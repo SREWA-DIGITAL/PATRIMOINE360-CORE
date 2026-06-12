@@ -1,19 +1,13 @@
 export default {
-  title: "shelf.nu Documentation",
-  description: "Open source asset management platform documentation",
+  title: "Patrimoine360 Core",
+  description:
+    "Documentation du socle communautaire de gestion des sites, biens et équipements.",
   base: "/",
-
-  // Clean URLs (remove .html extension)
   cleanUrls: true,
-
-  // Favicon
   head: [["link", { rel: "icon", href: "/favicon.ico" }]],
 
-  // Markdown configuration
   markdown: {
-    // Line numbers in code blocks
     lineNumbers: true,
-    // Configure languages for syntax highlighting
     languages: [
       "js",
       "ts",
@@ -30,167 +24,133 @@ export default {
   },
 
   themeConfig: {
-    // Logo in navigation bar
     logo: "/shelf-logo.png",
-
-    // Alternative: Logo with different sizes
-    // logo: {
-    //   light: '/shelf-logo-light.png',
-    //   dark: '/shelf-logo-dark.png'
-    // },
-
-    // Search configuration to handle duplicates
     search: {
       provider: "local",
     },
-
-    // Navigation bar
     nav: [
-      { text: "Home", link: "/" },
-      { text: "Docs", link: "/local-development" },
+      { text: "Accueil", link: "/" },
+      { text: "Développement local", link: "/local-development" },
       {
-        text: "Links",
+        text: "Projet",
         items: [
-          { text: "GitHub", link: "https://github.com/Shelf-nu/shelf.nu" },
-          { text: "Discord", link: "https://discord.gg/gdPMsSzqCS" },
-          { text: "Website", link: "https://shelf.nu" },
           {
-            text: "Knowledge base",
-            link: "https://www.shelf.nu/knowledge-base",
+            text: "GitHub",
+            link: "https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE",
           },
+          {
+            text: "Twitter",
+            link: "https://twitter.com/Patrimoine360",
+          },
+          { text: "Contribuer", link: "/contributing" },
         ],
       },
     ],
-
-    // Sidebar navigation
     sidebar: [
       {
-        text: "🚀 Getting Started",
+        text: "Démarrage",
         collapsed: false,
         items: [
-          { text: "Supabase Setup", link: "/supabase-setup" },
-          { text: "Local Development", link: "/local-development" },
-          { text: "Deployment", link: "/deployment" },
-          { text: "Docker Setup", link: "/docker" },
+          { text: "Configuration Supabase", link: "/supabase-setup" },
+          { text: "Développement local", link: "/local-development" },
+          { text: "Déploiement", link: "/deployment" },
+          { text: "Docker", link: "/docker" },
         ],
       },
       {
-        text: "⚙️ Configuration",
+        text: "Configuration",
         collapsed: true,
         items: [
-          { text: "App Configuration", link: "/app-configuration" },
+          { text: "Configuration applicative", link: "/app-configuration" },
           {
-            text: "Tracking & Analytics Scripts",
+            text: "Scripts de suivi et d'analyse",
             link: "/tracking-scripts",
           },
-          { text: "URL Shortener", link: "/url-shortener" },
+          { text: "Raccourcisseur d'URL", link: "/url-shortener" },
         ],
       },
       {
-        text: "🗄️ Database",
+        text: "Base de données",
         collapsed: true,
         items: [
-          { text: "Database Triggers", link: "/database-triggers" },
-          { text: "Protected Indexes", link: "/protected-indexes" },
+          { text: "Triggers", link: "/database-triggers" },
+          { text: "Index protégés", link: "/protected-indexes" },
         ],
       },
       {
-        text: "🛠️ Development",
+        text: "Développement",
         collapsed: true,
         items: [
-          { text: "Accessibility Guidelines", link: "/accessibility" },
-          { text: "Error Handling", link: "/handling-errors" },
-          { text: "Select All Pattern", link: "/select-all-pattern" },
-          { text: "Utility Hooks", link: "/hooks" },
+          { text: "Accessibilité", link: "/accessibility" },
+          { text: "Gestion des erreurs", link: "/handling-errors" },
+          { text: "Sélection multiple", link: "/select-all-pattern" },
+          { text: "Hooks utilitaires", link: "/hooks" },
           {
-            text: "Scanner Drawer Development",
+            text: "Développement du scanner",
             link: "/scanner-drawer-development",
           },
           {
-            text: "Barcode Types Guide",
+            text: "Types de codes-barres",
             link: "/barcode-types-development-guide",
           },
           {
-            text: "Booking conflict handling",
+            text: "Conflits de réservation",
             link: "/booking-conflict-queries",
           },
           {
-            text: "Security Review Agent",
+            text: "Agent de revue de sécurité",
             link: "/security-review-agent",
           },
         ],
       },
       {
-        text: "📊 Advanced Features",
+        text: "Index des biens",
         collapsed: true,
         items: [
+          { text: "Index avancé", link: "/advanced-index/" },
           {
-            text: "Advanced Asset Index",
-            link: "/advanced-index/",
-          },
-          {
-            text: "Filtering Guide",
+            text: "Filtres",
             link: "/advanced-index/advanced-filtering-guide",
           },
           {
-            text: "Sorting Guide",
+            text: "Tri",
             link: "/advanced-index/advanced-sorting-guide",
           },
           {
-            text: "Natural Sorting",
+            text: "Tri naturel",
             link: "/advanced-index/natural-sorting-explanation",
           },
           {
-            text: "Index Settings",
+            text: "Paramètres de l'index",
             link: "/advanced-index/asset-index-settings",
           },
         ],
       },
       {
-        text: "👥 Client Guides",
+        text: "Projet",
         collapsed: true,
         items: [
-          {
-            text: "Single Sign-On Setup",
-            link: "/sso/",
-          },
-          {
-            text: "Google Workspace",
-            link: "/sso/providers/google-workspace",
-          },
-          {
-            text: "Microsoft Entra",
-            link: "/sso/providers/microsoft-entra",
-          },
-        ],
-      },
-      {
-        text: "📋 Project Info",
-        collapsed: true,
-        items: [
-          { text: "Contributing Guide", link: "/contributing" },
-          { text: "Code of Conduct", link: "/code-of-conduct" },
-          { text: "License", link: "/license" },
+          { text: "Contribuer", link: "/contributing" },
+          { text: "Code de conduite", link: "/code-of-conduct" },
+          { text: "Licence", link: "/license" },
         ],
       },
     ],
-
-    // Social links in top nav
     socialLinks: [
-      { icon: "github", link: "https://github.com/Shelf-nu/shelf.nu" },
-      { icon: "discord", link: "https://discord.gg/gdPMsSzqCS" },
+      {
+        icon: "github",
+        link: "https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE",
+      },
+      { icon: "twitter", link: "https://twitter.com/Patrimoine360" },
     ],
-
-    // Edit this page link
     editLink: {
-      pattern: "https://github.com/Shelf-nu/shelf.nu/edit/main/apps/docs/:path",
-      text: "Edit this page on GitHub",
+      pattern:
+        "https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE/edit/main/apps/docs/:path",
+      text: "Modifier cette page sur GitHub",
     },
-
-    // Footer
     footer: {
-      message: "Released under the AGPL-3.0 License.",
-      copyright: "Copyright © 2025 Shelf Asset Management Inc.",
+      message: "Distribué sous licence GNU AGPL-3.0.",
+      copyright: "Patrimoine360 Core et ses contributeurs.",
     },
   },
 };

@@ -1,172 +1,164 @@
-<a href="https://www.shelf.nu/" target="_blank">
-<img width="100%" src="./apps/webapp/public/static/images/readme-cover.jpg" alt="Shelf.nu" />
-</a>
+<p align="center">
+  <img width="100%" src="./docs/assets/patrimoine360-core-banner.png" alt="Patrimoine360 Core - gestion communautaire des sites et des biens" />
+</p>
 
-<h3 align="center">Open-source asset management infrastructure for everyone.</h3>
+<h1 align="center">Patrimoine360 Core</h1>
 
 <p align="center">
-  <a href="https://github.com/Shelf-nu/shelf.nu/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Shelf-nu/shelf.nu?label=License" alt="License" /></a>
-  <a href="https://github.com/Shelf-nu/shelf.nu/actions/workflows/deploy.yml"><img src="https://github.com/Shelf-nu/shelf.nu/actions/workflows/deploy.yml/badge.svg" alt="Deploy" /></a>
-  <a href="https://github.com/Shelf-nu/shelf.nu/stargazers"><img src="https://img.shields.io/github/stars/Shelf-nu/shelf.nu" alt="Stars" /></a>
-  <a href="https://discord.gg/8he9W7aTJu"><img src="https://img.shields.io/badge/Discord-community-blue?logo=discord&logoColor=white" alt="Discord" /></a>
+  Plateforme communautaire de gestion des sites, locaux, biens et équipements.
 </p>
 
 <p align="center">
-  <a href="https://www.shelf.nu/?ref=github"><b>Website</b></a> &middot;
-  <a href="https://docs.shelf.nu/?ref=github"><b>Documentation</b></a> &middot;
-  <a href="https://discord.gg/8he9W7aTJu"><b>Discord</b></a> &middot;
-  <a href="https://twitter.com/ShelfQR/?ref=github"><b>Twitter</b></a>
+  <a href="https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE/blob/main/LICENSE"><img src="https://img.shields.io/github/license/SREWA-DIGITAL/PATRIMOINE360-CORE?label=Licence" alt="Licence AGPL-3.0" /></a>
+  <a href="https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE/actions/workflows/test.yml"><img src="https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE/actions/workflows/test.yml/badge.svg" alt="Tests" /></a>
+  <a href="https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE/stargazers"><img src="https://img.shields.io/github/stars/SREWA-DIGITAL/PATRIMOINE360-CORE" alt="Étoiles GitHub" /></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE"><b>GitHub</b></a>
+  &middot;
+  <a href="./apps/docs/index.md"><b>Documentation</b></a>
+  &middot;
+  <a href="https://twitter.com/Patrimoine360"><b>Twitter</b></a>
 </p>
 
 ---
 
-Shelf is a platform for tracking physical assets — equipment, devices, tools, vehicles, props, inventory. It's built for teams that need to know what they have, where it is, and who's using it. Organizations use Shelf to manage thousands of assets across locations with role-based access for their teams.
+Patrimoine360 Core est le socle public AGPL de Patrimoine360. Il aide les
+organisations à remplacer les fichiers dispersés par un référentiel commun
+pour savoir quels biens elles possèdent, où ils se trouvent, qui en est
+responsable et quand une action doit être menée.
 
-## Features
+Le produit vise en priorité les organisations d'Afrique de l'Ouest qui gèrent
+des sites, des locaux, du mobilier, des véhicules, du matériel informatique ou
+des équipements techniques.
 
-- **QR asset tags** — Generate and print QR codes. Scan with any phone to view, check out, or report an asset.
-- **Bookings and reservations** — Schedule equipment, prevent double-bookings, set checkout/return dates with calendar integration.
-- **Custody tracking** — Assign assets to team members. Know who has what at all times.
-- **Location management** — Hierarchical locations (buildings, floors, rooms, shelves). GPS tagging support.
-- **Team roles** — Owner, Admin, Base, and Self Service roles with granular permissions.
-- **Custom fields** — Add any metadata to assets: purchase date, warranty info, serial numbers, condition.
-- **Categories and tags** — Organize assets into categories. Tag for flexible cross-cutting grouping.
-- **Kits** — Bundle assets into kits (e.g., laptop + charger + dock) and manage them as a unit.
-- **Search and filtering** — Full-text search with advanced filters. Saved filter presets.
-- **CSV import/export** — Bulk import assets from spreadsheets. Export for reporting.
-- **Asset reminders** — Schedule alerts for maintenance, calibration, warranty expiry.
-- **Audit trail** — Notes and activity logs on every asset.
-- **Multi-workspace** — Manage separate inventories for different organizations or departments.
-- **Scanner** — Built-in QR/barcode scanner with bulk actions: assign custody, update location, add to bookings.
+## Fonctionnalités Core
 
-## Tech Stack
+- **Tableau de bord** : indicateurs de patrimoine, biens récents, sites,
+  affectations, réservations et rappels.
+- **Sites et locaux** : hiérarchie de lieux, informations de localisation,
+  notes, activité et rattachement des biens.
+- **Biens et équipements** : inventaire, catégories, tags, images, états,
+  valeurs, numéros de série et champs personnalisés.
+- **QR codes et codes-barres** : génération, impression et lecture depuis le
+  web ou l'application compagnon.
+- **Responsables et affectations** : attribution d'un bien à un collaborateur,
+  historique de garde et restitution.
+- **Réservations** : planification, sortie, retour, retour partiel,
+  annulation, calendrier et prévention des conflits.
+- **Rappels** : échéances liées aux biens, notifications et suivi des actions.
+- **Rapports simples** : inventaire, activité, utilisation, réservations,
+  retards et affectations, avec exports.
+- **Import et export** : intégration de données en masse et extraction pour
+  analyse.
+- **Gestion d'équipe** : organisations, membres et permissions de base.
+- **Application compagnon** : consultation, scan et opérations terrain sur
+  les fonctions Core compatibles.
 
-| Layer      | Technology                                                                      |
-| ---------- | ------------------------------------------------------------------------------- |
-| Framework  | [React Router](https://reactrouter.com/) 7 (React 19)                           |
-| Language   | [TypeScript](https://www.typescriptlang.org/) 5                                 |
-| Database   | [PostgreSQL](https://www.postgresql.org/) via [Supabase](https://supabase.com/) |
-| ORM        | [Prisma](https://www.prisma.io/) 6                                              |
-| Styling    | [Tailwind CSS](https://tailwindcss.com/) 3                                      |
-| Components | [Radix UI](https://www.radix-ui.com/) primitives                                |
-| Auth       | [Supabase Auth](https://supabase.com/docs/guides/auth) (email, SSO)             |
-| Job queue  | [pg-boss](https://github.com/timgit/pg-boss)                                    |
-| Payments   | [Stripe](https://stripe.com/)                                                   |
-| Email      | [Nodemailer](https://nodemailer.com/) (SMTP)                                    |
-| Build      | [Vite](https://vite.dev/) 7, [Turborepo](https://turbo.build/)                  |
-| Testing    | [Vitest](https://vitest.dev/), [Playwright](https://playwright.dev/)            |
+## Hors périmètre
 
-## Getting Started
+Ce dépôt public ne contient pas les extensions propriétaires Patrimoine360
+Enterprise : contrats et prestataires, fiches de visite, travaux et
+maintenance avancée, analyses consolidées, import CNPS spécialisé, RBAC
+géographique avancé, SSO Enterprise et notifications WhatsApp.
 
-### Prerequisites
+La frontière détaillée est documentée dans
+[`docs/PLAN-ALIGNEMENT-PRD.md`](./docs/PLAN-ALIGNEMENT-PRD.md).
 
-- [Node.js](https://nodejs.org/) >= 22.20.0
-- [pnpm](https://pnpm.io/) >= 9.15.4
-- A [Supabase](https://supabase.com/) project (free tier works)
+## État technique
 
-### Setup
+Le projet est un fork maintenu de Shelf.nu. Les noms techniques historiques
+comme `@shelf/database`, certains chemins internes et des identifiants mobiles
+sont conservés temporairement pour éviter une migration destructive. Ils ne
+définissent plus l'identité publique du produit.
+
+| Couche | Technologie actuelle |
+| --- | --- |
+| Application web | React Router 7, React 19, Hono |
+| Langage | TypeScript |
+| Base de données | PostgreSQL via Supabase |
+| ORM | Prisma 6 |
+| Interface | Tailwind CSS et composants Radix UI |
+| Tâches asynchrones | pg-boss |
+| Monorepo | pnpm et Turborepo |
+| Tests | Vitest et Playwright |
+| Application mobile | Expo et React Native |
+
+La migration vers une authentification et un stockage entièrement autonomes
+est une cible du PRD, pas une capacité déjà livrée.
+
+## Démarrage local
+
+### Prérequis
+
+- Node.js `>= 22.20.0`
+- pnpm `9.15.9`
+- Un projet Supabase pour l'architecture actuelle
 
 ```bash
-# Clone the repository
-git clone https://github.com/Shelf-nu/shelf.nu.git
-cd shelf.nu
-
-# Install dependencies
-pnpm install
-
-# Copy environment template
+git clone https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE.git
+cd PATRIMOINE360-CORE
+pnpm install --frozen-lockfile
 cp .env.example .env
 ```
 
-Edit `.env` with your Supabase credentials and other configuration. See the [Supabase setup guide](https://docs.shelf.nu/supabase-setup) for step-by-step instructions.
+Renseignez les variables de `.env`, puis lancez :
 
 ```bash
-# Generate Prisma client and run migrations
 pnpm webapp:setup
-
-# Start development server
 pnpm webapp:dev
 ```
 
-The app runs at `https://localhost:3000` (the dev server uses HTTPS with local certificates by default).
+L'application est ensuite accessible à l'adresse indiquée par le serveur de
+développement, généralement `https://localhost:3000`.
 
-For detailed setup instructions including SSL certificates and troubleshooting, see the [local development guide](https://docs.shelf.nu/local-development).
+## Commandes principales
 
-## Project Structure
+| Commande | Usage |
+| --- | --- |
+| `pnpm webapp:dev` | Démarrer l'application web |
+| `pnpm webapp:build` | Construire l'application |
+| `pnpm webapp:test -- --run` | Exécuter les tests web |
+| `pnpm webapp:validate` | Génération Prisma, tests, lint et typecheck |
+| `pnpm db:generate` | Générer le client Prisma |
+| `pnpm db:prepare-migration` | Préparer une migration |
+| `pnpm db:deploy-migration` | Appliquer les migrations |
+| `pnpm docs:dev` | Démarrer la documentation |
+| `pnpm companion:dev` | Démarrer l'application compagnon |
 
+`pnpm db:reset` est destructif et ne doit pas être utilisé sans sauvegarde ni
+validation explicite.
+
+## Structure
+
+```text
+apps/
+  webapp/       Application web et API
+  companion/    Application mobile compagnon
+  docs/         Documentation développeur
+packages/
+  database/     Schéma Prisma, migrations et client partagé
+tooling/
+  typescript/   Configurations TypeScript partagées
+docs/           Décisions produit, périmètre et audits
 ```
-shelf.nu/
-├── apps/
-│   ├── webapp/          # Main application (React Router + Hono)
-│   │   ├── app/
-│   │   │   ├── routes/      # File-based routing
-│   │   │   ├── modules/     # Business logic (booking, asset, kit, etc.)
-│   │   │   ├── components/  # React components
-│   │   │   └── utils/       # Shared utilities
-│   │   └── public/          # Static assets
-│   └── docs/            # Documentation site (VitePress)
-├── packages/
-│   └── database/        # Prisma schema, migrations, client
-└── tooling/
-    └── typescript/      # Shared TypeScript config
-```
 
-The monorepo is managed with pnpm workspaces and Turborepo. The `@shelf/database` package owns all database concerns — schema, migrations, and Prisma client generation.
+## Contribuer
 
-## Commands
+Les contributions au Core sont les bienvenues. Consultez
+[`CONTRIBUTING.md`](./CONTRIBUTING.md) avant d'ouvrir une pull request.
 
-| Command                     | Description                             |
-| --------------------------- | --------------------------------------- |
-| `pnpm webapp:dev`           | Start development server                |
-| `pnpm webapp:build`         | Production build                        |
-| `pnpm webapp:test`          | Run tests (Vitest)                      |
-| `pnpm webapp:validate`      | Lint + typecheck + test                 |
-| `pnpm webapp:doctor`        | React health scan (react-doctor)        |
-| `pnpm webapp:setup`         | Generate Prisma client + run migrations |
-| `pnpm db:prepare-migration` | Create a new database migration         |
-| `pnpm db:deploy-migration`  | Apply pending migrations                |
-| `pnpm db:reset`             | Reset database (destructive)            |
-| `pnpm docs:dev`             | Start documentation site                |
-| `pnpm typecheck`            | TypeScript type checking                |
-| `pnpm lint`                 | ESLint                                  |
+Toute proposition doit rester générique et communautaire. Une fonctionnalité
+réservée à un client, une intégration propriétaire ou un module Enterprise ne
+doit pas être ajouté à ce dépôt.
 
-## Deployment
+## Licence et attribution
 
-### Fly.io
+Patrimoine360 Core est distribué sous licence
+[GNU AGPL v3](./LICENSE). Le projet est dérivé de Shelf.nu, également publié
+sous AGPL-3.0. Les mentions d'origine et de modification sont précisées dans
+[`NOTICE.md`](./NOTICE.md).
 
-Shelf deploys to [Fly.io](https://fly.io/) with GitHub Actions for CI/CD. Pushes to `dev` trigger staging deploys and pushes to `main` trigger production deploys; in both cases we run lint, typecheck, test, Docker build, and deploy.
-
-See the [deployment guide](https://docs.shelf.nu/deployment) for full setup instructions.
-
-### Docker
-
-Community-maintained Docker support is available for self-hosting. Requires an external Supabase instance.
-
-See the [Docker guide](https://docs.shelf.nu/docker).
-
-## Documentation
-
-| Guide                                                        | Description                                  |
-| ------------------------------------------------------------ | -------------------------------------------- |
-| [Local Development](https://docs.shelf.nu/local-development) | Full local setup with SSL, monorepo overview |
-| [Supabase Setup](https://docs.shelf.nu/supabase-setup)       | Database, auth, storage configuration        |
-| [Deployment](https://docs.shelf.nu/deployment)               | Fly.io + GitHub Actions CI/CD                |
-| [Docker](https://docs.shelf.nu/docker)                       | Self-hosted Docker setup                     |
-| [App Configuration](https://docs.shelf.nu/app-configuration) | `shelf.config.ts` options                    |
-| [Error Handling](https://docs.shelf.nu/handling-errors)      | Error patterns and conventions               |
-| [Accessibility](https://docs.shelf.nu/accessibility)         | WCAG 2.1 AA compliance                       |
-| [Contributing](./CONTRIBUTING.md)                            | How to contribute                            |
-
-For developer onboarding and codebase conventions, see [`CLAUDE.md`](./CLAUDE.md).
-
-## Contributing
-
-We welcome contributions. Check the [contribution guidelines](./CONTRIBUTING.md) and look for issues labeled [**"Open for contributions"**](https://github.com/Shelf-nu/shelf.nu/issues?q=is%3Aissue+is%3Aopen+label%3A%22Open+for+contributions%22).
-
-The project uses [conventional commits](https://www.conventionalcommits.org/), enforced by commitlint. Pre-commit hooks run ESLint, Prettier, and TypeScript checking via Lefthook.
-
-Join the [Discord](https://discord.gg/8he9W7aTJu) if you have questions or want to discuss your contribution.
-
-## License
-
-Shelf.nu is licensed under [AGPL-3.0](./LICENSE).
+La bannière actuelle est provisoire et sera remplacée lors de la finalisation
+de l'identité visuelle.

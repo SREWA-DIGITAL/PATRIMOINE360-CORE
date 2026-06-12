@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Shelf Community Support
-    url: https://github.com/orgs/Shelf-nu/discussions
-    about: Please ask and answer questions here.
+  - name: Questions sur Patrimoine360 Core
+    url: https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE/discussions
+    about: Poser une question ou partager une idée avec la communauté.
+  - name: Signalement de sécurité
+    url: https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE/security/advisories/new
+    about: Signaler une vulnérabilité de manière privée.

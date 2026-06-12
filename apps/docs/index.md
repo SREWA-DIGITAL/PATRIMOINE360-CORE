@@ -2,34 +2,30 @@
 layout: home
 
 hero:
-  name: "Shelf.nu"
-  text: "Documentation"
-  tagline: "Open source asset management platform"
+  name: "Patrimoine360 Core"
+  text: "Documentation communautaire"
+  tagline: "Gérer les sites, les biens, les affectations, les réservations et les rappels."
   image:
-    src: https://cdn.prod.website-files.com/641c35b7e5057648c76fa79f/664deb3a00954d2c1d19280e_implement_asset_registry.jpeg
-    alt: Shelf.nu
+    src: /patrimoine360-core-banner.png
+    alt: Patrimoine360 Core
   actions:
     - theme: brand
-      text: Get Started
-      link: /supabase-setup
+      text: Démarrer
+      link: /local-development
     - theme: alt
-      text: View on GitHub
-      link: https://github.com/Shelf-nu/shelf.nu
+      text: Voir sur GitHub
+      link: https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE
 
 features:
-  - icon: 🚀
-    title: Quick Setup
-    details: Get your asset management system running locally in minutes with our step-by-step guides.
+  - title: Sites et biens
+    details: Centraliser les lieux, les équipements, leurs informations et leurs responsables.
 
-  - icon: 🗄️
-    title: Supabase Powered
-    details: Built on Supabase for reliable database, authentication, and file storage.
+  - title: Opérations Core
+    details: Gérer les affectations, réservations, rappels, QR codes et rapports simples.
 
-  - icon: 🔧
-    title: Developer Friendly
-    details: Modern stack with Remix, React, TypeScript, Prisma, and comprehensive documentation.
+  - title: Développement ouvert
+    details: Contribuer au socle public AGPL avec React Router, TypeScript, Prisma et PostgreSQL.
 
-  - icon: 🐳
-    title: Deploy Anywhere
-    details: Deploy to Fly.io, run with Docker, or use your preferred hosting platform.
+  - title: Déploiement maîtrisé
+    details: Développer localement et préparer un déploiement communautaire sans module Enterprise.
 ---

@@ -1,68 +1,75 @@
-name: Bug Report
-description: File a bug report
-title: "[Bug]: "
+name: Signaler un bug
+description: Signaler un comportement incorrect dans Patrimoine360 Core
+title: "[Bug] "
 labels: ["bug", "triage"]
-assignees:
-  - octocat
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report!
-  - type: input
-    id: contact
-    attributes:
-      label: Contact Details
-      description: How can we get in touch with you if we need more info?
-      placeholder: ex. email@example.com
-    validations:
-      required: false
+        Merci de vérifier que le problème concerne le dépôt public Patrimoine360 Core et qu'aucune donnée sensible n'est incluse.
   - type: textarea
-    id: what-happened
+    id: problem
     attributes:
-      label: What happened?
-      description: Steps to reproduce the issue.
-      value: |
-        Steps to reproduce:
-
-        1. Go to '...'
-        2. Click on '....'
-        3. Scroll down to '....'
-        4. See error
+      label: Problème rencontré
+      description: Décrivez le comportement observé et son impact.
     validations:
       required: true
   - type: textarea
-    id: expected-behaviour
+    id: reproduction
     attributes:
-      label: What is the expected behaviour?
-      description: Also tell us, what did you expect to happen?
+      label: Étapes de reproduction
+      value: |
+        1. Aller à ...
+        2. Cliquer sur ...
+        3. Observer ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportement attendu
+      description: Décrivez ce qui devrait se produire.
     validations:
       required: true
   - type: dropdown
+    id: deployment
+    attributes:
+      label: Type de déploiement
+      options:
+        - Développement local
+        - Auto-hébergé
+        - Image communautaire GHCR
+        - Autre
+    validations:
+      required: true
+  - type: input
     id: version
     attributes:
-      label: Version
-      description: What version of our software are you running?
-      options:
-        - Hosted (app.shelf.nu)
-        - Self-hosted
+      label: Version ou commit
+      placeholder: "Exemple : main@abc1234"
     validations:
       required: true
   - type: dropdown
     id: browsers
     attributes:
-      label: What browsers are you seeing the problem on?
+      label: Navigateur concerné
       multiple: true
       options:
         - Firefox
         - Chrome
         - Safari
         - Microsoft Edge
-    validations:
-      required: true
+        - Non applicable
   - type: textarea
     id: logs
     attributes:
-      label: Relevant log output
-      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks. Only relevant for hosted version.
+      label: Journaux utiles
+      description: Supprimez les secrets, jetons et données personnelles avant de publier.
       render: shell
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Vérification du périmètre
+      options:
+        - label: Le problème concerne une fonctionnalité Core et non un module Enterprise privé.
+          required: true
