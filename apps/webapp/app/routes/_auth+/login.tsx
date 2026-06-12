@@ -48,8 +48,9 @@ import {
 import { validEmail } from "~/utils/misc";
 
 export function loader({ context }: LoaderFunctionArgs) {
-  const title = "Log in";
-  const subHeading = "Welcome back! Enter your details below to log in.";
+  const title = "Connexion";
+  const subHeading =
+    "Bienvenue. Renseignez vos informations pour accéder à votre espace.";
   const { disableSignup, disableSSO } = config;
 
   if (context.isAuthenticated) {

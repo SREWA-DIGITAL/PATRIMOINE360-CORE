@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import { ShelfSidebarLogo } from "~/components/marketing/logos";
+import { config } from "~/config/shelf.config";
 import { useSidebarNavItems } from "~/hooks/use-sidebar-nav-items";
 import OrganizationSelector from "./organization-selector";
 import {
@@ -35,6 +36,11 @@ export default function AppSidebar(props: AppSidebarProps) {
 
       <SidebarFooter>
         <SidebarNav className="p-0" items={bottomMenuItems} />
+        {state === "collapsed" ? null : (
+          <p className="px-3 py-2 text-xs leading-5 text-gray-500">
+            {config.brand.sourceAttribution}
+          </p>
+        )}
         <SidebarUserMenu />
       </SidebarFooter>
       <SidebarRail />

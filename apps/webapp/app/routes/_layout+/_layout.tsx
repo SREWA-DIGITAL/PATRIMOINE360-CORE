@@ -303,19 +303,19 @@ export default function App() {
           ) : workspaceSwitching ? (
             <div className="flex size-full flex-col items-center justify-center text-center">
               <Spinner />
-              <p className="mt-2">Activating workspace...</p>
+              <p className="mt-2">Activation de l'espace...</p>
             </div>
           ) : (
             <>
               <header className="flex items-center justify-between border-b bg-white py-4 md:hidden">
-                <Link to="." title="Home" className="block h-8">
+                <Link to="." title="Accueil" className="block h-8">
                   <ShelfMobileLogo />
                 </Link>
                 <div className="flex items-center space-x-2">
                   <CommandPaletteButton variant="icon" />
                   <NavLink
                     to="/scanner"
-                    title="Scan QR Code"
+                    title="Scanner un code QR"
                     className={({ isActive }) =>
                       tw(
                         "relative flex items-center justify-center px-2 transition",

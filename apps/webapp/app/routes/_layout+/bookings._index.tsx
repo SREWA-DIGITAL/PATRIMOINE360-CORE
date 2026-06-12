@@ -57,13 +57,13 @@ import { requirePermission } from "~/utils/roles.server";
 import { resolveUserDisplayName } from "~/utils/user";
 
 export const bookingsSearchFieldTooltipText = `
-Search bookings based on different fields. Separate your keywords by a comma(,) to search with OR condition. Supported fields are: 
-- Name
+Recherchez des réservations à partir de plusieurs champs. Séparez vos mots-clés par une virgule pour appliquer une condition OU. Champs pris en charge :
+- Nom
 - Description
-- Tags
-- Custodian names (first or last name)
-- Asset names
-- Asset barcodes or qr code
+- Étiquettes
+- Nom du responsable
+- Nom des biens
+- Codes-barres ou codes QR des biens
 `;
 
 export type BookingsIndexLoaderData = typeof loader;
@@ -190,11 +190,11 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const totalPages = Math.ceil(bookingCount / perPage);
 
     const header: HeaderData = {
-      title: "Bookings",
+      title: "Réservations",
     };
     const modelName = {
-      singular: "booking",
-      plural: "bookings",
+      singular: "réservation",
+      plural: "réservations",
     };
 
     return data(
@@ -219,7 +219,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
         tags,
         totalTags: tags.length,
         searchFieldTooltip: {
-          title: "Search your bookings",
+          title: "Rechercher dans les réservations",
           text: parseMarkdownToReact(bookingsSearchFieldTooltipText),
         },
       }),
@@ -243,7 +243,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => [
 
 export const handle = {
   name: "bookings.index",
-  breadcrumb: () => <Link to="/bookings">Bookings</Link>,
+  breadcrumb: () => <Link to="/bookings">Réservations</Link>,
 };
 
 export const shouldRevalidate: ShouldRevalidateFunction = ({
@@ -316,11 +316,11 @@ export default function BookingsIndexPage({
             trigger={
               <Button
                 type="button"
-                aria-label="new booking"
+                aria-label="nouvelle réservation"
                 data-test-id="createNewBooking"
                 prefetch="none"
               >
-                New booking
+                Nouvelle réservation
               </Button>
             }
           />
@@ -336,23 +336,23 @@ export default function BookingsIndexPage({
             )
           }
           customEmptyStateContent={{
-            title: "No bookings yet",
-            text: "Bookings let your team reserve assets for specific dates. Create a booking to schedule equipment checkouts and returns.",
+            title: "Aucune réservation pour le moment",
+            text: "Les réservations permettent de planifier la sortie et le retour des biens à des dates précises.",
             newButtonRoute: "/bookings/new",
-            newButtonContent: "Create your first booking",
+            newButtonContent: "Créer votre première réservation",
           }}
           ItemComponent={ListBookingsContent}
           headerChildren={
             <>
               <Th />
-              <Th>Assets</Th>
+              <Th>Biens</Th>
               <Th>Description</Th>
 
-              <Th>From</Th>
-              <Th>To</Th>
-              <Th>Tags</Th>
-              <Th>Custodian</Th>
-              <Th>Created by</Th>
+              <Th>Début</Th>
+              <Th>Fin</Th>
+              <Th>Étiquettes</Th>
+              <Th>Responsable</Th>
+              <Th>Créée par</Th>
             </>
           }
           headerExtraContent={
@@ -458,10 +458,10 @@ const ListBookingsContent = ({
       <Td>
         {hasUnavaiableAssets ? (
           <AvailabilityBadge
-            badgeText={"Includes unavailable assets"}
-            tooltipTitle={"Booking includes unavailable assets"}
+            badgeText={"Contient des biens indisponibles"}
+            tooltipTitle={"La réservation contient des biens indisponibles"}
             tooltipContent={
-              "There are some assets within this booking that are unavailable for reservation because they are checked-out, have custody assigned or are marked as not allowed to book"
+              "Certains biens de cette réservation sont indisponibles, car ils sont sortis, affectés à un responsable ou marqués comme non réservables."
             }
           />
         ) : null}

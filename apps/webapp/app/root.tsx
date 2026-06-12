@@ -60,7 +60,7 @@ export const links: LinksFunction = () => [
 
 export const meta: MetaFunction = () => [
   {
-    title: "shelf.nu",
+    title: config.brand.name,
   },
 ];
 
@@ -98,7 +98,7 @@ export function Layout({ children }: { children: ReactNode }) {
   );
 
   return (
-    <html lang="en" className="overflow-hidden">
+    <html lang="fr" className="overflow-hidden">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -148,13 +148,13 @@ function App() {
 
   return maintenanceMode ? (
     <BlockInteractions
-      title={"Maintenance is being performed"}
+      title={"Maintenance en cours"}
       content={
-        "Apologies, we’re down for scheduled maintenance. Please try again later."
+        "Patrimoine360 est temporairement indisponible pour maintenance. Veuillez réessayer plus tard."
       }
       cta={{
-        to: "https://www.shelf.nu/blog-categories/updates-maintenance",
-        text: "Learn more",
+        to: "/",
+        text: "Retour à l'accueil",
       }}
       icon="tool"
     />

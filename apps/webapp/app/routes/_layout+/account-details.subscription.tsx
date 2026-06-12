@@ -20,13 +20,13 @@ import { InvoiceHistory } from "~/components/subscription/invoice-history";
 import { PricingTable } from "~/components/subscription/pricing-table";
 import { SubscriptionsOverview } from "~/components/subscription/subscriptions-overview";
 import SuccessfulSubscriptionModal from "~/components/subscription/successful-subscription-modal";
+import { config } from "~/config/shelf.config";
 import { db } from "~/database/db.server";
 import { useUserData } from "~/hooks/use-user-data";
 import { getUserTierLimit } from "~/modules/tier/service.server";
 
 import { getUserByID } from "~/modules/user/service.server";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
-import { ENABLE_PREMIUM_FEATURES } from "~/utils/env";
 import { ShelfError, makeShelfError } from "~/utils/error";
 import { payload, error, parseData } from "~/utils/http.server";
 import type { CustomerWithSubscriptions } from "~/utils/stripe.server";
@@ -49,7 +49,7 @@ export async function loader({ context }: LoaderFunctionArgs) {
   const { userId } = authSession;
 
   try {
-    if (!ENABLE_PREMIUM_FEATURES) {
+    if (!config.enablePremiumFeatures) {
       return redirect("/account-details/general");
     }
     /**

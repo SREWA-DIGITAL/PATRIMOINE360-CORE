@@ -80,13 +80,14 @@ export function useSidebarNavItems() {
     return {
       reason: (
         <div>
-          <h5>Disabled</h5>
+          <h5>Indisponible</h5>
           <p>
-            Booking is a premium feature only available for Team workspaces.
+            Les réservations sont disponibles uniquement pour les espaces
+            d'équipe compatibles.
           </p>
 
           <When truthy={!!subscription} fallback={<UpgradeMessage />}>
-            <p>Please switch to your team workspace to access this feature.</p>
+            <p>Changez d'espace pour accéder à cette fonctionnalité.</p>
           </When>
         </div>
       ),
@@ -96,37 +97,37 @@ export function useSidebarNavItems() {
   const topMenuItems: NavItem[] = [
     {
       type: "child",
-      title: "Admin Dashboard",
+      title: "Administration",
       to: "/admin-dashboard/users",
       Icon: ChartLineIcon,
       hidden: !isAdmin,
     },
     {
       type: "label",
-      title: "Asset management",
+      title: "Gestion du patrimoine",
     },
     {
       type: "child",
-      title: "Home",
+      title: "Accueil",
       to: "/home",
       Icon: HomeIcon,
       hidden: isBaseOrSelfService,
     },
     {
       type: "child",
-      title: "Assets",
+      title: "Biens",
       to: "/assets",
       Icon: PackageOpenIcon,
     },
     {
       type: "child",
-      title: "Kits",
+      title: "Lots",
       to: "/kits",
       Icon: Package,
     },
     {
       type: "child",
-      title: "Categories",
+      title: "Catégories",
       to: "/categories",
       Icon: BoxesIcon,
       hidden: isBaseOrSelfService,
@@ -134,14 +135,14 @@ export function useSidebarNavItems() {
 
     {
       type: "child",
-      title: "Tags",
+      title: "Étiquettes",
       to: "/tags",
       Icon: TagsIcon,
       hidden: isBaseOrSelfService,
     },
     {
       type: "child",
-      title: "Locations",
+      title: "Sites",
       to: "/locations",
       Icon: MapPinIcon,
       hidden: isBaseOrSelfService,
@@ -154,17 +155,17 @@ export function useSidebarNavItems() {
     },
     {
       type: "parent",
-      title: "Bookings",
+      title: "Réservations",
       Icon: CalendarRangeIcon,
       disabled: bookingDisabled,
       children: [
         {
-          title: "View Bookings",
+          title: "Voir les réservations",
           to: "/bookings",
           disabled: bookingDisabled,
         },
         {
-          title: "Calendar",
+          title: "Calendrier",
           to: "/calendar",
           disabled: bookingDisabled,
         },
@@ -172,62 +173,62 @@ export function useSidebarNavItems() {
     },
     {
       type: "child",
-      title: "Reminders",
+      title: "Rappels",
       Icon: AlarmClockIcon,
       hidden: isBaseOrSelfService,
       to: "/reminders",
     },
     {
       type: "child",
-      title: "Reports",
+      title: "Rapports",
       Icon: FileBarChartIcon,
       hidden: isBaseOrSelfService,
       to: "/reports",
     },
     {
       type: "label",
-      title: "Organization",
+      title: "Organisation",
       hidden: isBaseOrSelfService,
     },
     {
       type: "parent",
-      title: "Team",
+      title: "Équipe",
       Icon: UsersRoundIcon,
       hidden: isBaseOrSelfService,
       children: [
         {
-          title: "Users",
+          title: "Utilisateurs",
           to: "/settings/team/users",
           hidden: isPersonalOrganization,
         },
         {
-          title: "Pending invites",
+          title: "Invitations en attente",
           to: "/settings/team/invites",
           hidden: isPersonalOrganization,
         },
         {
-          title: "Non-registered members",
+          title: "Responsables sans compte",
           to: "/settings/team/nrm",
         },
       ],
     },
     {
       type: "parent",
-      title: "Workspace settings",
+      title: "Paramètres de l'espace",
       Icon: SettingsIcon,
       hidden: isBaseOrSelfService,
       children: [
         {
-          title: "General",
+          title: "Général",
           to: "/settings/general",
         },
         {
-          title: "Bookings",
+          title: "Réservations",
           to: "/settings/bookings",
           hidden: isPersonalOrganization,
         },
         {
-          title: "Custom fields",
+          title: "Champs personnalisés",
           to: "/settings/custom-fields",
         },
       ],
@@ -237,20 +238,20 @@ export function useSidebarNavItems() {
   const bottomMenuItems: NavItem[] = [
     {
       type: "child",
-      title: "Asset labels",
+      title: "Étiquettes QR",
       to: `https://store.shelf.nu/?ref=shelf_webapp_sidebar`,
       Icon: QrCodeIcon,
       target: "_blank",
     },
     {
       type: "child",
-      title: "QR Scanner",
+      title: "Scanner QR",
       to: "/scanner",
       Icon: ScanBarcodeIcon,
     },
     {
       type: "button",
-      title: "Updates",
+      title: "Nouveautés",
       Icon: BellIcon,
       badge: {
         show: (unreadUpdatesCount || 0) > 0,
@@ -262,7 +263,7 @@ export function useSidebarNavItems() {
     },
     {
       type: "button",
-      title: "Questions/Feedback",
+      title: "Questions / retour",
       Icon: MessageCircleIcon,
       onClick: () => {
         // Handled by FeedbackNavItem in sidebar-nav.tsx

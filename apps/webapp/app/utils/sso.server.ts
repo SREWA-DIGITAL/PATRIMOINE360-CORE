@@ -1,5 +1,6 @@
 import type { Organization, SsoDetails } from "@prisma/client";
 import type { AuthSession } from "@server/session";
+import { config } from "~/config/shelf.config";
 import { db } from "~/database/db.server";
 import {
   deleteAuthAccount,
@@ -14,8 +15,8 @@ import {
   createUserFromSSO,
   updateUserFromSSO,
 } from "~/modules/user/service.server";
-import { DISABLE_SSO } from "./env";
 import { isLikeShelfError, ShelfError } from "./error";
+import { assertEnterpriseFeature } from "./license";
 import { isValidDomain } from "./misc";
 
 /**
@@ -139,6 +140,24 @@ interface DomainCheckResult {
   ssoProviderId: string | null;
 }
 
+export function assertSSOEnabled() {
+  if (!config.license.isEnterprise) {
+    assertEnterpriseFeature("SSO", config.license.type);
+  }
+
+  if (config.disableSSO) {
+    throw new ShelfError({
+      cause: null,
+      title: "SSO is disabled",
+      message:
+        "For more information, please contact your workspace administrator.",
+      label: "User onboarding",
+      status: 403,
+      shouldBeCaptured: false,
+    });
+  }
+}
+
 /**
  * Fetches all domains configured for SSO in the auth schema
  * Uses raw query to access auth schema tables
@@ -256,7 +275,7 @@ export async function doesSSOUserExist(email: string): Promise<boolean> {
  */
 export async function validateNonSSOSignup(email: string): Promise<void> {
   /** Quick return if SSO is disabled as this check is then unnecessary */
-  if (DISABLE_SSO) return;
+  if (config.disableSSO) return;
   const domainStatus = await checkDomainSSOStatus(email);
 
   if (domainStatus.isConfiguredForSSO) {

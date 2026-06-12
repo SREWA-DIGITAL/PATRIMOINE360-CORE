@@ -12,6 +12,7 @@ declare global {
       MICROSOFT_CLARITY_ID: string;
       CRISP_WEBSITE_ID: string;
       CLOUDFLARE_WEB_ANALYTICS_TOKEN: string;
+      LICENSE_TYPE: string;
       ENABLE_PREMIUM_FEATURES: string;
       MAINTENANCE_MODE: string;
       CHROME_EXECUTABLE_PATH: string;
@@ -40,6 +41,7 @@ declare global {
       CRISP_WEBSITE_ID: string;
       MICROSOFT_CLARITY_ID: string;
       CLOUDFLARE_WEB_ANALYTICS_TOKEN: string;
+      LICENSE_TYPE: string;
       STRIPE_SECRET_KEY: string;
       STRIPE_WEBHOOK_ENDPOINT_SECRET: string;
       ENABLE_PREMIUM_FEATURES: string;
@@ -243,6 +245,12 @@ export const FULL_CALENDAR_LICENSE_KEY = getEnv("FULL_CALENDAR_LICENSE_KEY", {
   isRequired: false,
 });
 
+export const LICENSE_TYPE =
+  getEnv("LICENSE_TYPE", {
+    isSecret: false,
+    isRequired: false,
+  }) || "core";
+
 export const MAINTENANCE_MODE =
   getEnv("MAINTENANCE_MODE", {
     isSecret: false,
@@ -305,6 +313,7 @@ export function getBrowserEnv() {
     CRISP_WEBSITE_ID,
     MICROSOFT_CLARITY_ID,
     CLOUDFLARE_WEB_ANALYTICS_TOKEN,
+    LICENSE_TYPE,
     ENABLE_PREMIUM_FEATURES,
     MAINTENANCE_MODE,
     CHROME_EXECUTABLE_PATH,

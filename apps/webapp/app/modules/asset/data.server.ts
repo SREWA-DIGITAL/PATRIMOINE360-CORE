@@ -63,17 +63,17 @@ interface Props {
 }
 
 const searchFieldTooltipText = `
-Search assets based on asset fields. Separate your keywords by a comma(,) to search with OR condition. Supported fields are: 
-- Asset ID
-- Name
+Recherchez des biens à partir de leurs champs. Séparez vos mots-clés par une virgule pour appliquer une condition OU. Champs pris en charge :
+- Identifiant du bien
+- Nom
 - Description
-- Category
-- Location
-- Tags
-- Custodian names (first or last name)
-- QR code value
-- Custom field values
-- Barcodes values
+- Catégorie
+- Site
+- Étiquettes
+- Nom du responsable
+- Valeur du code QR
+- Champs personnalisés
+- Codes-barres
 `;
 
 export async function simpleModeLoader({
@@ -255,16 +255,16 @@ export async function simpleModeLoader({
   const header: HeaderData = {
     title: isPersonalOrg(currentOrganization)
       ? userName
-        ? `${userName}'s inventory`
-        : `Your inventory`
+        ? `Inventaire de ${userName}`
+        : `Votre inventaire`
       : currentOrganization?.name
-      ? `${currentOrganization?.name}'s inventory`
-      : "Your inventory",
+      ? `Inventaire de ${currentOrganization?.name}`
+      : "Votre inventaire",
   };
 
   const modelName = {
-    singular: "asset",
-    plural: "assets",
+    singular: "bien",
+    plural: "biens",
   };
 
   const userPrefsCookie = await userPrefs.serialize(cookie);
@@ -287,9 +287,9 @@ export async function simpleModeLoader({
       modelName,
       hasActiveFilters,
       canImportAssets: canImportAssets(tierLimit) && canImport,
-      searchFieldLabel: "Search assets",
+      searchFieldLabel: "Rechercher des biens",
       searchFieldTooltip: {
-        title: "Search your asset database",
+        title: "Rechercher dans les biens",
         text: parseMarkdownToReact(searchFieldTooltipText),
       },
       totalCategories,
@@ -529,16 +529,16 @@ export async function advancedModeLoader({
   const header: HeaderData = {
     title: isPersonalOrg(currentOrganization)
       ? userName
-        ? `${userName}'s inventory`
-        : `Your inventory`
+        ? `Inventaire de ${userName}`
+        : `Votre inventaire`
       : currentOrganization?.name
-      ? `${currentOrganization?.name}'s inventory`
-      : "Your inventory",
+      ? `Inventaire de ${currentOrganization?.name}`
+      : "Votre inventaire",
   };
 
   const modelName = {
-    singular: "asset",
-    plural: "assets",
+    singular: "bien",
+    plural: "biens",
   };
 
   const userPrefsCookie = await userPrefs.serialize(cookie);
@@ -559,9 +559,9 @@ export async function advancedModeLoader({
       modelName,
       hasActiveFilters,
       canImportAssets: canImportAssets(tierLimit) && advCanImport,
-      searchFieldLabel: "Search assets",
+      searchFieldLabel: "Rechercher des biens",
       searchFieldTooltip: {
-        title: "Search your asset database",
+        title: "Rechercher dans les biens",
         text: parseMarkdownToReact(searchFieldTooltipText),
       },
       filters,

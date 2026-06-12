@@ -352,20 +352,20 @@ export default function AssetIndexPage() {
             <Button
               to="new"
               role="link"
-              aria-label={`new asset`}
+              aria-label="nouveau bien"
               data-test-id="createNewAsset"
             >
-              New asset
+              Nouveau bien
             </Button>
           </>
         </When>
       </Header>
       <AssetsList
         customEmptyStateContent={{
-          title: "No assets yet",
-          text: "Assets are the core of your inventory. Create your first asset to start tracking equipment, devices, or anything your team manages.",
+          title: "Aucun bien pour le moment",
+          text: "Les biens sont le cœur de votre inventaire. Créez votre premier bien pour suivre les équipements, appareils ou ressources gérés par votre équipe.",
           newButtonRoute: "/assets/new",
-          newButtonContent: "Create your first asset",
+          newButtonContent: "Créer votre premier bien",
         }}
       />
     </div>

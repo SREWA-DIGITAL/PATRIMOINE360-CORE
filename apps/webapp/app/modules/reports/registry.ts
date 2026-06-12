@@ -30,61 +30,61 @@ export const REPORTS: ReportDefinition[] = [
   // -------------------------------------------------------------------------
   {
     id: "booking-compliance",
-    title: "Booking Compliance",
+    title: "Suivi des réservations",
     description:
-      "Track booking lifecycle compliance: on-time checkouts, late returns, and overdue items.",
+      "Suivez les sorties, les retours en retard et les biens en dépassement.",
     category: "bookings",
     icon: "ClipboardCheck",
     enabled: true, // R2 — the first report we're building
     filters: [
-      { type: "status", label: "Status", multi: true },
-      { type: "team_member", label: "Custodian", multi: false },
-      { type: "location", label: "Location", multi: false },
+      { type: "status", label: "Statut", multi: true },
+      { type: "team_member", label: "Responsable", multi: false },
+      { type: "location", label: "Site", multi: false },
     ],
     hasChart: true,
     exportable: true,
   },
   {
     id: "top-booked-assets",
-    title: "Top Booked Assets",
+    title: "Biens les plus réservés",
     description:
-      "Identify your most frequently booked assets and their utilization patterns.",
+      "Identifiez les biens les plus réservés et leurs tendances d'utilisation.",
     category: "bookings",
     icon: "TrendingUp",
     enabled: true, // R3
     filters: [
-      { type: "category", label: "Category", multi: true },
-      { type: "location", label: "Location", multi: false },
+      { type: "category", label: "Catégorie", multi: true },
+      { type: "location", label: "Site", multi: false },
     ],
     hasChart: true,
     exportable: true,
   },
   {
     id: "monthly-booking-trends",
-    title: "Monthly Booking Trends",
+    title: "Tendances mensuelles des réservations",
     description:
-      "Visualize booking volume trends over time with month-over-month comparisons.",
+      "Visualisez l'évolution du volume de réservations mois par mois.",
     category: "bookings",
     icon: "BarChart3",
     enabled: true, // R9
     filters: [
-      { type: "category", label: "Category", multi: true },
-      { type: "location", label: "Location", multi: false },
+      { type: "category", label: "Catégorie", multi: true },
+      { type: "location", label: "Site", multi: false },
     ],
     hasChart: true,
     exportable: true, // Monthly breakdown table can be exported
   },
   {
     id: "overdue-items",
-    title: "Overdue Items",
+    title: "Retards en cours",
     description:
-      "Live view of all currently overdue bookings requiring immediate attention.",
+      "Consultez les réservations en retard qui nécessitent une action.",
     category: "bookings",
     icon: "AlertTriangle",
     enabled: true, // R6
     filters: [
-      { type: "team_member", label: "Custodian", multi: false },
-      { type: "location", label: "Location", multi: false },
+      { type: "team_member", label: "Responsable", multi: false },
+      { type: "location", label: "Site", multi: false },
     ],
     hasChart: false,
     exportable: true,
@@ -95,70 +95,70 @@ export const REPORTS: ReportDefinition[] = [
   // -------------------------------------------------------------------------
   {
     id: "asset-inventory",
-    title: "Asset Inventory",
+    title: "Inventaire des biens",
     description:
-      "Complete snapshot of your asset inventory with filtering and export capabilities.",
+      "Consultez l'inventaire complet des biens avec filtres et export.",
     category: "assets",
     icon: "Package",
     enabled: true, // R1
     filters: [
-      { type: "category", label: "Category", multi: true },
-      { type: "location", label: "Location", multi: true },
-      { type: "status", label: "Status", multi: true },
+      { type: "category", label: "Catégorie", multi: true },
+      { type: "location", label: "Site", multi: true },
+      { type: "status", label: "Statut", multi: true },
     ],
     hasChart: false,
     exportable: true,
   },
   {
     id: "asset-activity",
-    title: "Asset Activity Summary",
+    title: "Activité des biens",
     description:
-      "Comprehensive activity history for all assets including changes, custody, and bookings.",
+      "Analysez l'activité des biens : modifications, affectations et réservations.",
     category: "assets",
     icon: "Activity",
     enabled: true, // R7
     filters: [
-      { type: "asset", label: "Asset", multi: false },
-      { type: "category", label: "Category", multi: true },
+      { type: "asset", label: "Bien", multi: false },
+      { type: "category", label: "Catégorie", multi: true },
     ],
     hasChart: true,
     exportable: true,
   },
   {
     id: "asset-utilization",
-    title: "Asset Utilization",
+    title: "Utilisation des biens",
     description:
-      "Measure how effectively assets are being used based on booking and custody time.",
+      "Mesurez l'utilisation des biens à partir des réservations et affectations.",
     category: "assets",
     icon: "PieChart",
     enabled: true, // R8
     filters: [
-      { type: "category", label: "Category", multi: true },
-      { type: "location", label: "Location", multi: false },
+      { type: "category", label: "Catégorie", multi: true },
+      { type: "location", label: "Site", multi: false },
     ],
     hasChart: true,
     exportable: true,
   },
   {
     id: "idle-assets",
-    title: "Idle Assets",
+    title: "Biens inactifs",
     description:
-      "Find assets that haven't been booked or checked out recently.",
+      "Repérez les biens qui n'ont pas été réservés ou sortis récemment.",
     category: "assets",
     icon: "Clock",
     enabled: true, // R4
     filters: [
-      { type: "category", label: "Category", multi: true },
-      { type: "location", label: "Location", multi: false },
+      { type: "category", label: "Catégorie", multi: true },
+      { type: "location", label: "Site", multi: false },
     ],
     hasChart: false,
     exportable: true,
   },
   {
     id: "distribution",
-    title: "Asset Distribution",
+    title: "Répartition des biens",
     description:
-      "Breakdown of assets by category, location, and status for inventory planning.",
+      "Analysez les biens par catégorie, site et statut.",
     category: "assets",
     icon: "LayoutGrid",
     enabled: true, // R10
@@ -172,15 +172,15 @@ export const REPORTS: ReportDefinition[] = [
   // -------------------------------------------------------------------------
   {
     id: "custody-snapshot",
-    title: "Custody Snapshot",
+    title: "Affectations en cours",
     description:
-      "Live view of all assets currently in custody and their assigned team members.",
+      "Consultez les biens actuellement affectés et leurs responsables.",
     category: "custody",
     icon: "Users",
     enabled: true, // R5
     filters: [
-      { type: "team_member", label: "Team Member", multi: false },
-      { type: "location", label: "Location", multi: false },
+      { type: "team_member", label: "Responsable", multi: false },
+      { type: "location", label: "Site", multi: false },
     ],
     hasChart: false,
     exportable: true,
@@ -231,23 +231,23 @@ export const REPORT_CATEGORIES: Record<
   { label: string; description: string }
 > = {
   overview: {
-    label: "Overview",
-    description: "High-level snapshots and distributions",
+    label: "Vue d'ensemble",
+    description: "Synthèses et répartitions globales",
   },
   bookings: {
-    label: "Bookings",
-    description: "Booking lifecycle and compliance tracking",
+    label: "Réservations",
+    description: "Cycle de vie et suivi des réservations",
   },
   assets: {
-    label: "Assets",
-    description: "Asset activity, utilization, and inventory",
+    label: "Biens",
+    description: "Inventaire, activité et utilisation des biens",
   },
   custody: {
-    label: "Custody",
-    description: "Custody assignments and history",
+    label: "Affectations",
+    description: "Responsabilités et affectations en cours",
   },
   audits: {
     label: "Audits",
-    description: "Audit completion and compliance",
+    description: "Contrôle et conformité des inventaires",
   },
 };
