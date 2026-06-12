@@ -36,10 +36,10 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
         request,
       });
 
-    const header: HeaderData = { title: "Reminders" };
+    const header: HeaderData = { title: "Rappels" };
     const modelName = {
-      singular: "reminder",
-      plural: "reminders",
+      singular: "rappel",
+      plural: "rappels",
     };
 
     return payload({
@@ -50,10 +50,10 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
       page,
       perPage,
       totalPages,
-      searchFieldLabel: "Search reminders",
+      searchFieldLabel: "Rechercher des rappels",
       searchFieldTooltip: {
-        title: "Search reminders",
-        text: "Search reminders by reminder name, message, asset name or team member name. Separate your keywords by a comma(,) to search with OR condition. For example: searching 'Laptop, maintenance' will find reminders matching any of these terms.",
+        title: "Rechercher des rappels",
+        text: "Recherchez par nom de rappel, message, bien ou responsable. Séparez vos mots-clés par une virgule pour appliquer une condition OU.",
       },
       search,
     });
@@ -96,8 +96,8 @@ export default function Reminders() {
       <Header
         subHeading={
           <>
-            To create a new reminder, navigate to the asset of your choice and
-            use <b>{"Actions > Set Reminder"}</b>
+            Pour créer un rappel, ouvrez le bien concerné puis utilisez{" "}
+            <b>{"Actions > Définir un rappel"}</b>.
           </>
         }
       />

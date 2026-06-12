@@ -2,11 +2,12 @@ import { Link, useMatches, Outlet } from "react-router";
 import { ErrorContent } from "~/components/errors";
 import { ShelfSymbolLogo } from "~/components/marketing/logos";
 import SubHeading from "~/components/shared/sub-heading";
+import { config } from "~/config/shelf.config";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
 
 export const loader = () => null;
 
-export const meta = () => [{ title: appendToMetaTitle("Authentication") }];
+export const meta = () => [{ title: appendToMetaTitle("Authentification") }];
 
 export default function App() {
   const matches = useMatches();
@@ -35,14 +36,12 @@ export default function App() {
         </div>
       </div>
       <aside className="relative hidden h-full flex-col items-end justify-end p-8 lg:flex lg:w-[700px] xl:w-[900px]">
-        {/* eslint-disable react/jsx-no-target-blank */}
-        <a
-          href="https://www.shelf.nu/?ref=shelf_app_auth_image"
+        <Link
+          to="/"
           className="relative z-20 mt-4 w-[150px] text-right text-sm text-white no-underline hover:text-white/80"
-          target="_blank"
         >
-          shelf.nu
-        </a>
+          {config.brand.name}
+        </Link>
         <img
           className="absolute inset-0 size-full max-w-none object-cover"
           src="/static/images/auth-cover.webp"

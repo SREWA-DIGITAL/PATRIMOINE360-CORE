@@ -1,4 +1,24 @@
+import type { LicenseType } from "~/utils/license";
+
 export interface Config {
+  /**
+   * Public application brand.
+   */
+  brand: {
+    name: string;
+    shortName: string;
+    description: string;
+    sourceAttribution: string;
+  };
+
+  /**
+   * Public deployment license boundary.
+   */
+  license: {
+    type: LicenseType;
+    isEnterprise: boolean;
+  };
+
   /**
    * Enable sending of onboarding email.
    * Email gets sent when user is onboarded and we have their first and last name

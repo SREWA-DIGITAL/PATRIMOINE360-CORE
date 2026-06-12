@@ -7,6 +7,7 @@ import type {
 import { data, redirect, useLoaderData } from "react-router";
 import { z } from "zod";
 import { ChoosePurpose } from "~/components/welcome/choose-purpose";
+import { config } from "~/config/shelf.config";
 import { db } from "~/database/db.server";
 import { sendAuditTrialWelcomeEmail } from "~/emails/stripe/audit-trial-welcome";
 import { sendBarcodeTrialWelcomeEmail } from "~/emails/stripe/barcode-trial-welcome";
@@ -21,17 +22,16 @@ import {
 import { getOrganizationByUserId } from "~/modules/organization/service.server";
 import { getUserByID } from "~/modules/user/service.server";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
-import { ENABLE_PREMIUM_FEATURES } from "~/utils/env";
 import { makeShelfError } from "~/utils/error";
 import { error, parseData, payload } from "~/utils/http.server";
 import { getOrCreateCustomerId } from "~/utils/stripe.server";
 
 export const meta: MetaFunction = () => [
-  { title: appendToMetaTitle("Welcome to shelf.nu") },
+  { title: appendToMetaTitle("Bienvenue sur Patrimoine360") },
 ];
 
 export async function loader({ context }: LoaderFunctionArgs) {
-  if (!ENABLE_PREMIUM_FEATURES) {
+  if (!config.enablePremiumFeatures) {
     return redirect("/assets");
   }
 

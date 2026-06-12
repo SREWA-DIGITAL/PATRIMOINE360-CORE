@@ -11,6 +11,7 @@ import { SERVER_URL } from "~/utils/env";
 
 import type { ErrorLabel } from "~/utils/error";
 import { isLikeShelfError, ShelfError } from "~/utils/error";
+import { assertEnterpriseFeature } from "~/utils/license";
 import { Logger } from "~/utils/logger";
 import { mapAuthSession } from "./mappers.server";
 
@@ -216,6 +217,22 @@ export async function signInWithEmail(email: string, password: string) {
 }
 
 export async function signInWithSSO(domain: string) {
+  if (!config.license.isEnterprise) {
+    assertEnterpriseFeature("SSO", config.license.type);
+  }
+
+  if (config.disableSSO) {
+    throw new ShelfError({
+      cause: null,
+      title: "SSO is disabled",
+      message:
+        "For more information, please contact your workspace administrator.",
+      label,
+      status: 403,
+      shouldBeCaptured: false,
+    });
+  }
+
   try {
     const { data, error } = await getSupabaseAdmin().auth.signInWithSSO({
       domain,

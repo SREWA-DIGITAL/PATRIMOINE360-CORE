@@ -1,7 +1,19 @@
-import { ShelfTypography } from "~/components/icons/library";
 import { config } from "~/config/shelf.config";
 import { tw } from "~/utils/tw";
-import When from "../when/when";
+
+const { brand } = config;
+
+const BrandMark = ({ className }: { className?: string }) => (
+  <span
+    aria-hidden="true"
+    className={tw(
+      "inline-flex size-8 shrink-0 items-center justify-center rounded-md bg-primary-600 text-[10px] font-semibold text-white",
+      className
+    )}
+  >
+    {brand.shortName}
+  </span>
+);
 
 /**
  * Logo shown in the sidebar
@@ -10,36 +22,35 @@ import When from "../when/when";
 export const ShelfSidebarLogo = ({ minimized }: { minimized: boolean }) => {
   const { logoPath } = config;
 
-  /** If a custom logo is used, we just use that instead of doing the dynamic shelf typograpy */
   if (logoPath) {
     return minimized ? (
       <img
         src={logoPath.symbol}
-        alt="Shelf Logo"
+        alt={`${brand.name} logo`}
         className="mx-1.5 inline h-[32px] transition duration-150 ease-linear"
       />
     ) : (
       <img
         src={logoPath.fullLogo}
-        alt="Shelf Logo"
+        alt={`${brand.name} logo`}
         className="mx-1.5 inline h-[32px] transition duration-150 ease-linear"
       />
     );
   }
 
-  return (
-    <>
-      <img
-        src="/static/images/shelf-symbol.png"
-        alt="Shelf Logo"
-        className="mx-1.5 inline h-[32px]"
-      />
-      <When truthy={!minimized}>
-        <span className="logo-text transition duration-150 ease-linear">
-          <ShelfTypography />
-        </span>
-      </When>
-    </>
+  return minimized ? (
+    <span className="mx-1.5 inline-flex h-[32px] items-center">
+      <BrandMark />
+      <span className="sr-only">{brand.name}</span>
+    </span>
+  ) : (
+    <span
+      className="mx-1.5 inline-flex h-[32px] items-center gap-2 transition duration-150 ease-linear"
+      title={brand.name}
+    >
+      <BrandMark />
+      <span className="text-sm font-semibold text-gray-900">{brand.name}</span>
+    </span>
   );
 };
 
@@ -50,32 +61,41 @@ export const ShelfMobileLogo = () => {
   const { logoPath } = config;
 
   if (logoPath) {
-    return <img src={logoPath.fullLogo} alt="Shelf Logo" className="h-full" />;
+    return (
+      <img
+        src={logoPath.fullLogo}
+        alt={`${brand.name} logo`}
+        className="h-full"
+      />
+    );
   }
 
   return (
-    <img
-      src="/static/images/logo-full-color(x2).png"
-      alt="logo"
-      className="h-full"
-    />
+    <span className="inline-flex h-full items-center gap-2 px-1">
+      <BrandMark className="size-7" />
+      <span className="text-sm font-semibold text-gray-900">{brand.name}</span>
+    </span>
   );
 };
 
 /**
- * Lego symbol
+ * Logo symbol
  */
 export const ShelfSymbolLogo = ({ className }: { className?: string }) => {
   const { logoPath } = config;
   const classes = tw("mx-auto mb-2 size-12", className);
 
   if (logoPath) {
-    return <img src={logoPath.symbol} alt="Shelf Logo" className={classes} />;
+    return (
+      <img
+        src={logoPath.symbol}
+        alt={`${brand.name} logo`}
+        className={classes}
+      />
+    );
   }
 
-  return (
-    <img src="/static/images/shelf-symbol.png" alt="logo" className={classes} />
-  );
+  return <BrandMark className={classes} />;
 };
 
 /**
@@ -86,14 +106,19 @@ export const ShelfFullLogo = ({ className }: { className?: string }) => {
   const classes = tw(className);
 
   if (logoPath) {
-    return <img src={logoPath.fullLogo} alt="Shelf Logo" className={classes} />;
+    return (
+      <img
+        src={logoPath.fullLogo}
+        alt={`${brand.name} logo`}
+        className={classes}
+      />
+    );
   }
 
   return (
-    <img
-      src="/static/images/logo-full-color(x2).png"
-      alt="logo"
-      className={classes}
-    />
+    <span className={tw("inline-flex items-center gap-2", classes)}>
+      <BrandMark />
+      <span className="font-semibold text-gray-900">{brand.name}</span>
+    </span>
   );
 };

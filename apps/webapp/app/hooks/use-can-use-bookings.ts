@@ -6,8 +6,8 @@ import { useCurrentOrganization } from "./use-current-organization";
 /**
  * Returns whether the current organization can use bookings.
  *
- * Checks BOTH the server-side `canUseBookings` flag (which respects
- * ENABLE_PREMIUM_FEATURES) AND the org type. Even when premium is
+ * Checks BOTH the server-side `canUseBookings` flag (which respects the
+ * license-aware premium config) AND the org type. Even when premium is
  * disabled, Personal orgs cannot actually create bookings — the
  * booking route loader will reject them. So we always return false
  * for Personal orgs to avoid showing broken CTAs.

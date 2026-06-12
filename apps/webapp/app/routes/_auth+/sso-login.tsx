@@ -14,11 +14,11 @@ import { useZorm } from "react-zorm";
 import { z } from "zod";
 import Input from "~/components/forms/input";
 import { Button } from "~/components/shared/button";
-import { config } from "~/config/shelf.config";
 import { useAutoFocus } from "~/hooks/use-auto-focus";
 import { signInWithSSO } from "~/modules/auth/service.server";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
-import { makeShelfError, notAllowedMethod, ShelfError } from "~/utils/error";
+import { SUPPORT_EMAIL } from "~/utils/env";
+import { makeShelfError, notAllowedMethod } from "~/utils/error";
 import { isFormProcessing } from "~/utils/form";
 import {
   payload,
@@ -27,6 +27,7 @@ import {
   parseData,
 } from "~/utils/http.server";
 import { isValidDomain } from "~/utils/misc";
+import { assertSSOEnabled } from "~/utils/sso.server";
 
 const SSOLoginFormSchema = z.object({
   domain: z
@@ -39,26 +40,16 @@ const SSOLoginFormSchema = z.object({
 });
 
 export function loader({ context }: LoaderFunctionArgs) {
-  const title = "Log in with SSO";
-  const subHeading = "Enter your company's domain to login with SSO.";
-  const { disableSSO } = config;
+  const title = "Connexion SSO";
+  const subHeading =
+    "Saisissez le domaine de votre organisation pour continuer.";
 
   try {
     if (context.isAuthenticated) {
       return redirect("/assets");
     }
 
-    if (disableSSO) {
-      throw new ShelfError({
-        cause: null,
-        title: "SSO is disabled",
-        message:
-          "For more information, please contact your workspace administrator.",
-        label: "User onboarding",
-        status: 403,
-        shouldBeCaptured: false,
-      });
-    }
+    assertSSOEnabled();
 
     return payload({ title, subHeading });
   } catch (cause) {
@@ -69,6 +60,8 @@ export function loader({ context }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
   try {
+    assertSSOEnabled();
+
     const method = getActionMethod(request);
 
     switch (method) {
@@ -112,7 +105,7 @@ export default function SSOLogin() {
             <Input
               ref={domainInputRef}
               data-test-id="domain"
-              label="Company domain"
+              label="Domaine de l'organisation"
               placeholder="yourdomain.com"
               required
               name={zo.fields.domain()}
@@ -129,23 +122,25 @@ export default function SSOLogin() {
               disabled={disabled}
               width="full"
             >
-              Log In
+              Se connecter
             </Button>
           </div>
         </Form>
         {data?.error?.message && (
           <div className="text-sm text-error-500">{data.error.message}</div>
         )}
-        <div>
-          Want to enable SSO for your organization?{" "}
-          <Button
-            as="a"
-            href="mailto:hello@shelf.nu?subject=SSO request"
-            variant="link"
-          >
-            Contact us
-          </Button>
-        </div>
+        {SUPPORT_EMAIL ? (
+          <div>
+            Vous souhaitez activer le SSO pour votre organisation ?{" "}
+            <Button
+              as="a"
+              href={`mailto:${SUPPORT_EMAIL}?subject=SSO request`}
+              variant="link"
+            >
+              Contacter le support
+            </Button>
+          </div>
+        ) : null}
       </div>
     </>
   );

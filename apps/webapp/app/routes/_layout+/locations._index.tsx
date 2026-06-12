@@ -59,11 +59,11 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const totalPages = Math.ceil(totalLocations / perPage);
 
     const header: HeaderData = {
-      title: "Locations",
+      title: "Sites",
     };
     const modelName = {
-      singular: "location",
-      plural: "locations",
+      singular: "site",
+      plural: "sites",
     };
 
     return data(
@@ -101,10 +101,10 @@ export default function LocationsIndexPage() {
         <Button
           to="new"
           role="link"
-          aria-label={`new location`}
+          aria-label="nouveau site"
           data-test-id="createNewLocation"
         >
-          New location
+          Nouveau site
         </Button>
       </Header>
       <ListContentWrapper>
@@ -114,19 +114,19 @@ export default function LocationsIndexPage() {
             isBaseOrSelfService ? undefined : <BulkActionsDropdown />
           }
           customEmptyStateContent={{
-            title: "No locations yet",
-            text: "Locations help you track where your assets are. Create locations to organize assets by room, building, or site.",
+            title: "Aucun site pour le moment",
+            text: "Les sites vous aident à suivre l'emplacement de vos biens. Créez des sites pour organiser les biens par salle, bâtiment ou zone.",
             newButtonRoute: "/locations/new",
-            newButtonContent: "Create your first location",
+            newButtonContent: "Créer votre premier site",
           }}
           ItemComponent={ListItemContent}
           headerChildren={
             <>
               <Th>Description</Th>
-              <Th>Parent location</Th>
-              <Th className="whitespace-nowrap">Child locations</Th>
-              <Th>Assets</Th>
-              <Th>Kits</Th>
+              <Th>Site parent</Th>
+              <Th className="whitespace-nowrap">Sous-sites</Th>
+              <Th>Biens</Th>
+              <Th>Lots</Th>
               <Th>Actions</Th>
             </>
           }
@@ -148,7 +148,7 @@ const ListItemContent = ({
           <div className="flex size-12 items-center justify-center">
             <ImageWithPreview
               thumbnailUrl={item.thumbnailUrl}
-              alt={`${item.name} main image`}
+              alt={`Image principale de ${item.name}`}
               className="size-full"
             />
           </div>

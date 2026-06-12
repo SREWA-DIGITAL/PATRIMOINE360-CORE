@@ -9,7 +9,6 @@ import { data, redirect, useFetcher } from "react-router";
 import { z } from "zod";
 import { Button } from "~/components/shared/button";
 import { Spinner } from "~/components/shared/spinner";
-import { config } from "~/config/shelf.config";
 import { useSearchParams } from "~/hooks/search-params";
 import { supabaseClient } from "~/integrations/supabase/client";
 import { refreshAccessToken } from "~/modules/auth/service.server";
@@ -18,7 +17,7 @@ import { getUserOrganizations } from "~/modules/organization/service.server";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
 import { createSSOFormData } from "~/utils/auth";
 import { setCookie } from "~/utils/cookies.server";
-import { makeShelfError, notAllowedMethod, ShelfError } from "~/utils/error";
+import { makeShelfError, notAllowedMethod } from "~/utils/error";
 import {
   payload,
   error,
@@ -26,7 +25,10 @@ import {
   parseData,
   safeRedirect,
 } from "~/utils/http.server";
-import { resolveUserAndOrgForSsoCallback } from "~/utils/sso.server";
+import {
+  assertSSOEnabled,
+  resolveUserAndOrgForSsoCallback,
+} from "~/utils/sso.server";
 
 /**
  * Schema for handling OAuth callback data with improved groups handling
@@ -61,23 +63,12 @@ const CallbackSchema = z.object({
 });
 
 export async function action({ request, context }: ActionFunctionArgs) {
-  const { disableSSO } = config;
   try {
     /**
      * Currently the only reason to use oauth/callback is for SSO reasons.
      * Once we start adding social login providers, this will need to be adjusted
      */
-    if (disableSSO) {
-      throw new ShelfError({
-        cause: null,
-        title: "SSO is disabled",
-        message:
-          "For more information, please contact your workspace administrator.",
-        label: "User onboarding",
-        status: 403,
-        shouldBeCaptured: false,
-      });
-    }
+    assertSSOEnabled();
 
     const method = getActionMethod(request);
 
@@ -168,6 +159,8 @@ export function loader({ context }: LoaderFunctionArgs) {
   if (context.isAuthenticated) {
     return redirect("/assets");
   }
+
+  assertSSOEnabled();
 
   return data(payload({ title, subHeading }));
 }

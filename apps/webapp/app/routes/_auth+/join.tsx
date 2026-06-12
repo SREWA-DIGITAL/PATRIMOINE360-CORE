@@ -36,8 +36,8 @@ import { validEmail } from "~/utils/misc";
 import { validateNonSSOSignup } from "~/utils/sso.server";
 
 export function loader({ context }: LoaderFunctionArgs) {
-  const title = "Create an account";
-  const subHeading = "Start your journey with Shelf";
+  const title = "Créer un compte";
+  const subHeading = "Commencez avec Patrimoine360";
   const { disableSignup } = config;
 
   try {
