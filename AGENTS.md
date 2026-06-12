@@ -1,4 +1,26 @@
-# AGENTS.md
+# Patrimoine360 Core
+
+Ce dépôt est le produit communautaire public Patrimoine360 Core. Il est dérivé
+de Shelf.nu et reste synchronisable avec le remote `upstream`.
+
+## Règles spécifiques Core
+
+- `origin` doit pointer vers `SREWA-DIGITAL/patrimoine360-core`.
+- `upstream` doit pointer vers `Shelf-nu/shelf.nu`.
+- Ne jamais pousser vers `upstream`.
+- Aucun secret, module client ou code propriétaire ne doit entrer dans ce dépôt.
+- Les fonctionnalités partageables sont implémentées ici avant leur propagation
+  vers Enterprise.
+- Ne jamais fusionner globalement Enterprise vers Core.
+- Les changements destinés à Enterprise doivent rester des contrats génériques,
+  des interfaces ou des points d'extension.
+- Suivre le plan `docs/PLAN-ALIGNEMENT-PRD.md`.
+- Ne jamais committer sans instruction explicite de l'utilisateur.
+
+Les conventions communes aux deux dépôts sont documentées dans
+`../AGENTS.md` et `../.codex/`.
+
+## Socle technique hérité
 
 This repository hosts **Shelf.nu**, an asset management platform built with Remix, React, TypeScript, and PostgreSQL. This is a **pnpm + Turborepo monorepo**. Use `pnpm` instead of `npm`. Follow the instructions below when working anywhere in this repository.
 
