@@ -5,7 +5,7 @@ de Shelf.nu et reste synchronisable avec le remote `upstream`.
 
 ## Règles spécifiques Core
 
-- `origin` doit pointer vers `SREWA-DIGITAL/patrimoine360-core`.
+- `origin` doit pointer vers `SREWA-DIGITAL/PATRIMOINE360-CORE`.
 - `upstream` doit pointer vers `Shelf-nu/shelf.nu`.
 - Ne jamais pousser vers `upstream`.
 - Aucun secret, module client ou code propriétaire ne doit entrer dans ce dépôt.
