@@ -63,9 +63,6 @@ Enterprise : contrats et prestataires, fiches de visite, travaux et
 maintenance avancée, analyses consolidées, import CNPS spécialisé, RBAC
 géographique avancé, SSO Enterprise et notifications WhatsApp.
 
-La frontière détaillée est documentée dans
-[`docs/PLAN-ALIGNEMENT-PRD.md`](./docs/PLAN-ALIGNEMENT-PRD.md).
-
 ## État technique
 
 Le projet est un fork maintenu de Shelf.nu. Les noms techniques historiques
