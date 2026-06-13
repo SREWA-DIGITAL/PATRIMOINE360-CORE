@@ -1,30 +1,16 @@
-# Shelf.nu Documentation Has Moved! 📚
+# Documentation Patrimoine360 Core
 
-The Shelf.nu documentation is now hosted at **[docs.shelf.nu](https://docs.shelf.nu)** with a much better experience!
+Ce dossier contient la documentation développeur du socle communautaire.
 
-## 🚀 **New Documentation Site Features:**
+```bash
+pnpm docs:dev
+pnpm docs:build
+```
 
-- 🔍 **Powerful search** - Find what you need instantly
-- 📱 **Mobile-friendly** - Perfect on any device
-- 🎨 **Beautiful design** - Clean, modern interface
-- ⚡ **Fast navigation** - Instant page loads
-- 🌙 **Dark mode** - Easy on the eyes
+La documentation couvre l'installation actuelle, Supabase, Prisma, les
+conventions du monorepo et les fonctions Core. Elle ne doit pas présenter les
+modules privés Patrimoine360 Enterprise comme disponibles dans ce dépôt.
 
-## 📖 **Quick Links:**
-
-- **🏠 [Documentation Home](https://docs.shelf.nu)** - Start here
-- **💻 [Local Development](https://docs.shelf.nu/local-development)** - Get started coding
-- **🗄️ [Supabase Setup](https://docs.shelf.nu/supabase-setup)** - Database configuration
-- **🚀 [Deployment Guide](https://docs.shelf.nu/deployment)** - Go to production
-
-## 🔧 **For Developers:**
-
-This folder still contains the source files for the documentation site. If you want to:
-
-- **Contribute to docs** - Edit the `.md` files in this folder
-- **Run docs locally** - Use `pnpm --filter @shelf/docs dev`
-- **Build docs** - Use `pnpm --filter @shelf/docs build`
-
----
-
-**👉 Visit [docs.shelf.nu](https://docs.shelf.nu) for the best documentation experience!**
+Pour participer au projet, consultez les pages consacrées aux
+[contributions](./contributing.md), au [code de conduite](./code-of-conduct.md)
+et à la [licence](./license.md).

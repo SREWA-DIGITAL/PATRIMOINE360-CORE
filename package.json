@@ -1,5 +1,5 @@
 {
-  "name": "shelf",
+  "name": "patrimoine360-core",
   "private": true,
   "scripts": {
     "preinstall": "npx only-allow pnpm",

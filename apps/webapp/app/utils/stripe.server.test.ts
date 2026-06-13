@@ -25,6 +25,12 @@ vi.mock("stripe", () => ({
   })),
 }));
 
+vi.mock("~/config/shelf.config", () => ({
+  config: {
+    enablePremiumFeatures: true,
+  },
+}));
+
 // why: Database module tries to connect to Prisma during import
 const { mockUserFindUnique } = vi.hoisted(() => ({
   mockUserFindUnique: vi.fn(),

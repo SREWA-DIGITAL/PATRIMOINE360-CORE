@@ -28,6 +28,7 @@ vi.mock("~/utils/env", () => ({
   SHOW_HOW_DID_YOU_FIND_US: false,
   COLLECT_BUSINESS_INTEL: false,
   GEOCODING_USER_AGENT: "",
+  LICENSE_TYPE: "core",
 }));
 
 import {

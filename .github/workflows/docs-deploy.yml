@@ -1,45 +1,47 @@
-name: 📚 Deploy Docs
+name: Validate Core documentation
 
 on:
   push:
-    branches: [main]
-    paths: [apps/docs/**]
+    branches:
+      - main
+    paths:
+      - "apps/docs/**"
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "CODE_OF_CONDUCT.md"
+      - "NOTICE.md"
   pull_request:
-    paths: [apps/docs/**]
+    paths:
+      - "apps/docs/**"
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "CODE_OF_CONDUCT.md"
+      - "NOTICE.md"
+
+permissions:
+  contents: read
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
-      pull-requests: write
+    timeout-minutes: 15
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
-      - name: ⬇️ Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
 
-      - name: ⎔ Setup node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.20.0
+          cache: pnpm
 
-      - name: 📥 Install deps
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: 🔨 Build docs
+      - name: Build documentation
         run: pnpm docs:build
-
-      - name: 📥 Install Wrangler
-        run: npm install -g wrangler
-
-      - name: 🚀 Deploy to Cloudflare Pages
-        run: wrangler pages deploy apps/docs/.vitepress/dist --project-name=shelf-docs --branch=${{ github.event_name == 'push' && 'main' || github.head_ref }}
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
