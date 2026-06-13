@@ -9,6 +9,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "project:validate": "node scripts/project/plan-tools.mjs validate",
+    "project:publish": "node scripts/project/plan-tools.mjs publish",
     "prepare": "git config --unset core.hooksPath || echo ok && npx lefthook install || echo ok",
     "webapp:dev": "turbo run dev --filter=@shelf/webapp",
     "webapp:dev:staging": "pnpm --filter @shelf/webapp run staging:dev",
@@ -53,7 +55,8 @@
     "@commitlint/config-conventional": "^20.5.0",
     "@evilmartians/lefthook": "^2.1.5",
     "prettier": "3.0.3",
-    "turbo": "^2.9.5"
+    "turbo": "^2.9.5",
+    "yaml": "^1.10.2"
   },
   "pnpm": {
     "overrides": {

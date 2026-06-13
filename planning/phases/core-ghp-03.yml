@@ -1,0 +1,29 @@
+version: 1
+phase:
+  id: CORE-GHP
+  title: Publication idempotente des issues
+  edition: Core
+  repository: SREWA-DIGITAL/PATRIMOINE360-CORE
+
+tasks:
+  - id: CORE-GHP-03
+    title: Implémenter la publication idempotente des issues
+    status: In progress
+    priority: P1
+    component: API
+    labels:
+      - core
+      - planning
+      - automation
+    description: >-
+      Ajouter le moteur public qui valide un plan YAML, crée ou met à jour les
+      issues GitHub à partir de leur Task ID, ajoute les issues au Project
+      configuré et renseigne les champs de pilotage.
+    acceptanceCriteria:
+      - Un mode simulation affiche les actions prévues sans écrire dans GitHub.
+      - Une deuxième publication du même plan ne crée aucun doublon.
+      - Une modification du titre, du corps ou des labels met à jour l'issue
+        existante.
+      - Le script renseigne les champs Status, Édition, Phase, Priorité,
+        Composant, Task ID et Source Plan.
+    dependencies: []
