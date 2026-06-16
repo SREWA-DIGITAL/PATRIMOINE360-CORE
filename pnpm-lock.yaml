@@ -37,6 +37,9 @@ importers:
       turbo:
         specifier: ^2.9.5
         version: 2.9.7
+      yaml:
+        specifier: ^1.10.2
+        version: 1.10.2
 
   apps/companion:
     dependencies:
