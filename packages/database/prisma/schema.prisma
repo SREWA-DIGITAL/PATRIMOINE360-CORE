@@ -88,6 +88,7 @@ model User {
   assetReminders     AssetReminder[]
   contact            UserContact?
   businessIntel      UserBusinessIntel?
+  betterAuthUser     BetterAuthUser? @relation("BetterAuthIdentity")
   auditsCreated      AuditSession[]
   auditAssignments   AuditAssignment[]
   auditAssetsScanned AuditAsset[]
@@ -123,6 +124,76 @@ model User {
   // Indexes for foreign keys
   @@index([tierId])
   @@index([lastSelectedOrganizationId])
+}
+
+model BetterAuthUser {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  userMetadata  Json?
+  appMetadata   Json?
+  invitedAt     DateTime?
+  lastSignInAt  DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user     User                @relation("BetterAuthIdentity", fields: [id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  sessions BetterAuthSession[]
+  accounts BetterAuthAccount[]
+
+  @@index([emailVerified])
+  @@index([lastSignInAt])
+}
+
+model BetterAuthSession {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  user BetterAuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model BetterAuthAccount {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user BetterAuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([providerId, accountId])
+}
+
+model BetterAuthVerification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@index([expiresAt])
 }
 
 model UserContact {

@@ -16,9 +16,8 @@ import { useSearchParams } from "~/hooks/search-params";
 import { useDisabled } from "~/hooks/use-disabled";
 
 import {
+  resetPasswordWithOtp,
   sendResetPasswordLink,
-  updateAccountPassword,
-  verifyRecoveryOtp,
 } from "~/modules/auth/service.server";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
 import { makeShelfError, ShelfError } from "~/utils/error";
@@ -141,13 +140,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
           { shouldBeCaptured: false }
         );
 
-        const recovery = await verifyRecoveryOtp(email, otp);
-
-        await updateAccountPassword(
-          recovery.userId,
-          password,
-          recovery.accessToken
-        );
+        await resetPasswordWithOtp(email, otp, password);
 
         context.destroySession();
         return redirect("/login?password_reset=true");

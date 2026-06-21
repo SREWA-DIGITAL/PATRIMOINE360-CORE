@@ -10,11 +10,12 @@ import { validatePermission } from "~/utils/permissions/permission.validator.ser
 import { canUseAudits, canUseBarcodes } from "~/utils/subscription.server";
 
 /**
- * Validates a Supabase JWT from the Authorization header and returns the
+ * Validates an auth bearer token from the Authorization header and returns the
  * authenticated user's database record.
  *
  * Used exclusively by mobile API routes. The webapp's cookie-based session
- * middleware doesn't apply to mobile clients, so we validate the JWT directly.
+ * middleware doesn't apply to mobile clients, so we validate the bearer token
+ * directly through the auth service facade.
  */
 export async function requireMobileAuth(request: Request) {
   const authHeader = request.headers.get("Authorization");

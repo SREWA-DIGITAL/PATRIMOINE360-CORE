@@ -156,7 +156,7 @@ tasks:
 
   - id: CORE-BREVO-06A
     title: Cadrer la migration Better Auth dans le lot CORE-BREVO-06
-    status: In progress
+    status: Done
     priority: P1
     component: Documentation
     labels:
@@ -181,7 +181,7 @@ tasks:
 
   - id: CORE-BREVO-06B
     title: Installer Better Auth et ouvrir le point d'entrée auth dans l'API Hono
-    status: In progress
+    status: Done
     priority: P1
     component: API
     labels:
@@ -205,7 +205,7 @@ tasks:
 
   - id: CORE-BREVO-06C
     title: Préparer le schéma Better Auth et l'adaptation Prisma PostgreSQL
-    status: Backlog
+    status: Done
     priority: P1
     component: Base de données
     labels:
@@ -228,7 +228,7 @@ tasks:
 
   - id: CORE-BREVO-06D
     title: Mettre en place la coexistence contrôlée Supabase Auth et Better Auth
-    status: Backlog
+    status: Done
     priority: P1
     component: API
     labels:
@@ -252,7 +252,7 @@ tasks:
 
   - id: CORE-BREVO-06E
     title: Migrer signup, login et session web vers Better Auth
-    status: Backlog
+    status: Done
     priority: P1
     component: Web
     labels:
@@ -275,7 +275,7 @@ tasks:
 
   - id: CORE-BREVO-06F
     title: Migrer OTP, reset password et changement d'email sur Better Auth avec Brevo
-    status: Backlog
+    status: Done
     priority: P1
     component: API
     labels:
@@ -298,7 +298,7 @@ tasks:
 
   - id: CORE-BREVO-06G
     title: Migrer OAuth, mobile auth et middleware de session vers Better Auth
-    status: Backlog
+    status: Done
     priority: P1
     component: API
     labels:

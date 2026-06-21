@@ -3,12 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   findFirst: vi.fn().mockResolvedValue({ id: "user-1", sso: false }),
+  resetPasswordWithOtp: vi.fn().mockResolvedValue(undefined),
   sendResetPasswordLink: vi.fn().mockResolvedValue(undefined),
-  updateAccountPassword: vi.fn().mockResolvedValue(undefined),
-  verifyRecoveryOtp: vi.fn().mockResolvedValue({
-    userId: "auth-user-id",
-    accessToken: "access-token",
-  }),
 }));
 
 vi.mock("~/database/db.server", () => ({
@@ -20,9 +16,8 @@ vi.mock("~/database/db.server", () => ({
 }));
 
 vi.mock("~/modules/auth/service.server", () => ({
+  resetPasswordWithOtp: mocks.resetPasswordWithOtp,
   sendResetPasswordLink: mocks.sendResetPasswordLink,
-  updateAccountPassword: mocks.updateAccountPassword,
-  verifyRecoveryOtp: mocks.verifyRecoveryOtp,
 }));
 
 const { action } = await import("./forgot-password");
@@ -30,9 +25,8 @@ const { action } = await import("./forgot-password");
 describe("forgot-password route action", () => {
   beforeEach(() => {
     mocks.findFirst.mockClear();
+    mocks.resetPasswordWithOtp.mockClear();
     mocks.sendResetPasswordLink.mockClear();
-    mocks.updateAccountPassword.mockClear();
-    mocks.verifyRecoveryOtp.mockClear();
   });
 
   it("sends reset OTPs through the backend flow", async () => {
@@ -50,6 +44,11 @@ describe("forgot-password route action", () => {
         destroySession: vi.fn(),
       },
     } as never);
+    expect(response).toBeInstanceOf(Response);
+
+    if (!(response instanceof Response)) {
+      throw new Error("Expected a redirect Response");
+    }
 
     expect(mocks.findFirst).toHaveBeenCalledWith({
       where: { email: "user@example.com" },
@@ -67,7 +66,7 @@ describe("forgot-password route action", () => {
     );
   });
 
-  it("verifies recovery OTPs and updates the password", async () => {
+  it("resets the password through the backend OTP flow", async () => {
     const destroySession = vi.fn();
     const request = new Request("http://localhost/forgot-password", {
       method: "POST",
@@ -86,15 +85,16 @@ describe("forgot-password route action", () => {
         destroySession,
       },
     } as never);
+    expect(response).toBeInstanceOf(Response);
 
-    expect(mocks.verifyRecoveryOtp).toHaveBeenCalledWith(
+    if (!(response instanceof Response)) {
+      throw new Error("Expected a redirect Response");
+    }
+
+    expect(mocks.resetPasswordWithOtp).toHaveBeenCalledWith(
       "user@example.com",
-      "123456"
-    );
-    expect(mocks.updateAccountPassword).toHaveBeenCalledWith(
-      "auth-user-id",
-      "password-123",
-      "access-token"
+      "123456",
+      "password-123"
     );
     expect(destroySession).toHaveBeenCalled();
     expect(response.status).toBe(302);

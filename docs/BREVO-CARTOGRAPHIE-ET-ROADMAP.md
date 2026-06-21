@@ -256,6 +256,29 @@ La séquence autorisée reste :
 - `CORE-BREVO-05` : flux applicatifs convergés vers le point d'entrée unique
 - `CORE-BREVO-06` : dépendances Supabase restantes documentées et priorisées
 
+## Etat de `CORE-BREVO-06G`
+
+Le lot `06G` est désormais cadré et implémenté sur le périmètre Core suivant :
+
+- callback OAuth / SSO Better Auth côté serveur via `apps/webapp/app/routes/_auth+/oauth.callback.tsx`
+- préférence Better Auth pour les domaines SSO configurés, avec fallback legacy contrôlé via `apps/webapp/app/modules/auth/service.server.ts`
+- validation bearer mobile via la façade auth partagée dans `apps/webapp/app/modules/api/mobile-auth.server.ts`
+- middleware de session web conservant le contrat `context.getSession()` tout en validant et rafraîchissant les sessions Better Auth via `apps/webapp/server/middleware.ts`
+
+### Différences web et mobile documentées
+
+- web : session applicative portée par cookie serveur, lue via le middleware Hono/Remix, puis rafraîchie par `refreshSession()`
+- mobile : pas de cookie applicatif ; le client envoie un bearer token validé par `requireMobileAuth()`
+- OAuth / SSO web : Better Auth finalise désormais la session côté serveur lorsque le provider Better Auth est configuré ; le callback Supabase historique reste en fallback pendant la coexistence
+- fallback legacy : si un bearer token mobile ou un domaine SSO n'est pas encore migré, la façade auth retombe vers Supabase de façon bornée
+
+### Impacts clients identifiés avant bascule finale
+
+- client web : pas de changement de contrat Remix côté routes protégées ; le contrat `context.getSession()` est conservé
+- client mobile : le bearer token reste le mécanisme d'appel, mais sa validation passe maintenant d'abord par Better Auth puis par le fallback legacy si nécessaire
+- clients SSO : les organisations configurées dans `BETTER_AUTH_SSO_PROVIDERS` empruntent Better Auth ; les autres restent sur le provider Supabase tant que `06H/06I` ne sont pas terminés
+- exploitation : la bascule finale nécessitera encore la migration des comptes Supabase existants (`06H`) avant le retrait complet du chemin actif Supabase Auth (`06I`)
+
 ## Validation actuelle
 
 Validations ciblées passées :
@@ -264,8 +287,12 @@ Validations ciblées passées :
 - `app/emails/email-provider.server.test.ts`
 - `app/emails/email.worker.server.test.ts`
 - `app/modules/auth/service.server.test.ts`
+- `app/modules/auth/service.provider-routing.server.test.ts`
+- `app/modules/auth/better-auth-session.server.test.ts`
 - `app/routes/_auth+/join.test.ts`
 - `app/routes/_auth+/forgot-password.test.ts`
+- `app/routes/_auth+/oauth.callback.test.ts`
+- `app/modules/api/mobile-auth.server.test.ts`
 
 Ces validations couvrent notamment :
 
@@ -273,6 +300,8 @@ Ces validations couvrent notamment :
 - le point d'entrée backend unique
 - le signup mot de passe avec OTP envoyé par l'application
 - le reset password émis par le backend applicatif
+- le callback OAuth / SSO Better Auth côté serveur
+- la préférence Better Auth avec fallback legacy sur mobile et SSO
 
 ## Blocages externes constatés
 

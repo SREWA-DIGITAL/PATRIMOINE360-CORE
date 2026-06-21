@@ -103,7 +103,7 @@ export function protect({
 
       return c.redirect(`${onFailRedirectTo}?redirectTo=${c.req.path}`);
     }
-    const isValidSession = await validateSession(auth.refreshToken);
+    const isValidSession = await validateSession(auth);
 
     if (!isValidSession) {
       session.flash(
@@ -157,7 +157,7 @@ export function refreshSession() {
     }
 
     try {
-      session.set(authSessionKey, await refreshAccessToken(auth.refreshToken));
+      session.set(authSessionKey, await refreshAccessToken(auth));
     } catch (_cause) {
       session.flash(
         "errorMessage",

@@ -59,6 +59,7 @@ declare global {
       BETTER_AUTH_SECRET: string;
       BETTER_AUTH_URL: string;
       BETTER_AUTH_BASE_PATH: string;
+      BETTER_AUTH_SSO_PROVIDERS: string;
       MAINTENANCE_MODE: string;
       DATABASE_URL: string;
       DIRECT_URL: string;
@@ -202,6 +203,10 @@ export const BETTER_AUTH_URL = getEnv("BETTER_AUTH_URL", {
 });
 export const BETTER_AUTH_BASE_PATH = getEnv("BETTER_AUTH_BASE_PATH", {
   isSecret: false,
+  isRequired: false,
+});
+export const BETTER_AUTH_SSO_PROVIDERS = getEnv("BETTER_AUTH_SSO_PROVIDERS", {
+  isSecret: true,
   isRequired: false,
 });
 export const DATABASE_URL = getEnv("DATABASE_URL");

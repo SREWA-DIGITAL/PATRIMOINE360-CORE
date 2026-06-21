@@ -15,13 +15,13 @@ derrière l'API Hono avant de reprioriser le reliquat backend Supabase.
 - [x] CORE-BREVO-04 : sortie des emails d'auth du rôle d'émetteur Supabase
 - [~] CORE-BREVO-05 : migration des emails applicatifs
 - [~] CORE-BREVO-06 : pilotage de la sortie de Supabase Auth vers Better Auth
-- [~] CORE-BREVO-06A : cadrage Better Auth
-- [ ] CORE-BREVO-06B : installation Better Auth et point d'entrée Hono
-- [ ] CORE-BREVO-06C : schéma Better Auth et adaptation Prisma/PostgreSQL
-- [ ] CORE-BREVO-06D : coexistence Supabase Auth / Better Auth
-- [ ] CORE-BREVO-06E : signup, login et session web
-- [ ] CORE-BREVO-06F : OTP, reset password et changement d'email
-- [ ] CORE-BREVO-06G : OAuth, mobile auth et middleware de session
+- [x] CORE-BREVO-06A : cadrage Better Auth
+- [x] CORE-BREVO-06B : installation Better Auth et point d'entrée Hono
+- [x] CORE-BREVO-06C : schéma Better Auth et adaptation Prisma/PostgreSQL
+- [x] CORE-BREVO-06D : coexistence Supabase Auth / Better Auth
+- [x] CORE-BREVO-06E : signup, login et session web
+- [x] CORE-BREVO-06F : OTP, reset password et changement d'email
+- [x] CORE-BREVO-06G : OAuth, mobile auth et middleware de session
 - [ ] CORE-BREVO-06H : migration des comptes Supabase existants
 - [ ] CORE-BREVO-06I : bascule finale et retrait de Supabase Auth actif
 - [ ] CORE-BREVO-06J : repriorisation du reliquat Supabase hors auth

@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  signUpWithEmailPass: vi.fn().mockResolvedValue(undefined),
+  signUpWithBetterAuthEmailPass: vi.fn().mockResolvedValue(undefined),
   findUserByEmail: vi.fn().mockResolvedValue(null),
   validateNonSSOSignup: vi.fn().mockResolvedValue(undefined),
 }));
@@ -14,7 +14,7 @@ vi.mock("~/config/shelf.config", () => ({
 }));
 
 vi.mock("~/modules/auth/service.server", () => ({
-  signUpWithEmailPass: mocks.signUpWithEmailPass,
+  signUpWithBetterAuthEmailPass: mocks.signUpWithBetterAuthEmailPass,
 }));
 
 vi.mock("~/modules/user/service.server", () => ({
@@ -29,32 +29,39 @@ const { action } = await import("./join");
 
 describe("join route action", () => {
   beforeEach(() => {
-    mocks.signUpWithEmailPass.mockClear();
+    mocks.signUpWithBetterAuthEmailPass.mockClear();
     mocks.findUserByEmail.mockClear();
     mocks.validateNonSSOSignup.mockClear();
   });
 
-  it("creates a password signup and redirects to confirm_signup OTP flow", async () => {
+  it("creates a Better Auth password signup and redirects to login email verification notice", async () => {
     const request = new Request("http://localhost/join", {
       method: "POST",
       body: new URLSearchParams({
         email: "USER@example.com",
         password: "password-123",
         confirmPassword: "password-123",
+        redirectTo: "/assets",
       }),
     });
 
     const response = await action({ request } as never);
+    expect(response).toBeInstanceOf(Response);
+
+    if (!(response instanceof Response)) {
+      throw new Error("Expected a redirect Response");
+    }
 
     expect(mocks.validateNonSSOSignup).toHaveBeenCalledWith("user@example.com");
     expect(mocks.findUserByEmail).toHaveBeenCalledWith("user@example.com");
-    expect(mocks.signUpWithEmailPass).toHaveBeenCalledWith(
+    expect(mocks.signUpWithBetterAuthEmailPass).toHaveBeenCalledWith(
       "user@example.com",
-      "password-123"
+      "password-123",
+      "/assets"
     );
     expect(response.status).toBe(302);
     expect(response.headers.get("Location")).toBe(
-      "/otp?email=user%40example.com&mode=confirm_signup"
+      "/login?email=user%40example.com&email_sent=true&redirectTo=%2Fassets"
     );
   });
 });

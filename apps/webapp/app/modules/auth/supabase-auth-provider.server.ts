@@ -4,10 +4,20 @@ export async function generateAuthLink(
   type: "magiclink" | "signup",
   email: string
 ) {
+  if (type === "magiclink") {
+    return getSupabaseAdmin().auth.admin.generateLink({
+      type: "magiclink",
+      email,
+    });
+  }
+
+  // Supabase's current JS types require a password for `signup` generateLink,
+  // but the legacy OTP verification flow still relies on generating the email
+  // confirmation code for an already-created unconfirmed auth user.
   return getSupabaseAdmin().auth.admin.generateLink({
-    type,
+    type: "signup",
     email,
-  });
+  } as never);
 }
 
 export async function generateRecoveryLink(email: string) {
@@ -31,7 +41,7 @@ function extractEmailOtp(
     | Awaited<ReturnType<typeof generateRecoveryLink>>
     | Awaited<ReturnType<typeof generateEmailChangeLink>>
 ) {
-  return response.data.properties.email_otp ?? null;
+  return response.data?.properties?.email_otp ?? null;
 }
 
 export async function generateAuthOtpCode(

@@ -310,19 +310,29 @@ export async function action({ context, request }: ActionFunctionArgs) {
           }
         );
 
-        const otp = await requestEmailChangeOtp(email, newEmail);
+        const emailChangeRequest = await requestEmailChangeOtp(
+          authSession,
+          newEmail
+        );
+        const otp =
+          emailChangeRequest.provider === "supabase"
+            ? emailChangeRequest.otp
+            : "";
 
-        // Send email with OTP using our email service
-        sendEmail({
-          to: newEmail,
-          subject: `🔐 Shelf verification code: ${otp}`,
-          text: changeEmailAddressTextEmail({
-            otp,
-            user,
-          }),
-          html: await changeEmailAddressHtmlEmail(otp, user),
-          tags: ["account", "email-change", "otp"],
-        });
+        if (emailChangeRequest.provider === "supabase") {
+          // Legacy Supabase users still need the app-level email until their
+          // auth provider is migrated. Better Auth sends its own OTP email.
+          sendEmail({
+            to: newEmail,
+            subject: `🔐 Shelf verification code: ${otp}`,
+            text: changeEmailAddressTextEmail({
+              otp,
+              user,
+            }),
+            html: await changeEmailAddressHtmlEmail(otp, user),
+            tags: ["account", "email-change", "otp"],
+          });
+        }
 
         sendNotification({
           title: "Email update initiated",
@@ -348,17 +358,19 @@ export async function action({ context, request }: ActionFunctionArgs) {
           select: { id: true } satisfies Prisma.UserSelect,
         });
 
-        await verifyEmailChangeOtp(newEmail, otp);
+        await verifyEmailChangeOtp(authSession, newEmail, otp);
 
-        /** Update the user's email */
-        await updateUserEmail({ userId, currentEmail: email, newEmail });
+        /** Legacy Supabase users still require the domain update here.
+         * Better Auth users are synchronized by the Better Auth hooks. */
+        if (authSession.provider !== "better-auth") {
+          await updateUserEmail({ userId, currentEmail: email, newEmail });
+        }
 
         /** Refresh the session so it has the up-to-date email */
-        const { refreshToken } = authSession;
-        const newSession = await refreshAccessToken(refreshToken);
+        const newSession = await refreshAccessToken(authSession);
         context.setSession(newSession);
         /** Destroy all other sessions */
-        await revokeOtherSessions(newSession.accessToken);
+        await revokeOtherSessions(newSession);
 
         sendNotification({
           title: "Email updated",

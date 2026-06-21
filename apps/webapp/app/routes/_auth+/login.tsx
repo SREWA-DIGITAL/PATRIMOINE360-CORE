@@ -123,7 +123,7 @@ export async function action({ context, request }: ActionFunctionArgs) {
           { shouldBeCaptured: false }
         );
 
-        const authSession = await signInWithEmail(email, password);
+        const authSession = await signInWithEmail(email, password, redirectTo);
 
         if (!authSession) {
           return redirect(`/otp?email=${encodeURIComponent(email)}&mode=login`);
@@ -153,6 +153,23 @@ export async function action({ context, request }: ActionFunctionArgs) {
 
     throw notAllowedMethod(method);
   } catch (cause) {
+    if (
+      isLikeShelfError(cause) &&
+      cause.additionalData?.authState === "email-not-verified" &&
+      typeof cause.additionalData.email === "string"
+    ) {
+      const params = new URLSearchParams({
+        email: cause.additionalData.email,
+        email_sent: "true",
+      });
+
+      if (typeof cause.additionalData.redirectTo === "string") {
+        params.set("redirectTo", cause.additionalData.redirectTo);
+      }
+
+      return redirect(`/login?${params.toString()}`);
+    }
+
     const reason = makeShelfError(
       cause,
       undefined,
@@ -174,6 +191,8 @@ export default function IndexLoginForm() {
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") ?? undefined;
   const acceptedInvite = searchParams.get("acceptedInvite");
+  const emailSent = searchParams.get("email_sent");
+  const emailVerified = searchParams.get("email_verified");
   const passwordReset = searchParams.get("password_reset");
   const data = useActionData<typeof action>();
 
@@ -196,6 +215,16 @@ export default function IndexLoginForm() {
         <div className="mb-8 text-center text-success-600">
           You have successfully reset your password. You can now use your new
           password to login.
+        </div>
+      ) : null}
+      {emailSent ? (
+        <div className="mb-8 text-center text-success-600">
+          Check your inbox and click the verification link before logging in.
+        </div>
+      ) : null}
+      {emailVerified ? (
+        <div className="mb-8 text-center text-success-600">
+          Your email has been verified. You can now log in.
         </div>
       ) : null}
       <Form ref={zo.ref} method="post" replace className="flex flex-col gap-5">
@@ -250,7 +279,13 @@ export default function IndexLoginForm() {
       </Form>
       {!disableSSO && (
         <div className="mt-6 text-center">
-          <Button variant="link" to="/sso-login">
+          <Button
+            variant="link"
+            to={{
+              pathname: "/sso-login",
+              search: searchParams.toString(),
+            }}
+          >
             Login with SSO
           </Button>
         </div>

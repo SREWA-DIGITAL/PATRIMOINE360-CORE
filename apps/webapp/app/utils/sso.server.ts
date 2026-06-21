@@ -2,10 +2,7 @@ import type { Organization, SsoDetails } from "@prisma/client";
 import type { AuthSession } from "@server/session";
 import { config } from "~/config/shelf.config";
 import { db } from "~/database/db.server";
-import {
-  deleteAuthAccount,
-  getAuthUserById,
-} from "~/modules/auth/service.server";
+import { deleteAuthAccount } from "~/modules/auth/service.server";
 import {
   emailMatchesDomains,
   parseDomains,
@@ -74,8 +71,7 @@ export async function resolveUserAndOrgForSsoCallback({
 
     // If user exists, check if they're trying to convert from email to SSO
     if (user) {
-      const authUser = await getAuthUserById(user.id);
-      if (authUser?.app_metadata?.provider === "email") {
+      if (!user.sso) {
         throw new ShelfError({
           cause: null,
           title: "User already exists",
@@ -164,15 +160,36 @@ export function assertSSOEnabled() {
  */
 export async function getConfiguredSSODomains(): Promise<SSODomainConfig[]> {
   try {
-    const domains = await db.$queryRaw<SSODomainConfig[]>`
-      SELECT 
-        id::text,
-        sso_provider_id::text as "ssoProviderId",
-        domain
-      FROM auth.sso_domains
-    `;
+    const organizations = await db.organization.findMany({
+      where: {
+        enabledSso: true,
+        ssoDetails: {
+          isNot: null,
+        },
+      },
+      select: {
+        ssoDetails: {
+          select: {
+            domain: true,
+            id: true,
+          },
+        },
+      },
+    });
 
-    return domains;
+    return organizations.flatMap((organization) => {
+      const ssoDetails = organization.ssoDetails;
+
+      if (!ssoDetails) {
+        return [];
+      }
+
+      return parseDomains(ssoDetails.domain).map((domain) => ({
+        domain,
+        id: ssoDetails.id,
+        ssoProviderId: domain,
+      }));
+    });
   } catch (cause) {
     throw new ShelfError({
       cause,
@@ -192,15 +209,31 @@ export async function checkDomainSSOStatus(
 ): Promise<DomainCheckResult> {
   try {
     const domain = email.split("@")[1]?.toLowerCase();
+    const organizations = domain
+      ? await db.organization.findMany({
+          where: {
+            enabledSso: true,
+            ssoDetails: {
+              isNot: null,
+            },
+          },
+          include: {
+            ssoDetails: true,
+          },
+        })
+      : [];
+    const linkedOrg =
+      organizations.find(
+        (organization) =>
+          organization.ssoDetails &&
+          emailMatchesDomains(domain ?? "", organization.ssoDetails.domain)
+      ) ?? null;
 
-    // Check all SSO providers configured for this domain
-    const ssoConfigs = await db.$queryRaw<{ ssoProviderId: string }[]>`
-      SELECT sso_provider_id::text as "ssoProviderId"
-      FROM auth.sso_domains
-      WHERE lower(domain) = ${domain}
-    `;
+    const isValidDomain = linkedOrg?.ssoDetails
+      ? emailMatchesDomains(domain ?? "", linkedOrg.ssoDetails.domain)
+      : false;
 
-    if (ssoConfigs.length === 0) {
+    if (!linkedOrg || !isValidDomain) {
       return {
         isConfiguredForSSO: false,
         linkedOrganization: null,
@@ -208,34 +241,10 @@ export async function checkDomainSSOStatus(
       };
     }
 
-    // Get all SSO provider IDs for this domain
-    const ssoProviderIds = ssoConfigs.map((config) => config.ssoProviderId);
-
-    // Find organization where this domain is included in their comma-separated domains
-    const linkedOrg = await db.organization.findFirst({
-      where: {
-        ssoDetails: {
-          domain: {
-            contains: domain,
-          },
-        },
-      },
-      include: {
-        ssoDetails: true,
-      },
-    });
-
-    // If we found an org, verify the domain is actually in their list
-    const isValidDomain = linkedOrg?.ssoDetails
-      ? emailMatchesDomains(email, linkedOrg.ssoDetails.domain)
-      : false;
-
-    // Return the first SSO provider ID if we found multiple
-    // This maintains backward compatibility while we handle multiple domains
     return {
       isConfiguredForSSO: true,
-      linkedOrganization: isValidDomain ? linkedOrg : null,
-      ssoProviderId: ssoProviderIds[0] || null,
+      linkedOrganization: linkedOrg,
+      ssoProviderId: domain ?? null,
     };
   } catch (cause) {
     throw new ShelfError({

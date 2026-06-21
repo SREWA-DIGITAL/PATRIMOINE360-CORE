@@ -133,6 +133,6 @@ describe("supabase storage provider", () => {
         upsert: true,
       }
     );
-    expect(result.data.path).toBe("path/to/file.jpg");
+    expect(result.data?.path).toBe("path/to/file.jpg");
   });
 });
