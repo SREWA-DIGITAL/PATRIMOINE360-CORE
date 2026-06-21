@@ -29,8 +29,12 @@ import {
 } from "~/emails/change-user-email-address";
 
 import { sendEmail } from "~/emails/mail.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
-import { refreshAccessToken } from "~/modules/auth/service.server";
+import {
+  refreshAccessToken,
+  requestEmailChangeOtp,
+  revokeOtherSessions,
+  verifyEmailChangeOtp,
+} from "~/modules/auth/service.server";
 import {
   getUserByID,
   getUserWithContact,
@@ -260,12 +264,14 @@ export async function action({ context, request }: ActionFunctionArgs) {
           to: ADMIN_EMAIL || `"Shelf" <updates@emails.shelf.nu>`,
           subject: "Delete account request",
           text: `User with id ${userId} and email ${parsedData.email} has requested to delete their account. \n User: ${SERVER_URL}/admin-dashboard/${userId} \n\n Reason: ${reason}\n\n`,
+          tags: ["account", "deletion-request", "admin-notification"],
         });
 
         sendEmail({
           to: parsedData.email,
           subject: "Delete account request received",
           text: `We have received your request to delete your account. It will be processed within 72 hours.\n\n Kind regards,\nthe Shelf team \n\n`,
+          tags: ["account", "deletion-request", "user-confirmation"],
         });
 
         sendNotification({
@@ -304,40 +310,18 @@ export async function action({ context, request }: ActionFunctionArgs) {
           }
         );
 
-        // Generate email change link/OTP
-        const { data: linkData, error: generateError } =
-          await getSupabaseAdmin().auth.admin.generateLink({
-            type: "email_change_new",
-            email: email,
-            newEmail: newEmail,
-          });
-
-        if (generateError) {
-          const emailExists = generateError.code === "email_exists";
-          throw new ShelfError({
-            cause: generateError,
-            ...(emailExists && { title: "Email is already taken." }),
-            message: emailExists
-              ? "Please choose a different email address which is not already in use."
-              : "Failed to initiate email change",
-            additionalData: { userId, newEmail },
-            label: "Auth",
-            shouldBeCaptured: !emailExists,
-          });
-        }
+        const otp = await requestEmailChangeOtp(email, newEmail);
 
         // Send email with OTP using our email service
         sendEmail({
           to: newEmail,
-          subject: `🔐 Shelf verification code: ${linkData.properties.email_otp}`,
+          subject: `🔐 Shelf verification code: ${otp}`,
           text: changeEmailAddressTextEmail({
-            otp: linkData.properties.email_otp,
+            otp,
             user,
           }),
-          html: await changeEmailAddressHtmlEmail(
-            linkData.properties.email_otp,
-            user
-          ),
+          html: await changeEmailAddressHtmlEmail(otp, user),
+          tags: ["account", "email-change", "otp"],
         });
 
         sendNotification({
@@ -364,21 +348,7 @@ export async function action({ context, request }: ActionFunctionArgs) {
           select: { id: true } satisfies Prisma.UserSelect,
         });
 
-        // Attempt to verify the OTP
-        const { error: verifyError } = await getSupabaseAdmin().auth.verifyOtp({
-          email: newEmail,
-          token: otp,
-          type: "email_change",
-        });
-
-        if (verifyError) {
-          throw new ShelfError({
-            cause: verifyError,
-            message: "Invalid or expired verification code",
-            additionalData: { userId },
-            label: "Auth",
-          });
-        }
+        await verifyEmailChangeOtp(newEmail, otp);
 
         /** Update the user's email */
         await updateUserEmail({ userId, currentEmail: email, newEmail });
@@ -388,10 +358,7 @@ export async function action({ context, request }: ActionFunctionArgs) {
         const newSession = await refreshAccessToken(refreshToken);
         context.setSession(newSession);
         /** Destroy all other sessions */
-        await getSupabaseAdmin().auth.admin.signOut(
-          newSession.accessToken,
-          "others"
-        );
+        await revokeOtherSessions(newSession.accessToken);
 
         sendNotification({
           title: "Email updated",

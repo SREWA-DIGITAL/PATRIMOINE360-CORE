@@ -197,6 +197,7 @@ export async function action({ context, request }: ActionFunctionArgs) {
             "",
             "Please link the audit addon to this organization manually.",
           ].join("\n"),
+          tags: ["workspace", "addon-link", "audit", "admin-notification"],
         });
       }
     }
@@ -250,6 +251,7 @@ export async function action({ context, request }: ActionFunctionArgs) {
             "",
             "Please link the barcode addon to this organization manually.",
           ].join("\n"),
+          tags: ["workspace", "addon-link", "barcode", "admin-notification"],
         });
       }
     }

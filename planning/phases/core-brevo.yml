@@ -1,0 +1,392 @@
+version: 1
+phase:
+  id: CORE-BREVO
+  title: Migration des emails transactionnels vers Brevo
+  edition: Core
+  repository: SREWA-DIGITAL/PATRIMOINE360-CORE
+
+tasks:
+  - id: CORE-BREVO-01
+    title: Piloter la migration Core des emails transactionnels vers Brevo
+    status: In progress
+    priority: P1
+    component: Transverse
+    labels:
+      - core
+      - email
+      - auth
+      - brevo
+      - supabase
+      - planning
+    description: >-
+      Coordonner la migration des emails transactionnels de Patrimoine360 Core
+      vers Brevo afin que les parcours d'authentification et les emails
+      applicatifs ne dépendent plus de l'envoi d'emails de Supabase.
+      L'exécution doit rester générique, publiable dans Core et compatible avec
+      la synchronisation ultérieure vers Enterprise.
+    acceptanceCriteria:
+      - "Le plan Core est découpé en tâches publiables couvrant les phases 1 à 6 de la migration."
+      - "Les dépendances entre les tâches reflètent l'ordre réel d'exécution et de validation."
+      - "Le pilotage prévoit un mécanisme de bascule progressive ou de rollback pour éviter toute interruption des emails critiques."
+      - "Aucun secret, workflow privé ou logique Enterprise n'entre dans le dépôt Core."
+    dependencies: []
+
+  - id: CORE-BREVO-02
+    title: Cartographier les flux email et les dépendances Supabase
+    status: In progress
+    priority: P1
+    component: Documentation
+    labels:
+      - core
+      - email
+      - auth
+      - supabase
+      - audit
+    description: >-
+      Documenter l'inventaire des flux email actuels et identifier précisément
+      les points de dépendance à Supabase pour l'émission, la vérification et
+      la récupération. Le cadrage doit couvrir au minimum l'OTP de connexion,
+      le renvoi d'OTP, la récupération de mot de passe, les invitations,
+      l'onboarding et les notifications applicatives déjà envoyées par le
+      backend.
+    acceptanceCriteria:
+      - "Les flux d'authentification utilisant `apps/webapp/app/modules/auth/service.server.ts` sont recensés avec leur type de dépendance à Supabase."
+      - "Les flux applicatifs utilisant `apps/webapp/app/emails/mail.server.ts`, `apps/webapp/app/emails/email.worker.server.ts`, `apps/webapp/app/modules/invite/service.server.ts` et `apps/webapp/app/routes/_welcome+/onboarding.tsx` sont inventoriés."
+      - "Chaque flux est classé par criticité, mode d'envoi, template concerné et chemin de migration attendu."
+      - "Les dépendances à conserver temporairement côté identité Supabase sont distinguées des dépendances à retirer après la migration email."
+    dependencies:
+      - CORE-BREVO-01
+
+  - id: CORE-BREVO-03
+    title: Introduire un provider Brevo centralisé côté backend
+    status: In progress
+    priority: P1
+    component: API
+    labels:
+      - core
+      - email
+      - brevo
+      - backend
+    description: >-
+      Ajouter un provider backend Brevo réutilisable pour les emails
+      transactionnels, avec configuration d'environnement, expéditeur validé,
+      support des templates transactionnels, tags métier, journalisation et
+      gestion des erreurs compatible avec la file d'envoi existante.
+    acceptanceCriteria:
+      - "Une configuration générique Brevo est définie pour Core avec les variables d'environnement nécessaires sans exposer de secret dans le dépôt."
+      - "Le provider peut envoyer un email transactionnel avec expéditeur, destinataire, template ou contenu, et métadonnées de traçabilité."
+      - "Le provider s'intègre au point d'entrée d'envoi existant afin d'éviter la multiplication d'implémentations parallèles."
+      - "Les erreurs Brevo disposent d'une stratégie claire de retry, de journalisation et d'escalade compatible avec la file applicative."
+    dependencies:
+      - CORE-BREVO-02
+
+  - id: CORE-BREVO-04
+    title: Sortir les emails d'authentification du rôle d'émetteur de Supabase
+    status: In progress
+    priority: P1
+    component: API
+    labels:
+      - core
+      - auth
+      - brevo
+      - supabase
+    description: >-
+      Mettre en place une stratégie de migration pour que les parcours de
+      connexion par OTP, renvoi d'OTP et récupération de mot de passe soient
+      émis par le backend applicatif via Brevo, sans interruption de service,
+      tout en conservant provisoirement les mécanismes Supabase encore requis
+      pour l'identité ou la validation tant qu'ils n'ont pas été remplacés.
+    acceptanceCriteria:
+      - "Une stratégie explicite existe pour `sendOTP`, `resendVerificationEmail` et `sendResetPasswordLink`, avec séparation du rôle d'émetteur d'email et du rôle de vérification."
+      - "Les routes `apps/webapp/app/routes/_auth+/send-otp.tsx`, `apps/webapp/app/routes/_auth+/resend-otp.tsx` et `apps/webapp/app/routes/_auth+/forgot-password.tsx` ont un chemin de migration documenté et testable."
+      - "Le plan de transition prévoit un mode de coexistence temporaire ou un feature flag permettant une bascule progressive."
+      - "Les risques de régression sur le login, le signup, l'invite acceptance et le reset password sont couverts par une stratégie de validation."
+    dependencies:
+      - CORE-BREVO-03
+
+  - id: CORE-BREVO-05
+    title: Migrer les emails applicatifs existants vers Brevo
+    status: In progress
+    priority: P2
+    component: API
+    labels:
+      - core
+      - email
+      - brevo
+      - templates
+    description: >-
+      Faire converger les emails applicatifs existants vers Brevo en
+      réutilisant le mécanisme de file et le point d'entrée backend commun,
+      puis homogénéiser les templates et métadonnées d'envoi pour les
+      invitations, l'onboarding et les notifications transactionnelles
+      restantes.
+    acceptanceCriteria:
+      - "Les flux d'invitation et d'onboarding disposent d'un chemin de migration Brevo explicite."
+      - "Les templates transactionnels applicatifs sont rationalisés entre rendu HTML, texte brut et paramètres dynamiques."
+      - "Les appels d'envoi existants réutilisent un point d'entrée backend unique au lieu de multiplier les branchements spécifiques."
+      - "La traçabilité permet d'identifier le type d'email, son template, son contexte métier et l'état de livraison attendu."
+    dependencies:
+      - CORE-BREVO-03
+
+  - id: CORE-BREVO-06
+    title: Piloter la sortie de Supabase Auth vers Better Auth et prioriser le reliquat backend
+    status: In progress
+    priority: P1
+    component: Transverse
+    labels:
+      - core
+      - supabase
+      - auth
+      - better-auth
+      - roadmap
+      - planning
+    description: >-
+      Formaliser et piloter le basculement de l'authentification Core depuis
+      Supabase Auth vers Better Auth derrière l'API Hono déjà en place, sans
+      réintroduire de dépendance d'envoi email à Supabase, puis cadrer le
+      reliquat Supabase hors authentification pour la suite.
+    acceptanceCriteria:
+      - "Le découpage `CORE-BREVO-06A` à `CORE-BREVO-06J` est publiable et suit l'ordre réel de migration vers Better Auth."
+      - "La cible Better Auth derrière l'API Hono est explicitée comme remplaçant de Supabase Auth pour Core."
+      - "Le plan distingue clairement la sortie de Supabase Auth du reliquat Supabase hors authentification, notamment stockage et sujets base de données."
+      - "La séquence `Core -> Enterprise` est explicitée pour les futurs travaux de synchronisation ou d'adaptation privée."
+    dependencies:
+      - CORE-BREVO-04
+      - CORE-BREVO-05
+
+  - id: CORE-BREVO-06A
+    title: Cadrer la migration Better Auth dans le lot CORE-BREVO-06
+    status: In progress
+    priority: P1
+    component: Documentation
+    labels:
+      - core
+      - auth
+      - better-auth
+      - roadmap
+      - planning
+      - documentation
+    description: >-
+      Reprendre le retrait progressif du backend Supabase restant sous l'angle
+      concret du PRD Patrimoine360, en confirmant Better Auth comme cible
+      d'authentification et en listant les impacts sur les couches web, API
+      Hono, session, mobile et synchronisation Enterprise.
+    acceptanceCriteria:
+      - "Le PRD et la documentation interne confirment Better Auth comme cible auth de Core."
+      - "Les points de code impactés par la migration auth sont listés avant implémentation."
+      - "La séquence `06B` à `06J` est priorisée avec dépendances explicites."
+      - "Le résultat attendu de `CORE-BREVO-06` est formulé clairement : sortie de Supabase Auth d'abord, puis priorisation du reliquat Supabase."
+    dependencies:
+      - CORE-BREVO-06
+
+  - id: CORE-BREVO-06B
+    title: Installer Better Auth et ouvrir le point d'entrée auth dans l'API Hono
+    status: In progress
+    priority: P1
+    component: API
+    labels:
+      - core
+      - auth
+      - better-auth
+      - hono
+      - api
+    description: >-
+      Ajouter Better Auth au socle Core, configurer ses variables
+      d'environnement et exposer un point d'entrée serveur derrière l'API Hono
+      existante pour préparer la bascule progressive des parcours
+      d'authentification.
+    acceptanceCriteria:
+      - "Les dépendances Better Auth nécessaires sont ajoutées au monorepo Core."
+      - "Les variables `BETTER_AUTH_*` et leur usage sont documentés sans exposer de secret."
+      - "Un handler Better Auth existe derrière l'API Hono et peut être appelé localement."
+      - "L'intégration conserve Brevo comme canal d'envoi email pour les parcours d'authentification."
+    dependencies:
+      - CORE-BREVO-06A
+
+  - id: CORE-BREVO-06C
+    title: Préparer le schéma Better Auth et l'adaptation Prisma PostgreSQL
+    status: Backlog
+    priority: P1
+    component: Base de données
+    labels:
+      - core
+      - auth
+      - better-auth
+      - prisma
+      - database
+    description: >-
+      Définir le schéma de données Better Auth, sa persistance PostgreSQL et
+      son adaptation Prisma afin d'aligner comptes, sessions et jetons de
+      vérification avec les besoins actuels de Patrimoine360 Core.
+    acceptanceCriteria:
+      - "Les tables et relations Better Auth nécessaires sont définies pour Core."
+      - "La stratégie de migration Prisma/PostgreSQL précise les impacts sur les identifiants utilisateurs et organisations existants."
+      - "Le plan de rollback et les prérequis de migration sont documentés."
+      - "Aucun secret ni détail privé Enterprise n'entre dans Core."
+    dependencies:
+      - CORE-BREVO-06B
+
+  - id: CORE-BREVO-06D
+    title: Mettre en place la coexistence contrôlée Supabase Auth et Better Auth
+    status: Backlog
+    priority: P1
+    component: API
+    labels:
+      - core
+      - auth
+      - better-auth
+      - supabase
+      - coexistence
+    description: >-
+      Organiser une phase de coexistence temporaire entre Supabase Auth et
+      Better Auth afin de migrer progressivement les parcours sans bloquer les
+      utilisateurs ni casser les sessions actives.
+    acceptanceCriteria:
+      - "Une stratégie de bascule progressive ou de feature flag existe entre les deux providers auth."
+      - "Les règles de propriété des sessions, cookies et refresh tokens sont explicites."
+      - "Les points de fallback vers Supabase Auth sont bornés et observables."
+      - "Le plan de surveillance et de retour arrière est documenté avant migration des parcours utilisateur."
+    dependencies:
+      - CORE-BREVO-06B
+      - CORE-BREVO-06C
+
+  - id: CORE-BREVO-06E
+    title: Migrer signup, login et session web vers Better Auth
+    status: Backlog
+    priority: P1
+    component: Web
+    labels:
+      - core
+      - auth
+      - better-auth
+      - web
+      - session
+    description: >-
+      Basculer les parcours web principaux d'inscription, de connexion et de
+      session utilisateur vers Better Auth, tout en conservant le comportement
+      attendu des routes Remix et de l'API Hono.
+    acceptanceCriteria:
+      - "Les parcours signup et login web n'utilisent plus Supabase Auth sur le chemin principal."
+      - "La gestion de session web est compatible avec Better Auth et l'architecture actuelle."
+      - "Les points de code auth côté web sont recensés et migrés avec preuves de validation ciblées."
+      - "Les régressions sur les flux critiques sont couvertes par une stratégie de tests et de smoke tests."
+    dependencies:
+      - CORE-BREVO-06D
+
+  - id: CORE-BREVO-06F
+    title: Migrer OTP, reset password et changement d'email sur Better Auth avec Brevo
+    status: Backlog
+    priority: P1
+    component: API
+    labels:
+      - core
+      - auth
+      - better-auth
+      - brevo
+      - otp
+    description: >-
+      Remplacer les opérations Supabase Auth encore utilisées pour les OTP, le
+      reset password et le changement d'email par des flux Better Auth
+      compatibles avec Brevo comme canal d'émission.
+    acceptanceCriteria:
+      - "Les parcours OTP, reset password et changement d'email n'utilisent plus `generateLink` ou `verifyOtp` Supabase sur le chemin principal."
+      - "Brevo reste l'émetteur backend de tous les emails transactionnels auth."
+      - "Les jetons ou codes de vérification Better Auth sont documentés et testables."
+      - "Les routes auth existantes gardent un comportement fonctionnel équivalent pour l'utilisateur final."
+    dependencies:
+      - CORE-BREVO-06E
+
+  - id: CORE-BREVO-06G
+    title: Migrer OAuth, mobile auth et middleware de session vers Better Auth
+    status: Backlog
+    priority: P1
+    component: API
+    labels:
+      - core
+      - auth
+      - better-auth
+      - mobile
+      - oauth
+    description: >-
+      Aligner les flux d'authentification non web strictement classiques sur
+      Better Auth, notamment les callbacks OAuth, la couche mobile auth et les
+      middlewares de session encore couplés à Supabase.
+    acceptanceCriteria:
+      - "Les callbacks OAuth ou providers sociaux pris en charge ont une trajectoire Better Auth explicite."
+      - "`mobile-auth.server.ts` et les middlewares de session utilisent le nouveau socle auth."
+      - "Les différences de comportement entre web et mobile sont documentées."
+      - "Les impacts sur les clients existants sont identifiés avant bascule finale."
+    dependencies:
+      - CORE-BREVO-06E
+
+  - id: CORE-BREVO-06H
+    title: Migrer les comptes Supabase existants vers Better Auth
+    status: Backlog
+    priority: P1
+    component: Base de données
+    labels:
+      - core
+      - auth
+      - better-auth
+      - migration
+      - supabase
+    description: >-
+      Préparer et exécuter la migration des comptes, identités et artefacts
+      utiles depuis Supabase Auth vers Better Auth sans perte d'accès pour les
+      utilisateurs existants.
+    acceptanceCriteria:
+      - "Une stratégie de migration des utilisateurs et identités Supabase est définie."
+      - "Les contraintes liées aux mots de passe, OTP et fournisseurs OAuth existants sont documentées."
+      - "Une validation en environnement de test ou staging existe avant production."
+      - "Le plan de rollback ou de reprise est documenté."
+    dependencies:
+      - CORE-BREVO-06F
+      - CORE-BREVO-06G
+
+  - id: CORE-BREVO-06I
+    title: Basculer définitivement Core sur Better Auth et retirer Supabase Auth du backend actif
+    status: Backlog
+    priority: P1
+    component: API
+    labels:
+      - core
+      - auth
+      - better-auth
+      - supabase
+      - cleanup
+    description: >-
+      Finaliser la bascule en faisant de Better Auth le provider
+      d'authentification principal de Core et en retirant Supabase Auth du
+      chemin actif backend, sans casser les emails Brevo ni les sessions
+      validées.
+    acceptanceCriteria:
+      - "Le provider auth principal de Core pointe vers Better Auth."
+      - "Les appels actifs à Supabase Auth sont retirés ou neutralisés sur le chemin principal."
+      - "La documentation d'installation et les variables d'environnement reflètent la nouvelle cible auth."
+      - "Une checklist de validation finale couvre web, mobile, OAuth et parcours email critiques."
+    dependencies:
+      - CORE-BREVO-06H
+
+  - id: CORE-BREVO-06J
+    title: Reprioriser le reliquat Supabase hors auth après la bascule Better Auth
+    status: Backlog
+    priority: P2
+    component: Documentation
+    labels:
+      - core
+      - supabase
+      - storage
+      - roadmap
+      - documentation
+    description: >-
+      Une fois Supabase Auth sorti du chemin principal, actualiser la feuille
+      de route des dépendances Supabase restantes, notamment stockage, schéma
+      auth SQL résiduel, base de données et séquence de synchronisation vers
+      Enterprise.
+    acceptanceCriteria:
+      - "Les dépendances Supabase restantes sont listées par domaine avec niveau de criticité et stratégie de retrait."
+      - "L'état actuel de l'abstraction storage et des accès SQL résiduels est documenté."
+      - "Le prochain lot après Better Auth est identifié sans ambiguïté."
+      - "La séquence `Core -> Enterprise` reste explicite pour la suite."
+    dependencies:
+      - CORE-BREVO-06I

@@ -24,7 +24,7 @@ export async function action({ request }: ActionFunctionArgs) {
           await validateNonSSOSignup(email);
         }
 
-        await sendOTP(email);
+        await sendOTP(email, mode || "login");
 
         return redirect(`/otp?email=${encodeURIComponent(email)}&mode=${mode}`);
       }

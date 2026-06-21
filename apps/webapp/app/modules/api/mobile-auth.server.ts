@@ -1,6 +1,6 @@
 import { OrganizationRoles } from "@prisma/client";
 import { db } from "~/database/db.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
+import { getAuthResponseByAccessToken } from "~/modules/auth/service.server";
 import { ShelfError } from "~/utils/error";
 import {
   type PermissionAction,
@@ -30,11 +30,10 @@ export async function requireMobileAuth(request: Request) {
 
   const token = authHeader.slice(7);
 
-  // Validate the JWT with Supabase Admin
   const {
     data: { user: authUser },
     error,
-  } = await getSupabaseAdmin().auth.getUser(token);
+  } = await getAuthResponseByAccessToken(token);
 
   if (error || !authUser) {
     throw new ShelfError({

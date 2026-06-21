@@ -89,6 +89,12 @@ const checkoutReminder = async ({ data }: PgBoss.Job<SchedulerData>) => {
           subject,
           text,
           html,
+          tags: [
+            "booking",
+            "checkout-reminder",
+            "notification",
+            recipient.reason,
+          ],
         });
       }
     }
@@ -221,6 +227,7 @@ const overdueHandler = async ({ data }: PgBoss.Job<SchedulerData>) => {
         subject,
         text,
         html,
+        tags: ["booking", "overdue", "notification", recipient.reason],
       });
     }
   }

@@ -1,25 +1,117 @@
-import {
-  AuthError,
-  isAuthApiError,
-  isAuthRetryableFetchError,
-} from "@supabase/supabase-js";
 import type { AuthSession } from "@server/session";
 import { config } from "~/config/shelf.config";
 import { db } from "~/database/db.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
+import { sendEmail } from "~/emails/mail.server";
 import { SERVER_URL } from "~/utils/env";
 
 import type { ErrorLabel } from "~/utils/error";
 import { isLikeShelfError, ShelfError } from "~/utils/error";
 import { assertEnterpriseFeature } from "~/utils/license";
 import { Logger } from "~/utils/logger";
+import {
+  getAuthErrorCode,
+  getAuthErrorMessage,
+  isAuthApiErrorLike,
+  isRetryableAuthError,
+} from "./auth-error-classifier.server";
+import {
+  createAuthUser,
+  deleteAuthUser,
+  findAuthUserIdByEmail,
+  generateAuthOtpCode,
+  generateEmailChangeOtpCode,
+  generateRecoveryOtpCode,
+  getAuthUserByAccessToken,
+  getAuthUserByIdFromProvider,
+  isRefreshTokenActive,
+  refreshAuthSession,
+  signInWithPassword,
+  signInWithSSO as signInWithSSOProvider,
+  signOutOtherSessions,
+  updateAuthUserById,
+  verifyEmailChangeOtpWithProvider,
+  verifyEmailOtp,
+  verifyRecoveryOtpWithProvider,
+} from "./auth-provider.server";
 import { mapAuthSession } from "./mappers.server";
 
 const label: ErrorLabel = "Auth";
+type AuthOtpMode = "login" | "signup" | "confirm_signup";
+
+function getAuthOtpModeCopy(mode: AuthOtpMode) {
+  switch (mode) {
+    case "login":
+      return {
+        headline: "Login code",
+        intro: "To log in, please use the following one-time code:",
+        subject: "Your login code",
+        tags: ["auth", "otp", "login"],
+      };
+    case "signup":
+      return {
+        headline: "Create your account",
+        intro:
+          "To create your account, please use the following one-time code:",
+        subject: "Your signup code",
+        tags: ["auth", "otp", "signup"],
+      };
+    case "confirm_signup":
+      return {
+        headline: "Confirm your email",
+        intro:
+          "To confirm your email address, please use the following one-time code:",
+        subject: "Confirm your email address",
+        tags: ["auth", "otp", "confirm-signup"],
+      };
+  }
+}
+
+async function sendGeneratedAuthOtp(email: string, mode: AuthOtpMode) {
+  const linkType = mode === "login" ? "magiclink" : "signup";
+  const { otp, error } =
+    mode === "login"
+      ? await generateAuthOtpCode("magiclink", email)
+      : await generateAuthOtpCode("signup", email);
+
+  if (error) {
+    throw error;
+  }
+
+  if (!otp) {
+    throw new ShelfError({
+      cause: null,
+      message: "Auth provider did not return an email OTP",
+      additionalData: { email, mode, linkType },
+      label,
+    });
+  }
+
+  const copy = getAuthOtpModeCopy(mode);
+
+  sendEmail({
+    to: email,
+    subject: `${copy.subject}: ${otp}`,
+    text: [
+      copy.headline,
+      "",
+      copy.intro,
+      otp,
+      "",
+      "Do not share this code with anyone.",
+    ].join("\n"),
+    html: [
+      `<h2>${copy.headline}</h2>`,
+      `<p>${copy.intro}</p>`,
+      `<h2><b>${otp}</b></h2>`,
+      "<p>Do not share this code with anyone.</p>",
+    ].join(""),
+    tags: copy.tags,
+  });
+}
 
 export async function createEmailAuthAccount(email: string, password: string) {
   try {
-    const { data, error } = await getSupabaseAdmin().auth.admin.createUser({
+    const { data, error } = await createAuthUser({
       email,
       password,
       email_confirm: true,
@@ -58,23 +150,16 @@ export async function confirmExistingAuthAccount(
   password: string
 ) {
   try {
-    const result = await db.$queryRaw<{ id: string }[]>`
-      SELECT id FROM auth.users
-      WHERE email = ${email.toLowerCase()}
-      LIMIT 1
-    `;
+    const authUserId = await findAuthUserIdByEmail(email);
 
-    if (result.length === 0) {
+    if (!authUserId) {
       return null;
     }
 
-    const { data, error } = await getSupabaseAdmin().auth.admin.updateUserById(
-      result[0].id,
-      {
-        email_confirm: true,
-        password,
-      }
-    );
+    const { data, error } = await updateAuthUserById(authUserId, {
+      email_confirm: true,
+      password,
+    });
 
     if (error) {
       throw error;
@@ -93,13 +178,12 @@ export async function confirmExistingAuthAccount(
 
 export async function signUpWithEmailPass(email: string, password: string) {
   try {
-    const { data, error } = await getSupabaseAdmin().auth.signUp({
+    const { data, error } = await createAuthUser({
       email: email,
       password: password,
-      options: {
-        data: {
-          signup_method: "email-password",
-        },
+      email_confirm: false,
+      user_metadata: {
+        signup_method: "email-password",
       },
     });
 
@@ -117,17 +201,19 @@ export async function signUpWithEmailPass(email: string, password: string) {
       });
     }
 
+    await sendGeneratedAuthOtp(email, "confirm_signup");
+
     return user;
   } catch (cause) {
     const isRateLimitError =
-      isAuthApiError(cause) &&
+      isAuthApiErrorLike(cause) &&
       (cause.status === 429 ||
         cause.message.includes("request this after 5 seconds"));
-    const isTransientFetchError = isAuthRetryableFetchError(cause);
+    const isTransientFetchError = isRetryableAuthError(cause);
     /** Supabase can return transient database errors during user creation
      * that resolve on retry — suppress these from Sentry. */
     const isDatabaseError =
-      isAuthApiError(cause) && cause.message.includes("Database error");
+      isAuthApiErrorLike(cause) && cause.message.includes("Database error");
     const message = isRateLimitError
       ? "You're trying too fast. Please wait a few seconds and try again."
       : "Something went wrong, refresh page and try to signup again.";
@@ -147,17 +233,10 @@ export async function signUpWithEmailPass(email: string, password: string) {
 
 export async function resendVerificationEmail(email: string) {
   try {
-    const { error } = await getSupabaseAdmin().auth.resend({
-      type: "signup",
-      email,
-    });
-
-    if (error) {
-      throw error;
-    }
+    await sendGeneratedAuthOtp(email, "confirm_signup");
   } catch (cause) {
-    // @ts-expect-error
-    const isRateLimitError = cause?.code === "over_email_send_rate_limit";
+    const isRateLimitError =
+      getAuthErrorCode(cause) === "over_email_send_rate_limit";
     throw new ShelfError({
       cause,
       message:
@@ -171,10 +250,7 @@ export async function resendVerificationEmail(email: string) {
 
 export async function signInWithEmail(email: string, password: string) {
   try {
-    const { data, error } = await getSupabaseAdmin().auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data, error } = await signInWithPassword(email, password);
 
     if (error?.message === "Email not confirmed") {
       return null;
@@ -189,14 +265,15 @@ export async function signInWithEmail(email: string, password: string) {
     return mapAuthSession(session);
   } catch (cause) {
     const isInvalidCredentials =
-      isAuthApiError(cause) && cause.message === "Invalid login credentials";
+      isAuthApiErrorLike(cause) &&
+      cause.message === "Invalid login credentials";
     // Supabase 504s and intermittent fetch failures surface as
     // `AuthRetryableFetchError`. They resolve on retry and shouldn't page us.
-    const isTransientFetchError = isAuthRetryableFetchError(cause);
+    const isTransientFetchError = isRetryableAuthError(cause);
     // "Database error finding user" / similar transient backend hiccups.
     const isDatabaseError =
-      isAuthApiError(cause) && cause.message.includes("Database error");
-    const isRateLimitError = isAuthApiError(cause) && cause.status === 429;
+      isAuthApiErrorLike(cause) && cause.message.includes("Database error");
+    const isRateLimitError = isAuthApiErrorLike(cause) && cause.status === 429;
 
     const message = isInvalidCredentials
       ? "Incorrect email or password"
@@ -234,12 +311,10 @@ export async function signInWithSSO(domain: string) {
   }
 
   try {
-    const { data, error } = await getSupabaseAdmin().auth.signInWithSSO({
+    const { data, error } = await signInWithSSOProvider(
       domain,
-      options: {
-        redirectTo: `${SERVER_URL}/oauth/callback`,
-      },
-    });
+      `${SERVER_URL}/oauth/callback`
+    );
 
     if (error) {
       throw error;
@@ -251,8 +326,7 @@ export async function signInWithSSO(domain: string) {
       "Something went wrong. Please try again later or contact support.";
     let shouldBeCaptured = true;
 
-    // @ts-expect-error
-    if (cause?.code === "sso_provider_not_found") {
+    if (getAuthErrorCode(cause) === "sso_provider_not_found") {
       message = "No SSO provider assigned for your organization's domain";
       shouldBeCaptured = false;
     }
@@ -291,39 +365,26 @@ async function validateNonSSOUser(email: string) {
   }
 }
 
-export async function sendOTP(email: string) {
+export async function sendOTP(email: string, mode: AuthOtpMode = "login") {
   try {
     await validateNonSSOUser(email);
-
-    const { error } = await getSupabaseAdmin().auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: !config.disableSignup, // If signup is disabled, don't create a new user
-      },
-    });
-
-    if (error) {
-      throw error;
-    }
+    await sendGeneratedAuthOtp(email, mode);
   } catch (cause) {
     // Read `code` via narrowing instead of `@ts-expect-error` — `cause` is
     // `unknown`, and a bare property access would throw at runtime if it
     // were null/undefined.
-    const errorCode =
-      typeof cause === "object" && cause !== null && "code" in cause
-        ? (cause as { code: unknown }).code
-        : undefined;
+    const errorCode = getAuthErrorCode(cause);
     // Match `signInWithEmail`'s rate-limit handling: cover both the
     // Supabase OTP-specific `over_email_send_rate_limit` code and the
     // generic HTTP 429 `AuthApiError` (which can carry a different code).
     const isRateLimitError =
       errorCode === "over_email_send_rate_limit" ||
-      (isAuthApiError(cause) && cause.status === 429);
+      (isAuthApiErrorLike(cause) && cause.status === 429);
     // Supabase 504s and intermittent fetch failures resolve on retry.
-    const isTransientFetchError = isAuthRetryableFetchError(cause);
+    const isTransientFetchError = isRetryableAuthError(cause);
     // "Database error finding user" — Supabase backend hiccup, not actionable.
     const isDatabaseError =
-      isAuthApiError(cause) && cause.message.includes("Database error");
+      isAuthApiErrorLike(cause) && cause.message.includes("Database error");
     // SSO-mismatch / similar `validateNonSSOUser` rejections already opt out
     // via their own `shouldBeCaptured: false` — preserve that decision.
     const inheritedShouldBeCaptured = isLikeShelfError(cause)
@@ -335,16 +396,12 @@ export async function sendOTP(email: string) {
 
     // AuthRetryableFetchError (e.g. from 504 timeout) can have "{}" as message,
     // so we validate the message is actually useful before showing it to users
-    const hasUsableMessage =
-      (cause instanceof AuthError || isLikeShelfError(cause)) &&
-      cause.message &&
-      cause.message !== "{}" &&
-      !cause.message.startsWith("{");
+    const providerMessage = getAuthErrorMessage(cause);
 
     throw new ShelfError({
       cause,
-      message: hasUsableMessage ? cause.message : fallbackMessage,
-      additionalData: { email },
+      message: providerMessage ?? fallbackMessage,
+      additionalData: { email, mode },
       label,
       shouldBeCaptured:
         inheritedShouldBeCaptured === false
@@ -358,7 +415,40 @@ export async function sendResetPasswordLink(email: string) {
   try {
     await validateNonSSOUser(email);
 
-    await getSupabaseAdmin().auth.resetPasswordForEmail(email);
+    const { otp, error } = await generateRecoveryOtpCode(email);
+
+    if (error) {
+      throw error;
+    }
+
+    if (!otp) {
+      throw new ShelfError({
+        cause: null,
+        message: "Auth provider did not return a recovery OTP",
+        additionalData: { email },
+        label,
+      });
+    }
+
+    sendEmail({
+      to: email,
+      subject: `Reset password code: ${otp}`,
+      text: [
+        "Reset Password",
+        "",
+        "To reset your password, please use the following one-time code:",
+        otp,
+        "",
+        "Do not share this code with anyone.",
+      ].join("\n"),
+      html: [
+        "<h2>Reset Password</h2>",
+        "<p>To reset your password, please use the following one-time code:</p>",
+        `<h2><b>${otp}</b></h2>`,
+        "<p>Do not share this code with anyone.</p>",
+      ].join(""),
+      tags: ["auth", "password-reset"],
+    });
   } catch (cause) {
     throw new ShelfError({
       cause,
@@ -368,6 +458,108 @@ export async function sendResetPasswordLink(email: string) {
       label,
     });
   }
+}
+
+export async function requestEmailChangeOtp(
+  currentEmail: string,
+  newEmail: string
+) {
+  try {
+    const { otp, error } = await generateEmailChangeOtpCode(
+      currentEmail,
+      newEmail
+    );
+
+    if (error) {
+      const emailExists = getAuthErrorCode(error) === "email_exists";
+      throw new ShelfError({
+        cause: error,
+        ...(emailExists && { title: "Email is already taken." }),
+        message: emailExists
+          ? "Please choose a different email address which is not already in use."
+          : "Failed to initiate email change",
+        additionalData: { currentEmail, newEmail },
+        label: "Auth",
+        shouldBeCaptured: !emailExists,
+      });
+    }
+
+    if (!otp) {
+      throw new ShelfError({
+        cause: null,
+        message: "Auth provider did not return an email change OTP",
+        additionalData: { currentEmail, newEmail },
+        label,
+      });
+    }
+
+    return otp;
+  } catch (cause) {
+    if (isLikeShelfError(cause)) {
+      throw cause;
+    }
+
+    throw new ShelfError({
+      cause,
+      message: "Failed to initiate email change",
+      additionalData: { currentEmail, newEmail },
+      label,
+    });
+  }
+}
+
+export async function verifyEmailChangeOtp(email: string, otp: string) {
+  try {
+    const { error } = await verifyEmailChangeOtpWithProvider(email, otp);
+
+    if (error) {
+      throw new ShelfError({
+        cause: error,
+        message: "Invalid or expired verification code",
+        additionalData: { email },
+        label: "Auth",
+        shouldBeCaptured: false,
+      });
+    }
+  } catch (cause) {
+    if (isLikeShelfError(cause)) {
+      throw cause;
+    }
+
+    throw new ShelfError({
+      cause,
+      message: "Invalid or expired verification code",
+      additionalData: { email },
+      label: "Auth",
+      shouldBeCaptured: false,
+    });
+  }
+}
+
+export async function revokeOtherSessions(accessToken: string) {
+  try {
+    const { error } = await signOutOtherSessions(accessToken);
+
+    if (error) {
+      throw error;
+    }
+  } catch (cause) {
+    throw new ShelfError({
+      cause,
+      message: "Failed to revoke the other active sessions",
+      label,
+    });
+  }
+}
+
+export async function setAuthUserEmail(userId: string, email: string) {
+  return updateAuthUserById(userId, {
+    email,
+  });
+}
+
+export async function softDeleteAuthUser(userId: string) {
+  return deleteAuthUser(userId, true);
 }
 
 export async function updateAccountPassword(
@@ -391,10 +583,10 @@ export async function updateAccountPassword(
     }
     //logout all the others session expect the current sesssion.
     if (accessToken) {
-      await getSupabaseAdmin().auth.admin.signOut(accessToken, "others");
+      await signOutOtherSessions(accessToken);
     }
     //on password update, it is remvoing the session in th supbase.
-    const { error } = await getSupabaseAdmin().auth.admin.updateUserById(id, {
+    const { error } = await updateAuthUserById(id, {
       password,
     });
 
@@ -414,7 +606,7 @@ export async function updateAccountPassword(
 
 export async function deleteAuthAccount(userId: string) {
   try {
-    const { error } = await getSupabaseAdmin().auth.admin.deleteUser(userId);
+    const { error } = await deleteAuthUser(userId);
 
     if (error) {
       throw error;
@@ -434,8 +626,7 @@ export async function deleteAuthAccount(userId: string) {
 
 export async function getAuthUserById(userId: string) {
   try {
-    const { data, error } =
-      await getSupabaseAdmin().auth.admin.getUserById(userId);
+    const { data, error } = await getAuthUserByIdFromProvider(userId);
 
     if (error) {
       throw error;
@@ -457,7 +648,7 @@ export async function getAuthUserById(userId: string) {
 
 export async function getAuthResponseByAccessToken(accessToken: string) {
   try {
-    return await getSupabaseAdmin().auth.getUser(accessToken);
+    return await getAuthUserByAccessToken(accessToken);
   } catch (cause) {
     throw new ShelfError({
       cause,
@@ -470,19 +661,9 @@ export async function getAuthResponseByAccessToken(accessToken: string) {
 
 export async function validateSession(token: string) {
   try {
-    // const t0 = performance.now();
-    const result = await db.$queryRaw<{ id: string; revoked: boolean }[]>`
-      SELECT id, revoked FROM auth.refresh_tokens 
-      WHERE token = ${token} 
-      AND revoked = false
-      LIMIT 1 
-    `;
-    // const t1 = performance.now();
+    const isActive = await isRefreshTokenActive(token);
 
-    // eslint-disable-next-line no-console
-    // console.log(`Call to validateSession took ${t1 - t0} milliseconds.`);
-
-    if (result.length === 0) {
+    if (!isActive) {
       //logging for debug
       Logger.error(
         new ShelfError({
@@ -493,7 +674,7 @@ export async function validateSession(token: string) {
         })
       );
     }
-    return result.length > 0;
+    return isActive;
   } catch (_err) {
     Logger.error(
       new ShelfError({
@@ -519,9 +700,7 @@ export async function refreshAccessToken(
       });
     }
 
-    const { data, error } = await getSupabaseAdmin().auth.refreshSession({
-      refresh_token: refreshToken,
-    });
+    const { data, error } = await refreshAuthSession(refreshToken);
 
     if (error) {
       throw error;
@@ -532,7 +711,7 @@ export async function refreshAccessToken(
     if (!session) {
       throw new ShelfError({
         cause: null,
-        message: "The session returned by Supabase is null",
+        message: "The auth provider returned a null session",
         label,
       });
     }
@@ -570,11 +749,7 @@ export async function verifyAuthSession(authSession: AuthSession) {
 
 export async function verifyOtpAndSignin(email: string, otp: string) {
   try {
-    const { data, error } = await getSupabaseAdmin().auth.verifyOtp({
-      email,
-      token: otp,
-      type: "email",
-    });
+    const { data, error } = await verifyEmailOtp(email, otp);
 
     if (error) {
       throw error;
@@ -585,7 +760,7 @@ export async function verifyOtpAndSignin(email: string, otp: string) {
     if (!session) {
       throw new ShelfError({
         cause: null,
-        message: "The session returned by Supabase is null",
+        message: "The auth provider returned a null session",
         label,
       });
     }
@@ -596,8 +771,10 @@ export async function verifyOtpAndSignin(email: string, otp: string) {
       "Something went wrong. Please try again later or contact support.";
     let shouldBeCaptured = true;
 
-    if (isAuthApiError(cause) && cause.message !== "") {
-      message = cause.message;
+    const providerMessage = getAuthErrorMessage(cause);
+
+    if (isAuthApiErrorLike(cause) && providerMessage) {
+      message = providerMessage;
       shouldBeCaptured = false;
     }
 
@@ -607,6 +784,39 @@ export async function verifyOtpAndSignin(email: string, otp: string) {
       label,
       shouldBeCaptured,
       additionalData: { email },
+    });
+  }
+}
+
+export async function verifyRecoveryOtp(email: string, otp: string) {
+  try {
+    const { data, error } = await verifyRecoveryOtpWithProvider(email, otp);
+
+    if (error || !data.user || !data.session) {
+      throw new ShelfError({
+        cause: error,
+        message: "Invalid or expired verification code",
+        additionalData: { email },
+        label,
+        shouldBeCaptured: false,
+      });
+    }
+
+    return {
+      userId: data.user.id,
+      accessToken: data.session.access_token,
+    };
+  } catch (cause) {
+    if (isLikeShelfError(cause)) {
+      throw cause;
+    }
+
+    throw new ShelfError({
+      cause,
+      message: "Invalid or expired verification code",
+      additionalData: { email },
+      label,
+      shouldBeCaptured: false,
     });
   }
 }

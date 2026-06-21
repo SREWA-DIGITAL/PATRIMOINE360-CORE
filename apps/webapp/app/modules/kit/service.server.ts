@@ -21,7 +21,6 @@ import {
 import type { LoaderFunctionArgs } from "react-router";
 import invariant from "tiny-invariant";
 import { db } from "~/database/db.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
 import {
   updateBarcodes,
   validateBarcodeUniqueness,
@@ -37,7 +36,6 @@ import {
   ShelfError,
   VALIDATION_ERROR,
 } from "~/utils/error";
-import { extractImageNameFromSupabaseUrl } from "~/utils/extract-image-name-from-supabase-url";
 import { getRedirectUrlFromRequest } from "~/utils/http";
 import { getCurrentSearchParams } from "~/utils/http.server";
 import { id } from "~/utils/id/id.server";
@@ -50,7 +48,11 @@ import {
   wrapUserLinkForNote,
 } from "~/utils/markdoc-wrappers";
 import { oneDayFromNow } from "~/utils/one-week-from-now";
-import { createSignedUrl, parseFileFormData } from "~/utils/storage.server";
+import {
+  createSignedUrl,
+  deleteAssetImage,
+  parseFileFormData,
+} from "~/utils/storage.server";
 import type { MergeInclude } from "~/utils/utils";
 import type { UpdateKitPayload } from "./types";
 import {
@@ -771,22 +773,18 @@ export async function deleteKitImage({
   bucketName?: string;
 }) {
   try {
-    const path = extractImageNameFromSupabaseUrl({ url, bucketName });
-    if (!path) {
+    const removed = await deleteAssetImage({
+      url,
+      bucketName,
+    });
+
+    if (!removed) {
       throw new ShelfError({
         cause: null,
-        message: "Cannot extract the image path from the URL",
+        message: "Failed to delete kit image",
         additionalData: { url, bucketName },
         label,
       });
-    }
-
-    const { error } = await getSupabaseAdmin()
-      .storage.from(bucketName)
-      .remove([path]);
-
-    if (error) {
-      throw error;
     }
 
     return true;

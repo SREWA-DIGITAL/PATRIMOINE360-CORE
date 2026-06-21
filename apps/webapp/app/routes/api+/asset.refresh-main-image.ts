@@ -3,7 +3,6 @@ import { data, type LoaderFunctionArgs } from "react-router";
 import { z } from "zod";
 import { extractStoragePath } from "~/components/assets/asset-image/utils";
 import { db } from "~/database/db.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
 import { isStorageObjectNotFound } from "~/modules/asset/service.server";
 import { ShelfError } from "~/utils/error";
 import { payload, parseData } from "~/utils/http.server";
@@ -14,6 +13,7 @@ import {
   PermissionEntity,
 } from "~/utils/permissions/permission.data";
 import { requirePermission } from "~/utils/roles.server";
+import { downloadStorageObject } from "~/utils/storage-provider.server";
 import { createSignedUrl, uploadFile } from "~/utils/storage.server";
 
 const THUMBNAIL_SIZE = 108;
@@ -49,7 +49,7 @@ async function generateThumbnailIfMissing(asset: {
 
     // Download the original image from Supabase
     const { data: originalFile, error: downloadError } =
-      await getSupabaseAdmin().storage.from("assets").download(originalPath);
+      await downloadStorageObject(originalPath, "assets");
 
     if (downloadError) {
       Logger.error(

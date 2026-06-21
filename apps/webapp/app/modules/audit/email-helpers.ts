@@ -8,6 +8,10 @@ import { ShelfError } from "~/utils/error";
 import { Logger } from "~/utils/logger";
 import { resolveUserDisplayName } from "~/utils/user";
 
+function getAuditEmailTags(event: string, audience: string) {
+  return ["audit", event, "notification", audience];
+}
+
 type BasicAuditEmailContentArgs = {
   auditName: string;
   assetsCount: number;
@@ -192,6 +196,7 @@ export async function sendAuditAssignedEmail({
         customEmailFooter: audit.organization.customEmailFooter,
       }),
       html,
+      tags: getAuditEmailTags("assigned", "assignee"),
     });
 
     Logger.info(
@@ -289,6 +294,7 @@ export function sendAuditCancelledEmails({
           customEmailFooter: audit.organization.customEmailFooter,
         }),
         html,
+        tags: getAuditEmailTags("cancelled", "assignee"),
       });
 
       const assigneeName =
@@ -372,6 +378,7 @@ export function sendAuditCompletedEmail({
           wasOverdue,
         }),
         html,
+        tags: getAuditEmailTags("completed", "assignee"),
       });
 
       const assigneeName =
@@ -449,6 +456,7 @@ export function sendAuditReminderEmail({
           timeframe,
         }),
         html,
+        tags: getAuditEmailTags("reminder", "assignee"),
       });
 
       const assigneeName =
@@ -516,6 +524,7 @@ export function sendAuditOverdueEmail({
           customEmailFooter: audit.organization.customEmailFooter,
         }),
         html,
+        tags: getAuditEmailTags("overdue", "recipient"),
       });
 
       const recipientName = resolveUserDisplayName(recipient) || "Unknown User";

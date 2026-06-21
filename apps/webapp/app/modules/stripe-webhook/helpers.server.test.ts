@@ -185,6 +185,7 @@ describe("sendAdminInvoiceEmail", () => {
       expect.objectContaining({
         to: "admin@test.com",
         subject: "Invoice alert",
+        tags: ["billing", "invoice", "admin-notification"],
       })
     );
   });

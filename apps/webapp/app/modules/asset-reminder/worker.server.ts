@@ -132,6 +132,11 @@ const ASSET_SCHEDULER_EVENT_HANDLERS: Record<
             customEmailFooter: reminder.organization.customEmailFooter,
           }),
           html,
+          tags: [
+            "asset-reminder",
+            user.isOwner ? "owner" : "assignee",
+            "notification",
+          ],
         });
       }),
       createNote({

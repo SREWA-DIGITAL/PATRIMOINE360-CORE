@@ -21,12 +21,13 @@ import { db } from "~/database/db.server";
 
 import { SOFT_DELETED_EMAIL_DOMAIN } from "~/emails/email.worker.server";
 import { sendEmail } from "~/emails/mail.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
 import {
   deleteAuthAccount,
   createEmailAuthAccount,
   confirmExistingAuthAccount,
+  setAuthUserEmail,
   signInWithEmail,
+  softDeleteAuthUser,
   updateAccountPassword,
 } from "~/modules/auth/service.server";
 
@@ -879,12 +880,7 @@ export async function updateUserEmail({
     /**
      * Update the user in supabase auth
      */
-    const { error } = await getSupabaseAdmin().auth.admin.updateUserById(
-      userId,
-      {
-        email: newEmail,
-      }
-    );
+    const { error } = await setAuthUserEmail(userId, newEmail);
 
     if (error) {
       throw new ShelfError({
@@ -904,11 +900,9 @@ export async function updateUserEmail({
       })
       .catch((cause) => {
         // On failure, revert the change of the user update in auth
-        void getSupabaseAdmin().auth.admin.updateUserById(userId, {
-          email: currentEmail,
-        });
+        void setAuthUserEmail(userId, currentEmail);
 
-        // Unique email constraint is being handled automatically by `getSupabaseAdmin().auth.admin.generateLink`
+        // Unique email constraint is being handled automatically by the auth email-change flow
         throw new ShelfError({
           cause,
           message: "Failed to update email in shelf",
@@ -1206,16 +1200,14 @@ export async function softDeleteUser(id: User["id"]) {
     }
 
     /** Delete the auth user. This should also destroy all their current sessions */
-    const { error } = await getSupabaseAdmin().auth.admin.deleteUser(
-      user.id,
-      true // Soft delete
-    );
+    const { error } = await softDeleteAuthUser(user.id);
 
     /** Send an email to the user that their request has been completed */
     void sendEmail({
       to: user.email,
       subject: "Your account has been deleted",
       text: `Your shelf account has been deleted. \n\n Kind regards, \n Shelf Team\n\n`,
+      tags: ["user", "account-deleted", "transactional"],
     });
 
     if (error) {

@@ -6,6 +6,12 @@ import type { AppLoadContext } from "react-router";
 import type { HonoServerOptions } from "react-router-hono-server/node";
 import { createHonoServer } from "react-router-hono-server/node";
 import { getSession, session } from "remix-hono/session";
+import {
+  betterAuthBasePath,
+  getBetterAuthBasePathWildcard,
+  handleBetterAuthRequest,
+  isBetterAuthConfigured,
+} from "~/modules/auth/better-auth.server";
 import { initEnv } from "~/utils/env";
 import { ShelfError } from "~/utils/error";
 import { runWithTabId } from "~/utils/tab-id.server";
@@ -112,6 +118,34 @@ export default createHonoServer<ServerEnv>({
      */
     server.use("*", logger());
 
+    server.all(betterAuthBasePath, async (c) => {
+      if (!isBetterAuthConfigured()) {
+        return c.json(
+          {
+            message:
+              "Better Auth is not configured yet. Define BETTER_AUTH_SECRET to enable this endpoint.",
+          },
+          503
+        );
+      }
+
+      return handleBetterAuthRequest(c.req.raw);
+    });
+
+    server.all(getBetterAuthBasePathWildcard(), async (c) => {
+      if (!isBetterAuthConfigured()) {
+        return c.json(
+          {
+            message:
+              "Better Auth is not configured yet. Define BETTER_AUTH_SECRET to enable this endpoint.",
+          },
+          503
+        );
+      }
+
+      return handleBetterAuthRequest(c.req.raw);
+    });
+
     /**
      * Mobile API rate limit. Path-scoped so webapp routes are unaffected.
      * Runs after logger() so 429s appear in logs, and before session() since
@@ -169,6 +203,8 @@ export default createHonoServer<ServerEnv>({
           "/resend-otp",
           "/reset-password",
           "/send-otp",
+          betterAuthBasePath,
+          `${betterAuthBasePath}/*path`,
           "/healthcheck",
           "/api/public-stats",
           "/api/oss-friends",

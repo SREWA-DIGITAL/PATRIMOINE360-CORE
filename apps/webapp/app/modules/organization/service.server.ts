@@ -958,6 +958,7 @@ export async function transferOwnership({
         workspaceName: currentOrganization.name,
         subscriptionTransferred,
       }),
+      tags: ["organization", "ownership-transfer", "new-owner"],
     });
 
     /** Send email to previous owner */
@@ -970,6 +971,7 @@ export async function transferOwnership({
         workspaceName: currentOrganization.name,
         subscriptionTransferred,
       }),
+      tags: ["organization", "ownership-transfer", "previous-owner"],
     });
 
     /** Send admin notification */
@@ -1005,6 +1007,7 @@ ${
       }`
     : ""
 }`,
+        tags: ["organization", "ownership-transfer", "admin-notification"],
       });
     }
 

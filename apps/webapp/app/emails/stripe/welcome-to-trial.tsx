@@ -34,6 +34,7 @@ export const sendTeamTrialWelcomeEmail = async ({
       subject,
       html,
       text,
+      tags: ["billing", "trial", "team", "welcome"],
     });
   } catch (cause) {
     Logger.error(

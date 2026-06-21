@@ -41,7 +41,7 @@ function ChangeEmailAddressHtmlEmailTemplate({
   return (
     <Html>
       <Head>
-        <title>🔐 Your verification code for email change is: {otp}</title>
+        <title>{`🔐 Your verification code for email change is: ${otp}`}</title>
       </Head>
 
       <Container style={{ maxWidth: "100%" }}>

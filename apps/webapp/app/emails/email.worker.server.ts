@@ -1,9 +1,8 @@
-import { transporter } from "~/emails/transporter.server";
 import { ShelfError } from "~/utils/error";
 import { Logger } from "~/utils/logger";
 import { QueueNames, scheduler } from "~/utils/scheduler.server";
+import { deliverEmail } from "./email-provider.server";
 import type { EmailPayloadType } from "./types";
-import { SMTP_FROM, SUPPORT_EMAIL } from "../utils/env";
 
 /** Domain used for soft-deleted user email addresses */
 export const SOFT_DELETED_EMAIL_DOMAIN = "@deleted.shelf.nu";
@@ -46,36 +45,21 @@ export const registerEmailWorkers = async () => {
   );
 };
 
-export const triggerEmail = async ({
-  to,
-  subject,
-  text,
-  html,
-  from,
-  replyTo,
-}: EmailPayloadType) => {
+export const triggerEmail = async ({ to, ...payload }: EmailPayloadType) => {
   if (to.endsWith(SOFT_DELETED_EMAIL_DOMAIN)) {
     Logger.warn(
-      `Skipping email to soft-deleted user: ${to} (subject: ${subject})`
+      `Skipping email to soft-deleted user: ${to} (subject: ${payload.subject})`
     );
     return;
   }
 
   try {
-    // send mail with defined transport object
-    await transporter.sendMail({
-      from: from || SMTP_FROM || `"Shelf" <hello@example.com>`, // sender address
-      replyTo: replyTo || SUPPORT_EMAIL, // reply to
-      to, // list of receivers
-      subject, // Subject line
-      text, // plain text body
-      html: html || "", // html body
-    });
+    await deliverEmail({ to, ...payload });
   } catch (cause) {
     throw new ShelfError({
       cause,
       message: "Unable to send email",
-      additionalData: { to, subject, from },
+      additionalData: { to, subject: payload.subject, from: payload.from },
       label: "Email",
     });
   }

@@ -102,6 +102,7 @@ export function sendAdminInvoiceEmail({
       to: ADMIN_EMAIL,
       subject,
       text: unpaidInvoiceAdminText({ user, eventType, invoiceId }),
+      tags: ["billing", "invoice", "admin-notification"],
     });
   }
 }

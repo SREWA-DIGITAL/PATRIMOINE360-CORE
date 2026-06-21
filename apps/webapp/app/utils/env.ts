@@ -53,6 +53,12 @@ declare global {
       SMTP_PORT: string;
       SMTP_USER: string;
       SMTP_FROM: string;
+      EMAIL_PROVIDER: "smtp" | "brevo";
+      BREVO_API_KEY: string;
+      BREVO_TIMEOUT_SECONDS: string;
+      BETTER_AUTH_SECRET: string;
+      BETTER_AUTH_URL: string;
+      BETTER_AUTH_BASE_PATH: string;
       MAINTENANCE_MODE: string;
       DATABASE_URL: string;
       DIRECT_URL: string;
@@ -173,6 +179,29 @@ export const SMTP_PORT = getEnv("SMTP_PORT", {
 });
 export const SMTP_USER = getEnv("SMTP_USER", { allowEmpty: true });
 export const SMTP_FROM = getEnv("SMTP_FROM", {
+  isRequired: false,
+});
+export const EMAIL_PROVIDER =
+  getEnv("EMAIL_PROVIDER", {
+    isSecret: false,
+    isRequired: false,
+  }) || "smtp";
+export const BREVO_API_KEY = getEnv("BREVO_API_KEY", {
+  isRequired: false,
+});
+export const BREVO_TIMEOUT_SECONDS = getEnv("BREVO_TIMEOUT_SECONDS", {
+  isSecret: false,
+  isRequired: false,
+});
+export const BETTER_AUTH_SECRET = getEnv("BETTER_AUTH_SECRET", {
+  isRequired: false,
+});
+export const BETTER_AUTH_URL = getEnv("BETTER_AUTH_URL", {
+  isSecret: false,
+  isRequired: false,
+});
+export const BETTER_AUTH_BASE_PATH = getEnv("BETTER_AUTH_BASE_PATH", {
+  isSecret: false,
   isRequired: false,
 });
 export const DATABASE_URL = getEnv("DATABASE_URL");

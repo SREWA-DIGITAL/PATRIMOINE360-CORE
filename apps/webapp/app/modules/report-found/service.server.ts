@@ -75,6 +75,7 @@ export function sendReportEmails({
       text: item
         ? `Your ${type} ${normalizedName} has been reported found. The reason is: \n\n| ${message} \n\n For contact use this email: ${reporterEmail}\n\nEmail sent via shelf.nu\n\n`
         : `The QR code own (${qr.id}) has been reported found. The reason is: \n\n| ${message} \n\n For contact use this email: ${reporterEmail}\n\nEmail sent via shelf.nu\n\n`,
+      tags: ["report-found", "owner-notification", type.toLowerCase()],
     });
 
     /** Send email to reporter */
@@ -84,6 +85,7 @@ export function sendReportEmails({
       text: item
         ? `Thank you for contacting the owner of the ${type} you found. They have been notified of your message and will contact you if they are interested.\n\nEmail sent via shelf.nu\n\n`
         : `Thank you for contacting the owner of the QR code you found. They have been notified of your message and will contact you if they are interested.\n\nEmail sent via shelf.nu\n\n`,
+      tags: ["report-found", "reporter-confirmation", type.toLowerCase()],
     });
 
     return;

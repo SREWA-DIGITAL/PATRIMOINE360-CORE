@@ -1,12 +1,17 @@
 import { describe, expect, it, vi, vitest, beforeEach } from "vitest";
 import { extractStoragePath } from "~/components/assets/asset-image/utils";
 import { db } from "~/database/db.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
 import { recordEvents } from "~/modules/activity-event/service.server";
 import { getCategory } from "~/modules/category/service.server";
 import { getActiveCustomFields } from "~/modules/custom-field/service.server";
 import { getQr } from "~/modules/qr/service.server";
 import { ShelfError } from "~/utils/error";
+import {
+  downloadStorageObject,
+  listStorageObjects,
+  removeStorageObjects,
+  uploadStorageObject,
+} from "~/utils/storage-provider.server";
 import { createSignedUrl } from "~/utils/storage.server";
 import {
   bulkAssignAssetTags,
@@ -84,8 +89,11 @@ vitest.mock("~/modules/qr/service.server", () => ({
 }));
 
 // why: avoid hitting Supabase storage during uploadDuplicateAssetMainImage tests
-vitest.mock("~/integrations/supabase/client", () => ({
-  getSupabaseAdmin: vitest.fn(),
+vitest.mock("~/utils/storage-provider.server", () => ({
+  downloadStorageObject: vitest.fn(),
+  listStorageObjects: vitest.fn(),
+  removeStorageObjects: vitest.fn(),
+  uploadStorageObject: vitest.fn(),
 }));
 
 // why: control storage path extraction for refreshExpiredAssetImages tests
@@ -199,6 +207,19 @@ describe("relinkAssetQrCode (asset)", () => {
 });
 
 describe("uploadDuplicateAssetMainImage", () => {
+  const mockDownloadStorageObject = downloadStorageObject as ReturnType<
+    typeof vitest.fn
+  >;
+  const mockListStorageObjects = listStorageObjects as ReturnType<
+    typeof vitest.fn
+  >;
+  const mockRemoveStorageObjects = removeStorageObjects as ReturnType<
+    typeof vitest.fn
+  >;
+  const mockUploadStorageObject = uploadStorageObject as ReturnType<
+    typeof vitest.fn
+  >;
+
   beforeEach(() => {
     vitest.clearAllMocks();
   });
@@ -212,33 +233,21 @@ describe("uploadDuplicateAssetMainImage", () => {
       pngHeader.byteOffset + pngHeader.byteLength
     );
 
-    const download = vitest.fn().mockResolvedValue({
+    mockDownloadStorageObject.mockResolvedValue({
       data: {
         arrayBuffer: () => arrayBuffer,
       },
       error: null,
     });
-    const upload = vitest.fn().mockResolvedValue({
+    mockUploadStorageObject.mockResolvedValue({
       data: { path: "user-1/asset-1/main-image-123" },
       error: null,
     });
-    const list = vitest.fn().mockResolvedValue({
+    mockListStorageObjects.mockResolvedValue({
       data: [{ name: "main-image-123" }, { name: "main-image-122" }],
       error: null,
     });
-    const remove = vitest.fn().mockResolvedValue({ data: null, error: null });
-
-    // @ts-expect-error mock setup
-    getSupabaseAdmin.mockReturnValue({
-      storage: {
-        from: () => ({
-          download,
-          upload,
-          list,
-          remove,
-        }),
-      },
-    });
+    mockRemoveStorageObjects.mockResolvedValue({ data: null, error: null });
     // @ts-expect-error mock setup
     createSignedUrl.mockResolvedValue("signed-url");
 
@@ -249,17 +258,21 @@ describe("uploadDuplicateAssetMainImage", () => {
     );
 
     expect(result).toBe("signed-url");
-    expect(download).toHaveBeenCalledWith("user-1/asset-1/main-image-123");
-    expect(upload).toHaveBeenCalledWith(
+    expect(mockDownloadStorageObject).toHaveBeenCalledWith(
+      "user-1/asset-1/main-image-123",
+      "assets"
+    );
+    expect(mockUploadStorageObject).toHaveBeenCalledWith(
       expect.stringContaining("user-1/asset-1/main-image-"),
       expect.any(Buffer),
+      "assets",
       { contentType: "image/png", upsert: true }
     );
     expect(createSignedUrl).toHaveBeenCalledWith({
       filename: "user-1/asset-1/main-image-123",
     });
-    expect(list).toHaveBeenCalled();
-    expect(remove).toHaveBeenCalled();
+    expect(mockListStorageObjects).toHaveBeenCalled();
+    expect(mockRemoveStorageObjects).toHaveBeenCalled();
   });
 
   it("rejects when the downloaded buffer is not a supported image", async () => {
@@ -275,25 +288,13 @@ describe("uploadDuplicateAssetMainImage", () => {
       jsonPayload.byteOffset + jsonPayload.byteLength
     );
 
-    const download = vitest.fn().mockResolvedValue({
+    mockDownloadStorageObject.mockResolvedValue({
       data: {
         arrayBuffer: () => arrayBuffer,
       },
       error: null,
     });
-    const upload = vitest.fn();
-
-    // @ts-expect-error mock setup
-    getSupabaseAdmin.mockReturnValue({
-      storage: {
-        from: () => ({
-          download,
-          upload,
-          list: vitest.fn(),
-          remove: vitest.fn(),
-        }),
-      },
-    });
+    mockUploadStorageObject.mockReset();
 
     await expect(
       uploadDuplicateAssetMainImage(
@@ -303,7 +304,7 @@ describe("uploadDuplicateAssetMainImage", () => {
       )
     ).rejects.toBeInstanceOf(ShelfError);
 
-    expect(upload).not.toHaveBeenCalled();
+    expect(mockUploadStorageObject).not.toHaveBeenCalled();
   });
 });
 
