@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { ShelfError } from "./error";
 import {
-  findShelfErrorInCause,
-  isSupabaseRateLimitError,
-  isSupabaseServerError,
-} from "./storage.server";
+  isStorageRateLimitError,
+  isStorageServerError,
+} from "./storage-error-classifier.server";
+import { findShelfErrorInCause } from "./storage.server";
 
-describe("isSupabaseRateLimitError", () => {
+describe("isStorageRateLimitError", () => {
   it("returns true for StorageApiError with numeric status 429", () => {
     const error = {
       name: "StorageApiError",
       message: "Too many requests",
       status: 429,
     };
-    expect(isSupabaseRateLimitError(error)).toBe(true);
+    expect(isStorageRateLimitError(error)).toBe(true);
   });
 
   it("returns true for StorageApiError with string statusCode '429'", () => {
@@ -22,7 +22,7 @@ describe("isSupabaseRateLimitError", () => {
       message: "Rate limit exceeded",
       statusCode: "429",
     };
-    expect(isSupabaseRateLimitError(error)).toBe(true);
+    expect(isStorageRateLimitError(error)).toBe(true);
   });
 
   it('returns true for StorageApiError with "too many" in message', () => {
@@ -31,7 +31,7 @@ describe("isSupabaseRateLimitError", () => {
       message: "Too many connections issued to the database",
       status: 0,
     };
-    expect(isSupabaseRateLimitError(error)).toBe(true);
+    expect(isStorageRateLimitError(error)).toBe(true);
   });
 
   it('returns true for case-insensitive "too many" matching', () => {
@@ -39,7 +39,7 @@ describe("isSupabaseRateLimitError", () => {
       name: "StorageApiError",
       message: "TOO MANY REQUESTS",
     };
-    expect(isSupabaseRateLimitError(error)).toBe(true);
+    expect(isStorageRateLimitError(error)).toBe(true);
   });
 
   it("returns false for non-StorageApiError with status 429", () => {
@@ -48,7 +48,7 @@ describe("isSupabaseRateLimitError", () => {
       message: "Some error",
       status: 429,
     };
-    expect(isSupabaseRateLimitError(error)).toBe(false);
+    expect(isStorageRateLimitError(error)).toBe(false);
   });
 
   it("returns false for StorageApiError with non-429 status", () => {
@@ -57,35 +57,35 @@ describe("isSupabaseRateLimitError", () => {
       message: "Not found",
       status: 404,
     };
-    expect(isSupabaseRateLimitError(error)).toBe(false);
+    expect(isStorageRateLimitError(error)).toBe(false);
   });
 
   it("returns false for null", () => {
-    expect(isSupabaseRateLimitError(null)).toBe(false);
+    expect(isStorageRateLimitError(null)).toBe(false);
   });
 
   it("returns false for undefined", () => {
-    expect(isSupabaseRateLimitError(undefined)).toBe(false);
+    expect(isStorageRateLimitError(undefined)).toBe(false);
   });
 
   it("returns false for non-object values", () => {
-    expect(isSupabaseRateLimitError("error")).toBe(false);
-    expect(isSupabaseRateLimitError(42)).toBe(false);
+    expect(isStorageRateLimitError("error")).toBe(false);
+    expect(isStorageRateLimitError(42)).toBe(false);
   });
 
   it("returns false for empty object", () => {
-    expect(isSupabaseRateLimitError({})).toBe(false);
+    expect(isStorageRateLimitError({})).toBe(false);
   });
 });
 
-describe("isSupabaseServerError", () => {
+describe("isStorageServerError", () => {
   it("returns true for StorageApiError with status 504", () => {
     const error = {
       name: "StorageApiError",
       message: "Gateway Timeout",
       status: 504,
     };
-    expect(isSupabaseServerError(error)).toBe(true);
+    expect(isStorageServerError(error)).toBe(true);
   });
 
   it("returns true for StorageApiError with status 502", () => {
@@ -94,7 +94,7 @@ describe("isSupabaseServerError", () => {
       message: "Bad Gateway",
       status: 502,
     };
-    expect(isSupabaseServerError(error)).toBe(true);
+    expect(isStorageServerError(error)).toBe(true);
   });
 
   it("returns true for StorageApiError with status 503", () => {
@@ -103,7 +103,7 @@ describe("isSupabaseServerError", () => {
       message: "Service Unavailable",
       status: 503,
     };
-    expect(isSupabaseServerError(error)).toBe(true);
+    expect(isStorageServerError(error)).toBe(true);
   });
 
   it("returns true for StorageApiError with status 500", () => {
@@ -112,7 +112,7 @@ describe("isSupabaseServerError", () => {
       message: "Internal Server Error",
       status: 500,
     };
-    expect(isSupabaseServerError(error)).toBe(true);
+    expect(isStorageServerError(error)).toBe(true);
   });
 
   it("returns true for StorageApiError with string statusCode '504'", () => {
@@ -121,7 +121,7 @@ describe("isSupabaseServerError", () => {
       message: "Gateway Timeout",
       statusCode: "504",
     };
-    expect(isSupabaseServerError(error)).toBe(true);
+    expect(isStorageServerError(error)).toBe(true);
   });
 
   it("returns false for non-StorageApiError with 5xx status", () => {
@@ -130,7 +130,7 @@ describe("isSupabaseServerError", () => {
       message: "Some error",
       status: 504,
     };
-    expect(isSupabaseServerError(error)).toBe(false);
+    expect(isStorageServerError(error)).toBe(false);
   });
 
   it("returns false for StorageApiError with 4xx status", () => {
@@ -139,7 +139,7 @@ describe("isSupabaseServerError", () => {
       message: "Not found",
       status: 404,
     };
-    expect(isSupabaseServerError(error)).toBe(false);
+    expect(isStorageServerError(error)).toBe(false);
   });
 
   it("returns false for StorageApiError with status 429 (rate limit)", () => {
@@ -148,24 +148,24 @@ describe("isSupabaseServerError", () => {
       message: "Too many requests",
       status: 429,
     };
-    expect(isSupabaseServerError(error)).toBe(false);
+    expect(isStorageServerError(error)).toBe(false);
   });
 
   it("returns false for null", () => {
-    expect(isSupabaseServerError(null)).toBe(false);
+    expect(isStorageServerError(null)).toBe(false);
   });
 
   it("returns false for undefined", () => {
-    expect(isSupabaseServerError(undefined)).toBe(false);
+    expect(isStorageServerError(undefined)).toBe(false);
   });
 
   it("returns false for non-object values", () => {
-    expect(isSupabaseServerError("error")).toBe(false);
-    expect(isSupabaseServerError(42)).toBe(false);
+    expect(isStorageServerError("error")).toBe(false);
+    expect(isStorageServerError(42)).toBe(false);
   });
 
   it("returns false for empty object", () => {
-    expect(isSupabaseServerError({})).toBe(false);
+    expect(isStorageServerError({})).toBe(false);
   });
 });
 

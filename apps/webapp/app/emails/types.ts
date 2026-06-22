@@ -23,4 +23,16 @@ export type EmailPayloadType = {
 
   /** Override the default reply to email address */
   replyTo?: string;
+
+  /** Optional provider tags for delivery analytics */
+  tags?: string[];
+
+  /** Optional provider-specific headers */
+  headers?: Record<string, string>;
+
+  /** Optional provider template identifier */
+  templateId?: number;
+
+  /** Optional provider template parameters */
+  params?: Record<string, unknown>;
 };

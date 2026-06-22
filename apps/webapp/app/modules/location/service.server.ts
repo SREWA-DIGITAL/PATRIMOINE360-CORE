@@ -10,7 +10,6 @@ import type {
 import { BookingStatus } from "@prisma/client";
 import invariant from "tiny-invariant";
 import { db } from "~/database/db.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
 import {
   DEFAULT_MAX_IMAGE_UPLOAD_SIZE,
   PUBLIC_BUCKET,
@@ -33,6 +32,7 @@ import {
   wrapUserLinkForNote,
 } from "~/utils/markdoc-wrappers";
 import {
+  getPublicFileURL,
   getFileUploadPath,
   parseFileFormData,
   removePublicFile,
@@ -1145,18 +1145,17 @@ export async function updateLocationImage({
       imagePath = image;
     }
 
-    const {
-      data: { publicUrl: imagePublicUrl },
-    } = getSupabaseAdmin().storage.from(PUBLIC_BUCKET).getPublicUrl(imagePath);
+    const imagePublicUrl = getPublicFileURL({
+      filename: imagePath,
+      bucketName: PUBLIC_BUCKET,
+    });
 
     let thumbnailPublicUrl: string | undefined;
     if (thumbnailPath) {
-      const {
-        data: { publicUrl },
-      } = getSupabaseAdmin()
-        .storage.from(PUBLIC_BUCKET)
-        .getPublicUrl(thumbnailPath);
-      thumbnailPublicUrl = publicUrl;
+      thumbnailPublicUrl = getPublicFileURL({
+        filename: thumbnailPath,
+        bucketName: PUBLIC_BUCKET,
+      });
     }
 
     await db.location.update({

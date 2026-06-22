@@ -18,7 +18,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     switch (method) {
       case "POST": {
-        const { email } = parseData(
+        const { email, mode } = parseData(
           await request.formData(),
           z.object({
             email: z
@@ -27,11 +27,12 @@ export async function action({ request }: ActionFunctionArgs) {
               .refine(validEmail, () => ({
                 message: "Please enter a valid email",
               })),
+            mode: z.enum(["login", "signup", "confirm_signup"]).optional(),
           }),
           { shouldBeCaptured: false }
         );
 
-        await sendOTP(email);
+        await sendOTP(email, mode || "login");
         return payload({ success: true });
       }
     }

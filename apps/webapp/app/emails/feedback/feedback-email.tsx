@@ -61,6 +61,7 @@ export const sendFeedbackEmail = async ({
       html,
       text,
       replyTo: userEmail,
+      tags: ["feedback", type, "support"],
     });
   } catch (cause) {
     Logger.error(

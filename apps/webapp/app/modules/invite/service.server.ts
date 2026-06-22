@@ -295,6 +295,7 @@ export async function createInvite(
         token,
         extraMessage: sanitizedMessage,
       }),
+      tags: ["invite", "organization", "transactional"],
     });
 
     return invite;
@@ -811,6 +812,7 @@ export async function bulkInviteUsers({
               extraMessage: extraInviteMessage,
             }),
             html,
+            tags: ["invite", "organization", "transactional"],
           });
         }, delay);
       });

@@ -14,11 +14,10 @@ import { Button } from "~/components/shared/button";
 import { db } from "~/database/db.server";
 import { useSearchParams } from "~/hooks/search-params";
 import { useDisabled } from "~/hooks/use-disabled";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
 
 import {
+  resetPasswordWithOtp,
   sendResetPasswordLink,
-  updateAccountPassword,
 } from "~/modules/auth/service.server";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
 import { makeShelfError, ShelfError } from "~/utils/error";
@@ -141,29 +140,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
           { shouldBeCaptured: false }
         );
 
-        // Attempt to verify the OTP
-        const { data: otpData, error: verifyError } =
-          await getSupabaseAdmin().auth.verifyOtp({
-            email,
-            token: otp,
-            type: "recovery",
-          });
-
-        if (verifyError || !otpData.user || !otpData.session) {
-          throw new ShelfError({
-            cause: verifyError,
-            message: "Invalid or expired verification code",
-            additionalData: { email, otp },
-            label: "Auth",
-            shouldBeCaptured: false,
-          });
-        }
-
-        await updateAccountPassword(
-          otpData.user.id,
-          password,
-          otpData.session.access_token
-        );
+        await resetPasswordWithOtp(email, otp, password);
 
         context.destroySession();
         return redirect("/login?password_reset=true");

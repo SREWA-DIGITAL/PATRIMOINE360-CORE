@@ -16,7 +16,7 @@ import { config } from "~/config/shelf.config";
 import { useSearchParams } from "~/hooks/search-params";
 import { useAutoFocus } from "~/hooks/use-auto-focus";
 import { ContinueWithEmailForm } from "~/modules/auth/components/continue-with-email-form";
-import { signUpWithEmailPass } from "~/modules/auth/service.server";
+import { signUpWithBetterAuthEmailPass } from "~/modules/auth/service.server";
 import { findUserByEmail } from "~/modules/user/service.server";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
 import {
@@ -95,7 +95,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     switch (getActionMethod(request)) {
       case "POST": {
-        const { email, password } = parseData(
+        const { email, password, redirectTo } = parseData(
           await request.formData(),
           JoinFormSchema,
           { shouldBeCaptured: false }
@@ -119,11 +119,18 @@ export async function action({ request }: ActionFunctionArgs) {
         }
 
         // Sign up with the provided email and password
-        await signUpWithEmailPass(email, password);
+        await signUpWithBetterAuthEmailPass(email, password, redirectTo);
 
-        return redirect(
-          `/otp?email=${encodeURIComponent(email)}&mode=confirm_signup`
-        );
+        const params = new URLSearchParams({
+          email,
+          email_sent: "true",
+        });
+
+        if (redirectTo) {
+          params.set("redirectTo", redirectTo);
+        }
+
+        return redirect(`/login?${params.toString()}`);
       }
     }
 

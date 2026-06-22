@@ -20,6 +20,7 @@ export function mapAuthSession(
     });
   }
   return {
+    provider: "supabase",
     accessToken: supabaseAuthSession.access_token,
     refreshToken: supabaseAuthSession.refresh_token,
     userId: supabaseAuthSession.user.id,

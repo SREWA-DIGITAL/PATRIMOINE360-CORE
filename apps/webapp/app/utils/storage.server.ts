@@ -7,7 +7,6 @@ import {
 import type { LRUCache } from "lru-cache";
 import type { ResizeOptions } from "sharp";
 
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
 import {
   ASSET_MAX_IMAGE_UPLOAD_SIZE,
   DEFAULT_MAX_IMAGE_UPLOAD_SIZE,
@@ -15,10 +14,8 @@ import {
 } from "./constants";
 import { cropImage } from "./crop-image";
 import { delay } from "./delay";
-import { SUPABASE_URL } from "./env";
 import type { AdditionalData, ErrorLabel } from "./error";
 import { isLikeShelfError, ShelfError } from "./error";
-import { extractImageNameFromSupabaseUrl } from "./extract-image-name-from-supabase-url";
 import { id } from "./id/id.server";
 import { detectImageFormat } from "./image-format.server";
 import {
@@ -26,6 +23,22 @@ import {
   type CachedImage,
 } from "./import.image-cache.server";
 import { Logger } from "./logger";
+import {
+  isStorageFetchFailedError,
+  isStorageHtmlError,
+  isStorageRateLimitError,
+  isStorageServerError,
+} from "./storage-error-classifier.server";
+import {
+  createSignedStorageUrl,
+  getPublicStorageUrl,
+  removeStorageObjects,
+  uploadStorageObject,
+} from "./storage-provider.server";
+import {
+  extractPublicStorageObjectPathFromUrl,
+  extractStorageObjectPathFromUrl,
+} from "./storage-url-resolver.server";
 
 const label: ErrorLabel = "File storage";
 
@@ -37,9 +50,7 @@ export function getPublicFileURL({
   bucketName?: string;
 }) {
   try {
-    const { data } = getSupabaseAdmin()
-      .storage.from(bucketName)
-      .getPublicUrl(filename);
+    const { data } = getPublicStorageUrl(filename, bucketName);
 
     return data.publicUrl;
   } catch (cause) {
@@ -66,9 +77,11 @@ export async function createSignedUrl({
 
   try {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const { data, error } = await getSupabaseAdmin()
-        .storage.from(bucketName)
-        .createSignedUrl(normalizedFilename, 3 * 24 * 60 * 60); // 72h — must match threeDaysFromNow() in refreshExpiredAssetImages
+      const { data, error } = await createSignedStorageUrl(
+        normalizedFilename,
+        bucketName,
+        3 * 24 * 60 * 60
+      ); // 72h — must match threeDaysFromNow() in refreshExpiredAssetImages
 
       if (!error) {
         const signedUrl = data?.signedUrl;
@@ -86,8 +99,8 @@ export async function createSignedUrl({
       // Supabase occasionally responds with HTML on 50x/edge errors, which the client surfaces
       // as StorageUnknownError with a JSON parse failure. Retry before surfacing it to keep
       // transient CDN hiccups from bubbling up as user-facing ShelfErrors.
-      const isHtmlError = isSupabaseHtmlError(error);
-      const isFetchFailed = isSupabaseFetchFailedError(error);
+      const isHtmlError = isStorageHtmlError(error);
+      const isFetchFailed = isStorageFetchFailedError(error);
 
       if (isHtmlError || isFetchFailed) {
         if (attempt < maxAttempts) {
@@ -131,7 +144,7 @@ export async function createSignedUrl({
 
       // Supabase returns 429 when the storage API is overwhelmed.
       // Use exponential backoff to give the API time to recover.
-      if (isSupabaseRateLimitError(error)) {
+      if (isStorageRateLimitError(error)) {
         if (attempt < maxAttempts) {
           const backoffMs = Math.pow(2, attempt - 1) * 1000; // 1s, 2s
           Logger.warn(
@@ -172,7 +185,7 @@ export async function createSignedUrl({
 
       // Supabase returns 5xx (502, 503, 504) on transient infrastructure issues
       // like gateway timeouts. Use exponential backoff before surfacing.
-      if (isSupabaseServerError(error)) {
+      if (isStorageServerError(error)) {
         if (attempt < maxAttempts) {
           const backoffMs = Math.pow(2, attempt - 1) * 1000; // 1s, 2s
           Logger.warn(
@@ -275,9 +288,12 @@ export async function uploadFile(
     const file = await cropImage(fileData, resizeOptions);
 
     // Upload original file
-    const { data, error } = await getSupabaseAdmin()
-      .storage.from(bucketName)
-      .upload(filename, file, { contentType, upsert });
+    const { data, error } = await uploadStorageObject(
+      filename,
+      file,
+      bucketName,
+      { contentType, upsert }
+    );
 
     if (error) {
       throw error;
@@ -313,9 +329,12 @@ export async function uploadFile(
       );
 
       // Upload thumbnail
-      const { data: thumbData, error: thumbError } = await getSupabaseAdmin()
-        .storage.from(bucketName)
-        .upload(thumbFilename, thumbnailFile, { contentType, upsert: true });
+      const { data: thumbData, error: thumbError } = await uploadStorageObject(
+        thumbFilename,
+        thumbnailFile,
+        bucketName,
+        { contentType, upsert: true }
+      );
 
       if (thumbError) {
         throw thumbError;
@@ -597,16 +616,19 @@ export async function uploadImageFromUrl(
         actualContentType = cached.contentType;
 
         // Upload cached optimized version
-        const { data, error } = await getSupabaseAdmin()
-          .storage.from(bucketName)
-          .upload(filename, buffer, {
+        const { data, error } = await uploadStorageObject(
+          filename,
+          buffer,
+          bucketName,
+          {
             contentType: actualContentType,
             upsert: true,
             metadata: {
               source: "url",
               originalUrl: imageUrl,
             },
-          });
+          }
+        );
 
         if (error) {
           /** Log the error so we are aware if there are some issues with uploading */
@@ -742,16 +764,19 @@ export async function uploadImageFromUrl(
     );
 
     // Upload to Supabase
-    const { data, error } = await getSupabaseAdmin()
-      .storage.from(bucketName)
-      .upload(filename, file, {
+    const { data, error } = await uploadStorageObject(
+      filename,
+      file,
+      bucketName,
+      {
         contentType: actualContentType,
         upsert: true,
         metadata: {
           source: "url",
           originalUrl: imageUrl,
         },
-      });
+      }
+    );
 
     if (error) {
       /** Log the error so we are aware if there are some issues with uploading */
@@ -799,12 +824,9 @@ export async function deleteProfilePicture({
   bucketName?: string;
 }) {
   try {
-    if (
-      !url.startsWith(
-        `${SUPABASE_URL}/storage/v1/object/public/profile-pictures/`
-      ) ||
-      url === ""
-    ) {
+    const path = extractPublicStorageObjectPathFromUrl(url, bucketName);
+
+    if (!path) {
       throw new ShelfError({
         cause: null,
         message: "Invalid file URL",
@@ -813,9 +835,7 @@ export async function deleteProfilePicture({
       });
     }
 
-    const { error } = await getSupabaseAdmin()
-      .storage.from(bucketName)
-      .remove([url.split(`${bucketName}/`)[1]]);
+    const { error } = await removeStorageObjects([path], bucketName);
 
     if (error) {
       throw error;
@@ -840,7 +860,7 @@ export async function deleteAssetImage({
   bucketName: string;
 }) {
   try {
-    const path = extractImageNameFromSupabaseUrl({ url, bucketName });
+    const path = extractStorageObjectPathFromUrl(url, bucketName);
     if (!path) {
       throw new ShelfError({
         cause: null,
@@ -850,9 +870,7 @@ export async function deleteAssetImage({
       });
     }
 
-    const { error } = await getSupabaseAdmin()
-      .storage.from(bucketName)
-      .remove([path]);
+    const { error } = await removeStorageObjects([path], bucketName);
 
     if (error) {
       throw error;
@@ -872,7 +890,7 @@ export async function deleteAssetImage({
 }
 
 /**
- * This function constructs the path for the file to be uploaded to Supabase storage.
+ * This function constructs the path for the file to be uploaded to object storage.
  */
 export function getFileUploadPath({
   organizationId,
@@ -887,15 +905,16 @@ export function getFileUploadPath({
 }
 
 /**
- * This function remove the public file from `files` bucket in Supabase using a public URL.
+ * This function removes the public file from `files` bucket using a public URL.
  */
 export async function removePublicFile({ publicUrl }: { publicUrl: string }) {
   try {
-    if (
-      !publicUrl.startsWith(
-        `${SUPABASE_URL}/storage/v1/object/public/${PUBLIC_BUCKET}/`
-      )
-    ) {
+    const path = extractPublicStorageObjectPathFromUrl(
+      publicUrl,
+      PUBLIC_BUCKET
+    );
+
+    if (!path) {
       throw new ShelfError({
         cause: null,
         message: "Invalid file URL",
@@ -904,9 +923,7 @@ export async function removePublicFile({ publicUrl }: { publicUrl: string }) {
       });
     }
 
-    const { error } = await getSupabaseAdmin()
-      .storage.from(PUBLIC_BUCKET)
-      .remove([publicUrl.split(`${PUBLIC_BUCKET}/`)[1]]);
+    const { error } = await removeStorageObjects([path], PUBLIC_BUCKET);
 
     if (error) {
       throw error;
@@ -920,126 +937,4 @@ export async function removePublicFile({ publicUrl }: { publicUrl: string }) {
       label,
     });
   }
-}
-
-/**
- * Supabase can sporadically return HTML error pages (e.g., CDN/edge 50x) that the storage
- * client surfaces as StorageUnknownError due to JSON parsing. Detect that shape so callers
- * can retry instead of immediately failing user-visible flows.
- */
-function isSupabaseHtmlError(error: unknown) {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
-
-  const message =
-    "message" in error && typeof error.message === "string"
-      ? error.message
-      : "";
-  const name =
-    "name" in error && typeof error.name === "string" ? error.name : "";
-
-  // Detect JSON parse failures that typically show up when HTML is returned instead of JSON
-  const lowerMessage = message.toLowerCase();
-  const isJsonParseFailure =
-    lowerMessage.includes("unexpected token") && lowerMessage.includes("json");
-  const mentionsHtml =
-    lowerMessage.includes("<html") ||
-    lowerMessage.includes("html>") ||
-    lowerMessage.includes("text/html");
-  const isUnexpectedHtml =
-    isJsonParseFailure && (mentionsHtml || lowerMessage.includes("<"));
-  const isStorageUnknown =
-    name === "StorageUnknownError" ||
-    ("__isStorageError" in error &&
-      typeof error.__isStorageError === "boolean" &&
-      error.__isStorageError === true);
-
-  return isUnexpectedHtml && isStorageUnknown;
-}
-
-/**
- * Supabase can also surface network failures as StorageUnknownError with a
- * generic "fetch failed" message. Treat those as transient for retries.
- */
-function isSupabaseFetchFailedError(error: unknown) {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
-
-  const message =
-    "message" in error && typeof error.message === "string"
-      ? error.message
-      : "";
-  const name =
-    "name" in error && typeof error.name === "string" ? error.name : "";
-
-  const lowerMessage = message.toLowerCase();
-  const isFetchFailed = lowerMessage.includes("fetch failed");
-  const isStorageUnknown =
-    name === "StorageUnknownError" ||
-    ("__isStorageError" in error &&
-      typeof error.__isStorageError === "boolean" &&
-      error.__isStorageError === true);
-
-  return isFetchFailed && isStorageUnknown;
-}
-
-/**
- * Supabase returns HTTP 429 when too many requests hit the storage API.
- * The client surfaces this as a StorageApiError. Detect it so callers
- * can back off and retry instead of immediately failing.
- */
-export function isSupabaseRateLimitError(error: unknown) {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
-
-  const name =
-    "name" in error && typeof error.name === "string" ? error.name : "";
-  const message =
-    "message" in error && typeof error.message === "string"
-      ? error.message
-      : "";
-  const status =
-    "status" in error && typeof error.status === "number" ? error.status : 0;
-  const statusCode =
-    "statusCode" in error && typeof error.statusCode === "string"
-      ? error.statusCode
-      : "";
-
-  const isRateLimitStatus = status === 429 || statusCode === "429";
-  const isRateLimitMessage = message.toLowerCase().includes("too many");
-  const isStorageApiError = name === "StorageApiError";
-
-  return isStorageApiError && (isRateLimitStatus || isRateLimitMessage);
-}
-
-/**
- * Supabase returns HTTP 5xx (502, 503, 504, etc.) on transient infrastructure
- * issues like gateway timeouts. The client surfaces these as StorageApiError.
- * Detect them so callers can retry instead of immediately failing.
- */
-export function isSupabaseServerError(error: unknown) {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
-
-  const name =
-    "name" in error && typeof error.name === "string" ? error.name : "";
-  const status =
-    "status" in error && typeof error.status === "number" ? error.status : 0;
-  const statusCode =
-    "statusCode" in error && typeof error.statusCode === "string"
-      ? error.statusCode
-      : "";
-
-  const isServerStatus =
-    (status >= 500 && status <= 599) ||
-    (statusCode !== "" &&
-      Number(statusCode) >= 500 &&
-      Number(statusCode) <= 599);
-  const isStorageApiError = name === "StorageApiError";
-
-  return isStorageApiError && isServerStatus;
 }

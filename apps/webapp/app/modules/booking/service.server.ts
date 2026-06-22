@@ -136,6 +136,7 @@ async function sendBookingEmailToAllRecipients({
   textContent,
   heading,
   hints,
+  emailTags,
   templateProps,
 }: {
   recipients: NotificationRecipient[];
@@ -144,6 +145,7 @@ async function sendBookingEmailToAllRecipients({
   textContent: string;
   heading: string;
   hints: ClientHint;
+  emailTags: string[];
   templateProps?: {
     hideViewButton?: boolean;
     cancellationReason?: string;
@@ -167,6 +169,7 @@ async function sendBookingEmailToAllRecipients({
       subject,
       text: textContent,
       html,
+      tags: [...emailTags, recipient.reason],
     });
   }
 }
@@ -1162,6 +1165,7 @@ export async function reserveBooking({
         textContent: text,
         heading: `Booking reservation for ${custodian}`,
         hints,
+        emailTags: ["booking", "reserved", "notification"],
         templateProps: {
           assets: bookingFound.assets,
         },
@@ -1899,6 +1903,7 @@ export async function checkinBooking({
         textContent: text,
         heading: `Your booking has been completed: "${updatedBooking.name}"`,
         hints,
+        emailTags: ["booking", "completed", "notification"],
       });
     }
 
@@ -2642,6 +2647,7 @@ export async function cancelBooking({
         textContent: text,
         heading: `Your booking has been cancelled: "${booking.name}"`,
         hints,
+        emailTags: ["booking", "cancelled", "notification"],
         templateProps: {
           cancellationReason: cancellationReason || undefined,
         },
@@ -2946,6 +2952,7 @@ export async function extendBooking({
           newEndDate
         )}`,
         hints,
+        emailTags: ["booking", "extended", "notification"],
       });
     }
 
@@ -3640,6 +3647,7 @@ export async function deleteBooking(
         textContent: text,
         heading: `Your booking has been deleted: "${b.name}"`,
         hints,
+        emailTags: ["booking", "deleted", "notification"],
         templateProps: {
           hideViewButton: true,
         },
@@ -4184,6 +4192,7 @@ export async function bulkDeleteBookings({
           textContent: text,
           heading: `Your booking has been deleted: "${b.name}"`,
           hints,
+          emailTags: ["booking", "deleted", "notification"],
           templateProps: {
             hideViewButton: true,
           },
@@ -4465,6 +4474,7 @@ export async function bulkCancelBookings({
           textContent: text,
           heading: `Your booking has been cancelled: "${b.name}"`,
           hints,
+          emailTags: ["booking", "cancelled", "notification"],
         });
       }
     }

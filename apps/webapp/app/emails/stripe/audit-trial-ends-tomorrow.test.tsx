@@ -99,6 +99,7 @@ describe("sendAuditTrialEndsTomorrowEmail", () => {
       expect.objectContaining({
         to: "alice@example.com",
         subject: "Your Audits trial ends tomorrow — auto-charge reminder",
+        tags: ["billing", "trial", "audit", "ends-tomorrow"],
       })
     );
   });
@@ -115,6 +116,7 @@ describe("sendAuditTrialEndsTomorrowEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         subject: "Your Audits trial ends tomorrow",
+        tags: ["billing", "trial", "audit", "ends-tomorrow"],
       })
     );
   });

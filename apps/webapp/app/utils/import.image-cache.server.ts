@@ -1,7 +1,7 @@
 import type { LRUCache } from "lru-cache";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
 import { isLikeShelfError, ShelfError } from "./error";
 import { Logger } from "./logger";
+import { downloadStorageObject } from "./storage-provider.server";
 
 // 100MB total cache size for the import operation
 export const MAX_CACHE_SIZE = 100 * 1024 * 1024;
@@ -24,9 +24,7 @@ export async function cacheOptimizedImage(
   cache: LRUCache<string, CachedImage>
 ): Promise<CachedImage | null> {
   try {
-    const { data, error } = await getSupabaseAdmin()
-      .storage.from("assets")
-      .download(path);
+    const { data, error } = await downloadStorageObject(path, "assets");
 
     if (error || !data) {
       Logger.error(

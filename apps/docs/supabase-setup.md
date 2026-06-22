@@ -1,6 +1,6 @@
 # Supabase Setup Guide 🗄️
 
-This guide will walk you through setting up Supabase for your Shelf.nu application. Supabase provides our database, authentication, and file storage.
+This guide will walk you through setting up Supabase for your Shelf.nu application. In the current Core target, Supabase provides PostgreSQL and file storage, while active authentication runs through Better Auth behind the Hono API.
 
 ## Prerequisites ✅
 
@@ -66,9 +66,21 @@ SUPABASE_SERVICE_ROLE="your-service-role-key"
 
 ---
 
-## Step 4: Setup Authentication 🔐
+## Step 4: Configure Better Auth and legacy Supabase auth prerequisites 🔐
 
-### Configure Auth Settings
+### Better Auth is the active auth provider
+
+Core now authenticates through Better Auth on the backend. Define these variables in the root `.env`:
+
+```bash
+BETTER_AUTH_SECRET="replace-with-a-long-random-secret"
+BETTER_AUTH_URL="http://localhost:3000"
+BETTER_AUTH_BASE_PATH="/api/auth"
+```
+
+If you use SSO with Better Auth generic OAuth providers, also define `BETTER_AUTH_SSO_PROVIDERS`.
+
+### Legacy Supabase auth prerequisites still worth keeping
 
 1. **Go to Authentication** → **URL Configuration**
 2. **Site URL**: Set to `https://localhost:3000` (for development with SSL) or `http://localhost:3000` (without SSL)
@@ -93,68 +105,29 @@ SUPABASE_SERVICE_ROLE="your-service-role-key"
 
 > 💡 **Why this is important**: If the OTP length is not set to 6, users won't be able to sign up or log in, as the application only accepts 6-digit codes.
 
-### Setup Email Templates for OTP
+### Auth emails after the Brevo migration
 
-Shelf uses One-Time Passwords (OTP) instead of magic links. Update the email templates:
+Shelf now sends the main authentication emails from the application backend.
+Better Auth owns the active auth path, and Supabase is no longer expected to be
+the primary identity provider or email sender for the main Core auth flows.
 
-1. **Go to Authentication** → **Email Templates**
-2. **Update each template** with the content below:
+Current backend-sent flows include:
 
-<details>
-<summary><strong>📧 Confirm Signup Template</strong> (click to expand)</summary>
+- login OTP
+- signup confirmation OTP
+- resend verification OTP
+- password reset OTP
+- email change OTP
 
-Replace the entire email content with:
+As a result:
 
-```html
-<p>
-  To confirm your account, please use the following One Time Password (OTP):
-</p>
-<h2><b>{{ .Token }}</b></h2>
-<p>
-  Don't share this OTP with anyone. Our customer service team will never ask you
-  for your password, OTP, credit card, or banking info. We hope to see you again
-  soon.
-</p>
-```
+1. **You do not need Supabase email templates to be the primary delivery path**
+2. **You do not need Supabase SMTP to be the primary sender once Brevo is enabled in the app**
+3. **Keep Supabase auth settings only if you still operate a temporary fallback environment during migration cleanup**
 
-</details>
-
-<details>
-<summary><strong>🔐 Magic Link Template</strong> (click to expand)</summary>
-
-Replace the entire email content with:
-
-```html
-<p>To authenticate, please use the following One Time Password (OTP):</p>
-<h2><b>{{ .Token }}</b></h2>
-<p>
-  Don't share this OTP with anyone. Our customer service team will never ask you
-  for your password, OTP, credit card, or banking info. We hope to see you again
-  soon.
-</p>
-```
-
-</details>
-
-<details>
-<summary><strong>🔄 Reset Password Template</strong> (click to expand)</summary>
-
-Replace the entire email content with:
-
-```html
-<h2>Reset Password</h2>
-<p>To reset your password, please use the following (OTP):</p>
-<h2><b>{{ .Token }}</b></h2>
-<p>
-  Don't share this OTP with anyone. Our customer service team will never ask you
-  for your password, OTP, credit card, or banking info. We hope to see you again
-  soon.
-</p>
-```
-
-</details>
-
-3. **Click "Save"** for each template after updating
+If you are operating a legacy deployment or a temporary fallback environment,
+you may still configure Supabase email templates and SMTP. In the target Core
+setup, however, transactional auth emails are sent by the application backend.
 
 ---
 
@@ -213,6 +186,11 @@ SUPABASE_URL="https://your-project-ref.supabase.co"
 SUPABASE_ANON_PUBLIC="your-anon-public-key"
 SUPABASE_SERVICE_ROLE="your-service-role-key"
 
+# Better Auth
+BETTER_AUTH_SECRET="replace-with-a-long-random-secret"
+BETTER_AUTH_URL="https://localhost:3000"
+BETTER_AUTH_BASE_PATH="/api/auth"
+
 # App configuration
 SESSION_SECRET="your-super-secret-session-key"
 SERVER_URL="https://localhost:3000"  # With SSL (recommended)
@@ -222,12 +200,18 @@ FINGERPRINT="a-custom-host-fingerprint"
 # Features (optional - set to false to disable premium features)
 ENABLE_PREMIUM_FEATURES="false"
 
-# Email configuration (required for auth emails)
+# Email configuration for application emails
 SMTP_HOST="smtp.yourhost.com"
 SMTP_PORT=465
 SMTP_USER="you@example.com"
 SMTP_PWD="yourSMTPpassword"
 SMTP_FROM="You from Shelf.nu <you@example.com>"
+EMAIL_PROVIDER="smtp"
+
+# Optional Brevo API delivery for application emails
+# Set EMAIL_PROVIDER="brevo" to route backend emails through Brevo
+# BREVO_API_KEY="xkeysib-your-brevo-api-key"
+# BREVO_TIMEOUT_SECONDS="30"
 
 # Map integration (optional)
 MAPTILER_TOKEN="your-maptiler-token"
@@ -271,6 +255,17 @@ Shelf requires email configuration for user authentication. You can use:
 - **Any SMTP provider**
 
 Update the SMTP settings in your `.env` file with your email provider's details.
+
+### Recommended Brevo setup
+
+If you want to standardize outbound email on Brevo:
+
+1. Set `EMAIL_PROVIDER="brevo"` and `BREVO_API_KEY` in the application `.env`
+   so backend-triggered emails, including the main auth flows, use Brevo.
+2. Keep `SMTP_*` variables available if you want a fallback transport for local
+   development or temporary rollback.
+3. Treat Supabase SMTP and Supabase Auth templates as legacy fallback settings,
+   not as the primary email delivery path for Core.
 
 ---
 
@@ -326,9 +321,8 @@ Your Supabase setup is complete! You should now have:
 - ✅ API keys in `.env`
 - ✅ Connection mode set to "Transaction"
 - ✅ OTP length set to 6 digits
-- ✅ Auth templates configured for OTP
 - ✅ Storage buckets created with policies
-- ✅ Email configuration completed
+- ✅ Backend email configuration completed
 - ✅ Session secrets generated
 
 ## Next Steps 🚀
@@ -352,7 +346,7 @@ Your app should connect to Supabase successfully!
 ### Common Issues
 
 **Connection Error**: Double-check your database password and connection strings  
-**Auth Not Working**: Verify email templates use the escaped token syntax instead of URLs  
+**Auth Not Working**: Verify `BETTER_AUTH_*` variables are present and that the Hono auth handler is mounted correctly  
 **File Upload Fails**: Ensure storage buckets exist and have proper policies  
 **Email Issues**: Test your SMTP settings with a simple email client first
 

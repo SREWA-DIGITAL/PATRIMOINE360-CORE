@@ -46,6 +46,7 @@ export const sendAuditTrialWelcomeEmail = async ({
       subject,
       html,
       text,
+      tags: ["billing", "trial", "audit", "welcome"],
     });
   } catch (cause) {
     Logger.error(

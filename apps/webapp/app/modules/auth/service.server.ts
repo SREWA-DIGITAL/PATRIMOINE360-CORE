@@ -1,25 +1,215 @@
-import {
-  AuthError,
-  isAuthApiError,
-  isAuthRetryableFetchError,
-} from "@supabase/supabase-js";
 import type { AuthSession } from "@server/session";
 import { config } from "~/config/shelf.config";
 import { db } from "~/database/db.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
+import { sendEmail } from "~/emails/mail.server";
 import { SERVER_URL } from "~/utils/env";
 
 import type { ErrorLabel } from "~/utils/error";
 import { isLikeShelfError, ShelfError } from "~/utils/error";
 import { assertEnterpriseFeature } from "~/utils/license";
 import { Logger } from "~/utils/logger";
-import { mapAuthSession } from "./mappers.server";
+import {
+  getAuthErrorCode,
+  getAuthErrorMessage,
+  isAuthApiErrorLike,
+  isRetryableAuthError,
+} from "./auth-error-classifier.server";
+import type { getAuthUserByAccessToken } from "./auth-provider.server";
+import {
+  createAuthUser,
+  findAuthUserIdByEmail,
+  generateAuthOtpCode,
+  updateAuthUserById,
+  verifyRecoveryOtpWithProvider,
+} from "./auth-provider.server";
+import {
+  deleteBetterAuthUserIdentity,
+  getBetterAuthProviderUserById,
+  updateBetterAuthCredentialPassword,
+  updateBetterAuthUserEmail,
+} from "./better-auth-identity.server";
+import {
+  changeBetterAuthEmail,
+  getBetterAuthErrorCode,
+  getBetterAuthSession,
+  isBetterAuthApiError,
+  refreshBetterAuthAppSession,
+  requestBetterAuthEmailChange,
+  requestBetterAuthPasswordResetOtp,
+  resetBetterAuthPasswordWithOtp,
+  revokeBetterAuthOtherSessions,
+  sendBetterAuthSignInOtp,
+  signInWithBetterAuthEmail,
+  signInWithBetterAuthEmailOtp,
+  signInWithBetterAuthOAuthProvider,
+  signUpWithBetterAuthEmail,
+  signOutBetterAuthSession,
+} from "./better-auth-session.server";
+import { findBetterAuthSsoProviderByDomain } from "./better-auth.server";
 
 const label: ErrorLabel = "Auth";
+type AuthOtpMode = "login" | "signup" | "confirm_signup";
+type EmailChangeOtpRequestResult =
+  | { provider: "better-auth" }
+  | { otp: string; provider: "supabase" };
+type SessionValidationInput =
+  | string
+  | Pick<AuthSession, "provider" | "accessToken" | "refreshToken">;
+type AuthAccessTokenResponse = Awaited<
+  ReturnType<typeof getAuthUserByAccessToken>
+>;
+
+function mapBetterAuthAccessTokenResponse(
+  session: NonNullable<Awaited<ReturnType<typeof getBetterAuthSession>>>
+): AuthAccessTokenResponse {
+  if (!session.user.email) {
+    throw new ShelfError({
+      cause: null,
+      message: "Better Auth user should have an email",
+      additionalData: {
+        userId: session.user.id || session.session.userId,
+      },
+      label,
+    });
+  }
+
+  return {
+    data: {
+      user: {
+        id: session.user.id || session.session.userId,
+        email: session.user.email,
+      },
+    },
+    error: null,
+  } as AuthAccessTokenResponse;
+}
+
+function getAuthSessionProvider(
+  authSession: Pick<AuthSession, "provider"> | null | undefined
+) {
+  return authSession?.provider ?? "better-auth";
+}
+
+function getAuthSessionToken(input: SessionValidationInput) {
+  if (typeof input === "string") {
+    return {
+      provider: "better-auth" as const,
+      token: input,
+    };
+  }
+
+  const provider = getAuthSessionProvider(input);
+
+  return {
+    provider,
+    token: provider === "better-auth" ? input.accessToken : input.refreshToken,
+  };
+}
+
+function getBetterAuthSignupName(email: string) {
+  return email.split("@")[0] ?? email;
+}
+
+function buildSignupVerificationCallbackURL(
+  email: string,
+  redirectTo?: string | undefined
+) {
+  const params = new URLSearchParams({
+    email,
+    email_verified: "true",
+  });
+
+  if (redirectTo) {
+    params.set("redirectTo", redirectTo);
+  }
+
+  return `${SERVER_URL}/login?${params.toString()}`;
+}
+
+function buildSsoCallbackURL(redirectTo?: string | undefined) {
+  const callbackURL = new URL("/oauth/callback", SERVER_URL);
+
+  if (redirectTo) {
+    callbackURL.searchParams.set("redirectTo", redirectTo);
+  }
+
+  return callbackURL.toString();
+}
+
+function getAuthOtpModeCopy(mode: AuthOtpMode) {
+  switch (mode) {
+    case "login":
+      return {
+        headline: "Login code",
+        intro: "To log in, please use the following one-time code:",
+        subject: "Your login code",
+        tags: ["auth", "otp", "login"],
+      };
+    case "signup":
+      return {
+        headline: "Create your account",
+        intro:
+          "To create your account, please use the following one-time code:",
+        subject: "Your signup code",
+        tags: ["auth", "otp", "signup"],
+      };
+    case "confirm_signup":
+      return {
+        headline: "Confirm your email",
+        intro:
+          "To confirm your email address, please use the following one-time code:",
+        subject: "Confirm your email address",
+        tags: ["auth", "otp", "confirm-signup"],
+      };
+  }
+}
+
+async function sendGeneratedAuthOtp(email: string, mode: AuthOtpMode) {
+  const linkType = mode === "login" ? "magiclink" : "signup";
+  const { otp, error } =
+    mode === "login"
+      ? await generateAuthOtpCode("magiclink", email)
+      : await generateAuthOtpCode("signup", email);
+
+  if (error) {
+    throw error;
+  }
+
+  if (!otp) {
+    throw new ShelfError({
+      cause: null,
+      message: "Auth provider did not return an email OTP",
+      additionalData: { email, mode, linkType },
+      label,
+    });
+  }
+
+  const copy = getAuthOtpModeCopy(mode);
+
+  sendEmail({
+    to: email,
+    subject: `${copy.subject}: ${otp}`,
+    text: [
+      copy.headline,
+      "",
+      copy.intro,
+      otp,
+      "",
+      "Do not share this code with anyone.",
+    ].join("\n"),
+    html: [
+      `<h2>${copy.headline}</h2>`,
+      `<p>${copy.intro}</p>`,
+      `<h2><b>${otp}</b></h2>`,
+      "<p>Do not share this code with anyone.</p>",
+    ].join(""),
+    tags: copy.tags,
+  });
+}
 
 export async function createEmailAuthAccount(email: string, password: string) {
   try {
-    const { data, error } = await getSupabaseAdmin().auth.admin.createUser({
+    const { data, error } = await createAuthUser({
       email,
       password,
       email_confirm: true,
@@ -58,23 +248,16 @@ export async function confirmExistingAuthAccount(
   password: string
 ) {
   try {
-    const result = await db.$queryRaw<{ id: string }[]>`
-      SELECT id FROM auth.users
-      WHERE email = ${email.toLowerCase()}
-      LIMIT 1
-    `;
+    const authUserId = await findAuthUserIdByEmail(email);
 
-    if (result.length === 0) {
+    if (!authUserId) {
       return null;
     }
 
-    const { data, error } = await getSupabaseAdmin().auth.admin.updateUserById(
-      result[0].id,
-      {
-        email_confirm: true,
-        password,
-      }
-    );
+    const { data, error } = await updateAuthUserById(authUserId, {
+      email_confirm: true,
+      password,
+    });
 
     if (error) {
       throw error;
@@ -93,13 +276,12 @@ export async function confirmExistingAuthAccount(
 
 export async function signUpWithEmailPass(email: string, password: string) {
   try {
-    const { data, error } = await getSupabaseAdmin().auth.signUp({
+    const { data, error } = await createAuthUser({
       email: email,
       password: password,
-      options: {
-        data: {
-          signup_method: "email-password",
-        },
+      email_confirm: false,
+      user_metadata: {
+        signup_method: "email-password",
       },
     });
 
@@ -117,17 +299,19 @@ export async function signUpWithEmailPass(email: string, password: string) {
       });
     }
 
+    await sendGeneratedAuthOtp(email, "confirm_signup");
+
     return user;
   } catch (cause) {
     const isRateLimitError =
-      isAuthApiError(cause) &&
+      isAuthApiErrorLike(cause) &&
       (cause.status === 429 ||
         cause.message.includes("request this after 5 seconds"));
-    const isTransientFetchError = isAuthRetryableFetchError(cause);
+    const isTransientFetchError = isRetryableAuthError(cause);
     /** Supabase can return transient database errors during user creation
      * that resolve on retry — suppress these from Sentry. */
     const isDatabaseError =
-      isAuthApiError(cause) && cause.message.includes("Database error");
+      isAuthApiErrorLike(cause) && cause.message.includes("Database error");
     const message = isRateLimitError
       ? "You're trying too fast. Please wait a few seconds and try again."
       : "Something went wrong, refresh page and try to signup again.";
@@ -145,19 +329,97 @@ export async function signUpWithEmailPass(email: string, password: string) {
   }
 }
 
-export async function resendVerificationEmail(email: string) {
+export async function signUpWithBetterAuthEmailPass(
+  email: string,
+  password: string,
+  redirectTo?: string
+) {
   try {
-    const { error } = await getSupabaseAdmin().auth.resend({
-      type: "signup",
-      email,
+    const normalizedEmail = email.toLowerCase();
+    const callbackURL = buildSignupVerificationCallbackURL(
+      normalizedEmail,
+      redirectTo
+    );
+    const { user } = await signUpWithBetterAuthEmail({
+      callbackURL,
+      email: normalizedEmail,
+      name: getBetterAuthSignupName(normalizedEmail),
+      password,
     });
 
-    if (error) {
-      throw error;
+    if (!user) {
+      throw new ShelfError({
+        cause: null,
+        message: "The user returned by Better Auth is null",
+        label,
+      });
     }
+
+    return user;
   } catch (cause) {
-    // @ts-expect-error
-    const isRateLimitError = cause?.code === "over_email_send_rate_limit";
+    const betterAuthErrorCode = getBetterAuthErrorCode(cause);
+    const isBetterAuthDuplicateEmail =
+      betterAuthErrorCode === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL";
+    const message = isBetterAuthDuplicateEmail
+      ? "User with this Email already exits, login instead"
+      : "Something went wrong, refresh page and try to signup again.";
+
+    throw new ShelfError({
+      cause,
+      message,
+      additionalData: { email },
+      label,
+      shouldBeCaptured: !isBetterAuthDuplicateEmail,
+      status: isBetterAuthDuplicateEmail ? 409 : undefined,
+    });
+  }
+}
+
+function createBetterAuthEmailNotVerifiedError(
+  email: string,
+  redirectTo?: string
+) {
+  return new ShelfError({
+    cause: null,
+    message:
+      "Check your inbox and click the verification link before logging in.",
+    additionalData: {
+      authState: "email-not-verified",
+      email,
+      redirectTo,
+    },
+    label,
+    shouldBeCaptured: false,
+    status: 403,
+  });
+}
+
+function getBetterAuthOtpErrorState(cause: unknown) {
+  const betterAuthErrorCode = getBetterAuthErrorCode(cause);
+
+  switch (betterAuthErrorCode) {
+    case "INVALID_OTP":
+    case "OTP_EXPIRED":
+      return {
+        message: "Invalid or expired verification code",
+        shouldBeCaptured: false,
+      };
+    case "TOO_MANY_ATTEMPTS":
+      return {
+        message: "Too many attempts. Please request a new code and try again.",
+        shouldBeCaptured: false,
+      };
+    default:
+      return null;
+  }
+}
+
+export async function resendVerificationEmail(email: string) {
+  try {
+    await sendGeneratedAuthOtp(email, "confirm_signup");
+  } catch (cause) {
+    const isRateLimitError =
+      getAuthErrorCode(cause) === "over_email_send_rate_limit";
     throw new ShelfError({
       cause,
       message:
@@ -169,38 +431,44 @@ export async function resendVerificationEmail(email: string) {
   }
 }
 
-export async function signInWithEmail(email: string, password: string) {
+export async function signInWithEmail(
+  email: string,
+  password: string,
+  redirectTo?: string
+): Promise<AuthSession | null> {
   try {
-    const { data, error } = await getSupabaseAdmin().auth.signInWithPassword({
-      email,
+    const normalizedEmail = email.toLowerCase();
+    return await signInWithBetterAuthEmail(
+      normalizedEmail,
       password,
-    });
-
-    if (error?.message === "Email not confirmed") {
-      return null;
-    }
-
-    if (error) {
-      throw error;
-    }
-
-    const { session } = data;
-
-    return mapAuthSession(session);
+      buildSignupVerificationCallbackURL(normalizedEmail, redirectTo)
+    );
   } catch (cause) {
+    const betterAuthErrorCode = getBetterAuthErrorCode(cause);
+    if (betterAuthErrorCode === "EMAIL_NOT_VERIFIED") {
+      throw createBetterAuthEmailNotVerifiedError(
+        email.toLowerCase(),
+        redirectTo
+      );
+    }
+
     const isInvalidCredentials =
-      isAuthApiError(cause) && cause.message === "Invalid login credentials";
+      isAuthApiErrorLike(cause) &&
+      cause.message === "Invalid login credentials";
+    const isBetterAuthInvalidCredentials =
+      betterAuthErrorCode === "INVALID_EMAIL_OR_PASSWORD";
     // Supabase 504s and intermittent fetch failures surface as
     // `AuthRetryableFetchError`. They resolve on retry and shouldn't page us.
-    const isTransientFetchError = isAuthRetryableFetchError(cause);
+    const isTransientFetchError = isRetryableAuthError(cause);
     // "Database error finding user" / similar transient backend hiccups.
     const isDatabaseError =
-      isAuthApiError(cause) && cause.message.includes("Database error");
-    const isRateLimitError = isAuthApiError(cause) && cause.status === 429;
+      isAuthApiErrorLike(cause) && cause.message.includes("Database error");
+    const isRateLimitError = isAuthApiErrorLike(cause) && cause.status === 429;
 
-    const message = isInvalidCredentials
-      ? "Incorrect email or password"
-      : "Something went wrong. Please try again later or contact support.";
+    const message =
+      isInvalidCredentials || isBetterAuthInvalidCredentials
+        ? "Incorrect email or password"
+        : "Something went wrong. Please try again later or contact support.";
 
     throw new ShelfError({
       cause,
@@ -208,6 +476,7 @@ export async function signInWithEmail(email: string, password: string) {
       label,
       shouldBeCaptured: !(
         isInvalidCredentials ||
+        isBetterAuthInvalidCredentials ||
         isTransientFetchError ||
         isDatabaseError ||
         isRateLimitError
@@ -216,7 +485,7 @@ export async function signInWithEmail(email: string, password: string) {
   }
 }
 
-export async function signInWithSSO(domain: string) {
+export async function signInWithSSO(domain: string, redirectTo?: string) {
   if (!config.license.isEnterprise) {
     assertEnterpriseFeature("SSO", config.license.type);
   }
@@ -234,25 +503,31 @@ export async function signInWithSSO(domain: string) {
   }
 
   try {
-    const { data, error } = await getSupabaseAdmin().auth.signInWithSSO({
-      domain,
-      options: {
-        redirectTo: `${SERVER_URL}/oauth/callback`,
-      },
-    });
+    const betterAuthSsoProvider = findBetterAuthSsoProviderByDomain(domain);
 
-    if (error) {
-      throw error;
+    if (!betterAuthSsoProvider) {
+      throw new ShelfError({
+        cause: null,
+        message: "No SSO provider assigned for your organization's domain",
+        additionalData: { domain },
+        label,
+        shouldBeCaptured: false,
+        status: 404,
+      });
     }
 
-    return data.url;
+    const result = await signInWithBetterAuthOAuthProvider({
+      callbackURL: buildSsoCallbackURL(redirectTo),
+      providerId: betterAuthSsoProvider.providerId,
+    });
+
+    return result.url;
   } catch (cause) {
     let message =
       "Something went wrong. Please try again later or contact support.";
     let shouldBeCaptured = true;
 
-    // @ts-expect-error
-    if (cause?.code === "sso_provider_not_found") {
+    if (isLikeShelfError(cause) && cause.shouldBeCaptured === false) {
       message = "No SSO provider assigned for your organization's domain";
       shouldBeCaptured = false;
     }
@@ -291,39 +566,35 @@ async function validateNonSSOUser(email: string) {
   }
 }
 
-export async function sendOTP(email: string) {
+export async function sendOTP(email: string, mode: AuthOtpMode = "login") {
   try {
-    await validateNonSSOUser(email);
+    const normalizedEmail = email.toLowerCase();
 
-    const { error } = await getSupabaseAdmin().auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: !config.disableSignup, // If signup is disabled, don't create a new user
-      },
-    });
+    await validateNonSSOUser(normalizedEmail);
 
-    if (error) {
-      throw error;
+    if (mode === "login") {
+      await sendBetterAuthSignInOtp(normalizedEmail);
+      return;
     }
+
+    await sendGeneratedAuthOtp(normalizedEmail, mode);
   } catch (cause) {
     // Read `code` via narrowing instead of `@ts-expect-error` — `cause` is
     // `unknown`, and a bare property access would throw at runtime if it
     // were null/undefined.
-    const errorCode =
-      typeof cause === "object" && cause !== null && "code" in cause
-        ? (cause as { code: unknown }).code
-        : undefined;
+    const errorCode = getAuthErrorCode(cause);
     // Match `signInWithEmail`'s rate-limit handling: cover both the
     // Supabase OTP-specific `over_email_send_rate_limit` code and the
     // generic HTTP 429 `AuthApiError` (which can carry a different code).
     const isRateLimitError =
       errorCode === "over_email_send_rate_limit" ||
-      (isAuthApiError(cause) && cause.status === 429);
+      (isAuthApiErrorLike(cause) && cause.status === 429) ||
+      (isBetterAuthApiError(cause) && cause.status === 429);
     // Supabase 504s and intermittent fetch failures resolve on retry.
-    const isTransientFetchError = isAuthRetryableFetchError(cause);
+    const isTransientFetchError = isRetryableAuthError(cause);
     // "Database error finding user" — Supabase backend hiccup, not actionable.
     const isDatabaseError =
-      isAuthApiError(cause) && cause.message.includes("Database error");
+      isAuthApiErrorLike(cause) && cause.message.includes("Database error");
     // SSO-mismatch / similar `validateNonSSOUser` rejections already opt out
     // via their own `shouldBeCaptured: false` — preserve that decision.
     const inheritedShouldBeCaptured = isLikeShelfError(cause)
@@ -335,16 +606,14 @@ export async function sendOTP(email: string) {
 
     // AuthRetryableFetchError (e.g. from 504 timeout) can have "{}" as message,
     // so we validate the message is actually useful before showing it to users
-    const hasUsableMessage =
-      (cause instanceof AuthError || isLikeShelfError(cause)) &&
-      cause.message &&
-      cause.message !== "{}" &&
-      !cause.message.startsWith("{");
+    const providerMessage =
+      getAuthErrorMessage(cause) ||
+      (isBetterAuthApiError(cause) ? cause.message : undefined);
 
     throw new ShelfError({
       cause,
-      message: hasUsableMessage ? cause.message : fallbackMessage,
-      additionalData: { email },
+      message: providerMessage ?? fallbackMessage,
+      additionalData: { email: email.toLowerCase(), mode },
       label,
       shouldBeCaptured:
         inheritedShouldBeCaptured === false
@@ -356,18 +625,125 @@ export async function sendOTP(email: string) {
 
 export async function sendResetPasswordLink(email: string) {
   try {
-    await validateNonSSOUser(email);
-
-    await getSupabaseAdmin().auth.resetPasswordForEmail(email);
+    const normalizedEmail = email.toLowerCase();
+    await validateNonSSOUser(normalizedEmail);
+    await requestBetterAuthPasswordResetOtp(normalizedEmail);
   } catch (cause) {
+    const isRateLimitError =
+      (isAuthApiErrorLike(cause) && cause.status === 429) ||
+      (isBetterAuthApiError(cause) && cause.status === 429);
+
     throw new ShelfError({
       cause,
       message:
         "Something went wrong while sending the reset password link. Please try again later or contact support.",
-      additionalData: { email },
+      additionalData: { email: email.toLowerCase() },
+      label,
+      shouldBeCaptured: !isRateLimitError,
+    });
+  }
+}
+
+export async function requestEmailChangeOtp(
+  authSession: AuthSession,
+  newEmail: string
+): Promise<EmailChangeOtpRequestResult> {
+  try {
+    const normalizedNewEmail = newEmail.toLowerCase();
+    await requestBetterAuthEmailChange(
+      authSession.accessToken,
+      normalizedNewEmail
+    );
+
+    return {
+      provider: "better-auth",
+    };
+  } catch (cause) {
+    if (isLikeShelfError(cause)) {
+      throw cause;
+    }
+
+    throw new ShelfError({
+      cause,
+      message: "Failed to initiate email change",
+      additionalData: {
+        currentEmail: authSession.email.toLowerCase(),
+        newEmail: newEmail.toLowerCase(),
+        provider: getAuthSessionProvider(authSession),
+      },
       label,
     });
   }
+}
+
+export async function verifyEmailChangeOtp(
+  authSession: AuthSession,
+  newEmail: string,
+  otp: string
+) {
+  try {
+    const normalizedNewEmail = newEmail.toLowerCase();
+    await changeBetterAuthEmail(
+      authSession.accessToken,
+      normalizedNewEmail,
+      otp
+    );
+  } catch (cause) {
+    if (isLikeShelfError(cause)) {
+      throw cause;
+    }
+
+    throw new ShelfError({
+      cause,
+      message: "Invalid or expired verification code",
+      additionalData: { email: newEmail.toLowerCase() },
+      label: "Auth",
+      shouldBeCaptured: false,
+    });
+  }
+}
+
+export async function revokeOtherSessions(
+  authSessionOrAccessToken: AuthSession | string
+) {
+  try {
+    const accessToken =
+      typeof authSessionOrAccessToken === "string"
+        ? authSessionOrAccessToken
+        : authSessionOrAccessToken.accessToken;
+
+    await revokeBetterAuthOtherSessions(accessToken);
+  } catch (cause) {
+    throw new ShelfError({
+      cause,
+      message: "Failed to revoke the other active sessions",
+      label,
+    });
+  }
+}
+
+export async function signOutCurrentAuthSession(authSession: AuthSession) {
+  if (getAuthSessionProvider(authSession) !== "better-auth") {
+    return;
+  }
+
+  try {
+    await signOutBetterAuthSession(authSession.accessToken);
+  } catch (cause) {
+    throw new ShelfError({
+      cause,
+      message: "Failed to revoke the current Better Auth session",
+      label,
+    });
+  }
+}
+
+export async function setAuthUserEmail(userId: string, email: string) {
+  return updateBetterAuthUserEmail(userId, email);
+}
+
+export async function softDeleteAuthUser(userId: string) {
+  return deleteBetterAuthUserIdentity(userId);
 }
 
 export async function updateAccountPassword(
@@ -391,16 +767,9 @@ export async function updateAccountPassword(
     }
     //logout all the others session expect the current sesssion.
     if (accessToken) {
-      await getSupabaseAdmin().auth.admin.signOut(accessToken, "others");
+      await revokeOtherSessions(accessToken);
     }
-    //on password update, it is remvoing the session in th supbase.
-    const { error } = await getSupabaseAdmin().auth.admin.updateUserById(id, {
-      password,
-    });
-
-    if (error) {
-      throw error;
-    }
+    await updateBetterAuthCredentialPassword(id, password);
   } catch (cause) {
     throw new ShelfError({
       cause,
@@ -414,7 +783,7 @@ export async function updateAccountPassword(
 
 export async function deleteAuthAccount(userId: string) {
   try {
-    const { error } = await getSupabaseAdmin().auth.admin.deleteUser(userId);
+    const { error } = await deleteBetterAuthUserIdentity(userId);
 
     if (error) {
       throw error;
@@ -434,14 +803,18 @@ export async function deleteAuthAccount(userId: string) {
 
 export async function getAuthUserById(userId: string) {
   try {
-    const { data, error } =
-      await getSupabaseAdmin().auth.admin.getUserById(userId);
+    const user = await getBetterAuthProviderUserById(userId);
 
-    if (error) {
-      throw error;
+    if (!user) {
+      throw new ShelfError({
+        cause: null,
+        message: "Auth user was not found",
+        additionalData: { userId },
+        label,
+        shouldBeCaptured: false,
+        status: 404,
+      });
     }
-
-    const { user } = data;
 
     return user;
   } catch (cause) {
@@ -457,8 +830,28 @@ export async function getAuthUserById(userId: string) {
 
 export async function getAuthResponseByAccessToken(accessToken: string) {
   try {
-    return await getSupabaseAdmin().auth.getUser(accessToken);
+    const betterAuthSession = await getBetterAuthSession(accessToken);
+
+    if (!betterAuthSession) {
+      return {
+        data: {
+          user: null,
+        },
+        error: null,
+      };
+    }
+
+    return mapBetterAuthAccessTokenResponse(betterAuthSession);
   } catch (cause) {
+    if (isBetterAuthApiError(cause)) {
+      return {
+        data: {
+          user: null,
+        },
+        error: cause,
+      };
+    }
+
     throw new ShelfError({
       cause,
       message:
@@ -468,32 +861,17 @@ export async function getAuthResponseByAccessToken(accessToken: string) {
   }
 }
 
-export async function validateSession(token: string) {
+export async function validateSession(input: SessionValidationInput) {
   try {
-    // const t0 = performance.now();
-    const result = await db.$queryRaw<{ id: string; revoked: boolean }[]>`
-      SELECT id, revoked FROM auth.refresh_tokens 
-      WHERE token = ${token} 
-      AND revoked = false
-      LIMIT 1 
-    `;
-    // const t1 = performance.now();
+    const { token } = getAuthSessionToken(input);
 
-    // eslint-disable-next-line no-console
-    // console.log(`Call to validateSession took ${t1 - t0} milliseconds.`);
-
-    if (result.length === 0) {
-      //logging for debug
-      Logger.error(
-        new ShelfError({
-          cause: null,
-          message: "Refresh token is invalid or has been revoked",
-          label,
-          shouldBeCaptured: false,
-        })
-      );
+    if (!token) {
+      return false;
     }
-    return result.length > 0;
+
+    const session = await getBetterAuthSession(token);
+
+    return Boolean(session);
   } catch (_err) {
     Logger.error(
       new ShelfError({
@@ -508,36 +886,23 @@ export async function validateSession(token: string) {
 }
 
 export async function refreshAccessToken(
-  refreshToken?: string
+  authSessionOrRefreshToken?: AuthSession | string
 ): Promise<AuthSession> {
   try {
-    if (!refreshToken) {
+    const accessToken =
+      typeof authSessionOrRefreshToken === "string"
+        ? authSessionOrRefreshToken
+        : authSessionOrRefreshToken?.accessToken;
+
+    if (!accessToken) {
       throw new ShelfError({
         cause: null,
-        message: "Refresh token is required",
+        message: "Access token is required",
         label,
       });
     }
 
-    const { data, error } = await getSupabaseAdmin().auth.refreshSession({
-      refresh_token: refreshToken,
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    const { session } = data;
-
-    if (!session) {
-      throw new ShelfError({
-        cause: null,
-        message: "The session returned by Supabase is null",
-        label,
-      });
-    }
-
-    return mapAuthSession(session);
+    return await refreshBetterAuthAppSession(accessToken);
   } catch (cause) {
     throw new ShelfError({
       cause,
@@ -545,7 +910,10 @@ export async function refreshAccessToken(
         "Unable to refresh access token. Please try again. If the issue persists, contact support",
       label,
       additionalData: {
-        refreshToken,
+        accessToken:
+          typeof authSessionOrRefreshToken === "string"
+            ? authSessionOrRefreshToken
+            : authSessionOrRefreshToken?.accessToken,
       },
     });
   }
@@ -553,11 +921,9 @@ export async function refreshAccessToken(
 
 export async function verifyAuthSession(authSession: AuthSession) {
   try {
-    const authAccount = await getAuthResponseByAccessToken(
-      authSession.accessToken
-    );
+    const session = await getBetterAuthSession(authSession.accessToken);
 
-    return Boolean(authAccount);
+    return Boolean(session);
   } catch (cause) {
     throw new ShelfError({
       cause,
@@ -570,34 +936,26 @@ export async function verifyAuthSession(authSession: AuthSession) {
 
 export async function verifyOtpAndSignin(email: string, otp: string) {
   try {
-    const { data, error } = await getSupabaseAdmin().auth.verifyOtp({
-      email,
-      token: otp,
-      type: "email",
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    const { session } = data;
-
-    if (!session) {
-      throw new ShelfError({
-        cause: null,
-        message: "The session returned by Supabase is null",
-        label,
-      });
-    }
-
-    return mapAuthSession(session);
+    const normalizedEmail = email.toLowerCase();
+    return await signInWithBetterAuthEmailOtp(normalizedEmail, otp);
   } catch (cause) {
     let message =
       "Something went wrong. Please try again later or contact support.";
     let shouldBeCaptured = true;
 
-    if (isAuthApiError(cause) && cause.message !== "") {
+    const betterAuthOtpError = getBetterAuthOtpErrorState(cause);
+    const providerMessage = getAuthErrorMessage(cause);
+
+    if (betterAuthOtpError) {
+      message = betterAuthOtpError.message;
+      shouldBeCaptured = betterAuthOtpError.shouldBeCaptured;
+    } else if (isBetterAuthApiError(cause) && cause.message) {
       message = cause.message;
+      shouldBeCaptured = false;
+    }
+
+    if (isAuthApiErrorLike(cause) && providerMessage) {
+      message = providerMessage;
       shouldBeCaptured = false;
     }
 
@@ -606,7 +964,75 @@ export async function verifyOtpAndSignin(email: string, otp: string) {
       message,
       label,
       shouldBeCaptured,
+      additionalData: { email: email.toLowerCase() },
+    });
+  }
+}
+
+export async function verifyRecoveryOtp(email: string, otp: string) {
+  try {
+    const { data, error } = await verifyRecoveryOtpWithProvider(email, otp);
+
+    if (error || !data.user || !data.session) {
+      throw new ShelfError({
+        cause: error,
+        message: "Invalid or expired verification code",
+        additionalData: { email },
+        label,
+        shouldBeCaptured: false,
+      });
+    }
+
+    return {
+      userId: data.user.id,
+      accessToken: data.session.access_token,
+    };
+  } catch (cause) {
+    if (isLikeShelfError(cause)) {
+      throw cause;
+    }
+
+    throw new ShelfError({
+      cause,
+      message: "Invalid or expired verification code",
       additionalData: { email },
+      label,
+      shouldBeCaptured: false,
+    });
+  }
+}
+
+export async function resetPasswordWithOtp(
+  email: string,
+  otp: string,
+  password: string
+) {
+  try {
+    const normalizedEmail = email.toLowerCase();
+    await resetBetterAuthPasswordWithOtp(normalizedEmail, otp, password);
+  } catch (cause) {
+    const betterAuthOtpError = getBetterAuthOtpErrorState(cause);
+
+    if (betterAuthOtpError) {
+      throw new ShelfError({
+        cause,
+        message: betterAuthOtpError.message,
+        additionalData: { email: email.toLowerCase() },
+        label,
+        shouldBeCaptured: betterAuthOtpError.shouldBeCaptured,
+      });
+    }
+
+    if (isLikeShelfError(cause)) {
+      throw cause;
+    }
+
+    throw new ShelfError({
+      cause,
+      message: "Invalid or expired verification code",
+      additionalData: { email: email.toLowerCase() },
+      label,
+      shouldBeCaptured: false,
     });
   }
 }

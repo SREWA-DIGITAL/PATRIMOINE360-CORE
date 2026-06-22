@@ -31,7 +31,6 @@ import type {
   SortingOptions,
 } from "~/components/list/filters/sort-by";
 import { db } from "~/database/db.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
 import {
   updateBarcodes,
   validateBarcodeUniqueness,
@@ -102,6 +101,12 @@ import {
 } from "~/utils/markdoc-wrappers";
 import { isValidImageUrl } from "~/utils/misc";
 import { threeDaysFromNow } from "~/utils/one-week-from-now";
+import {
+  downloadStorageObject,
+  listStorageObjects,
+  removeStorageObjects,
+  uploadStorageObject,
+} from "~/utils/storage-provider.server";
 import {
   createSignedUrl,
   parseFileFormData,
@@ -1972,9 +1977,7 @@ export async function deleteOtherImages({
       : `${currentImage}-thumbnail`;
 
     const { data: deletedImagesData, error: deletedImagesError } =
-      await getSupabaseAdmin()
-        .storage.from("assets")
-        .list(`${userId}/${assetId}`);
+      await listStorageObjects(`${userId}/${assetId}`, "assets");
 
     if (deletedImagesError) {
       throw new ShelfError({
@@ -1997,9 +2000,7 @@ export async function deleteOtherImages({
     // Delete the images
     await Promise.all(
       imagesToDelete.map((image) =>
-        getSupabaseAdmin()
-          .storage.from("assets")
-          .remove([`${userId}/${assetId}/${image}`])
+        removeStorageObjects([`${userId}/${assetId}/${image}`], "assets")
       )
     );
   } catch (cause) {
@@ -2037,7 +2038,7 @@ export async function uploadDuplicateAssetMainImage(
     }
 
     const { data: originalFile, error: downloadError } =
-      await getSupabaseAdmin().storage.from("assets").download(originalPath);
+      await downloadStorageObject(originalPath, "assets");
 
     if (downloadError) {
       throw new ShelfError({
@@ -2063,13 +2064,12 @@ export async function uploadDuplicateAssetMainImage(
     }
 
     /** Uploading the Blob to supabase */
-    const { data, error } = await getSupabaseAdmin()
-      .storage.from("assets")
-      .upload(
-        `${userId}/${assetId}/main-image-${dateTimeInUnix(Date.now())}`,
-        imageBuffer,
-        { contentType: detectedFormat, upsert: true }
-      );
+    const { data, error } = await uploadStorageObject(
+      `${userId}/${assetId}/main-image-${dateTimeInUnix(Date.now())}`,
+      imageBuffer,
+      "assets",
+      { contentType: detectedFormat, upsert: true }
+    );
 
     if (error) {
       throw error;

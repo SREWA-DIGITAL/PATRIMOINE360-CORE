@@ -29,7 +29,11 @@
     "seed:reporting-demo": "dotenv -e ../../.env -- tsx scripts/seed-reporting-demo.ts",
     "seed:reporting-demo:staging": "dotenv -e ../../.env.staging -- tsx scripts/seed-reporting-demo.ts",
     "clean:reporting-demo": "dotenv -e ../../.env -- tsx scripts/clean-reporting-demo.ts",
-    "clean:reporting-demo:staging": "dotenv -e ../../.env.staging -- tsx scripts/clean-reporting-demo.ts"
+    "clean:reporting-demo:staging": "dotenv -e ../../.env.staging -- tsx scripts/clean-reporting-demo.ts",
+    "auth:audit:supabase-migration": "dotenv -e ../../.env -- tsx scripts/audit-supabase-auth-migration.ts",
+    "auth:audit:supabase-migration:staging": "dotenv -e ../../.env.staging -- tsx scripts/audit-supabase-auth-migration.ts",
+    "auth:migrate:supabase-to-better-auth": "dotenv -e ../../.env -- tsx scripts/migrate-supabase-auth-to-better-auth.ts",
+    "auth:migrate:supabase-to-better-auth:staging": "dotenv -e ../../.env.staging -- tsx scripts/migrate-supabase-auth-to-better-auth.ts"
   },
   "dependencies": {
     "@bwip-js/browser": "^4.9.0",
@@ -40,6 +44,7 @@
     "@fullcalendar/resource": "^6.1.20",
     "@fullcalendar/resource-timeline": "^6.1.20",
     "@fullcalendar/timegrid": "^6.1.20",
+    "@getbrevo/brevo": "^5.0.4",
     "@markdoc/markdoc": "^0.5.7",
     "@paralleldrive/cuid2": "^3.3.0",
     "@prisma/client": "^6.19.3",
@@ -65,6 +70,8 @@
     "@supabase/supabase-js": "^2.103.0",
     "@tanstack/react-table": "^8.21.3",
     "@tremor/react": "^3.18.7",
+    "bcryptjs": "^3.0.3",
+    "better-auth": "^1.6.20",
     "changedpi": "^1.0.4",
     "chardet": "^2.1.1",
     "class-variance-authority": "^0.7.1",

@@ -459,6 +459,7 @@ export async function action({ context, request }: ActionFunctionArgs) {
         to: user.email,
         subject: "🏷️ Welcome to Shelf - can I ask you a question?",
         text: onboardingEmailText({ firstName: user.firstName as string }),
+        tags: ["onboarding", "welcome", "transactional"],
       });
     }
 

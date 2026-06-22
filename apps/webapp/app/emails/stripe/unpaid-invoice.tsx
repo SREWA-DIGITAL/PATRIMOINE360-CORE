@@ -93,6 +93,7 @@ export const sendUnpaidInvoiceUserEmail = async ({
       subject,
       html,
       text,
+      tags: ["billing", "invoice", "payment-failed"],
     });
   } catch (cause) {
     Logger.error(

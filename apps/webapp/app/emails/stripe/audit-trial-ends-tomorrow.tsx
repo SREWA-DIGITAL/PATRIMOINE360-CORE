@@ -48,6 +48,7 @@ export const sendAuditTrialEndsTomorrowEmail = async ({
       subject,
       html,
       text,
+      tags: ["billing", "trial", "audit", "ends-tomorrow"],
     });
   } catch (cause) {
     Logger.error(
