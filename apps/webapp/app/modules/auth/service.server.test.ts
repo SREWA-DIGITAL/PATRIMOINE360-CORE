@@ -167,19 +167,11 @@ describe("auth email otp delivery", () => {
     mocks.betterAuthFindUnique.mockResolvedValue(null);
   });
 
-  it("sends login OTPs with magiclink generation and app email delivery", async () => {
+  it("sends login OTPs through Better Auth", async () => {
     await sendOTP("user@example.com", "login");
 
-    expect(mocks.generateOtpCode).toHaveBeenCalledWith(
-      "magiclink",
+    expect(mocks.sendBetterAuthSignInOtp).toHaveBeenCalledWith(
       "user@example.com"
-    );
-    expect(mocks.sendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "user@example.com",
-        subject: "Your login code: 123456",
-        tags: ["auth", "otp", "login"],
-      })
     );
   });
 
@@ -261,11 +253,11 @@ describe("auth email otp delivery", () => {
     );
   });
 
-  it("requests email change OTPs through the auth provider facade", async () => {
+  it("requests email change OTPs through Better Auth", async () => {
     await expect(
       requestEmailChangeOtp(
         {
-          provider: "supabase",
+          provider: "better-auth",
           accessToken: "access-token",
           refreshToken: "refresh-token",
           userId: "auth-user-id",
@@ -276,21 +268,20 @@ describe("auth email otp delivery", () => {
         "new@example.com"
       )
     ).resolves.toEqual({
-      otp: "654321",
-      provider: "supabase",
+      provider: "better-auth",
     });
 
-    expect(mocks.generateEmailChangeOtpCode).toHaveBeenCalledWith(
-      "old@example.com",
+    expect(mocks.requestBetterAuthEmailChange).toHaveBeenCalledWith(
+      "access-token",
       "new@example.com"
     );
   });
 
-  it("verifies email change OTPs through the auth provider facade", async () => {
+  it("verifies email change OTPs through Better Auth", async () => {
     await expect(
       verifyEmailChangeOtp(
         {
-          provider: "supabase",
+          provider: "better-auth",
           accessToken: "access-token",
           refreshToken: "refresh-token",
           userId: "auth-user-id",
@@ -303,27 +294,30 @@ describe("auth email otp delivery", () => {
       )
     ).resolves.toBeUndefined();
 
-    expect(mocks.verifyEmailChangeOtpWithProvider).toHaveBeenCalledWith(
+    expect(mocks.changeBetterAuthEmail).toHaveBeenCalledWith(
+      "access-token",
       "new@example.com",
       "654321"
     );
   });
 
-  it("revokes other sessions through the auth provider facade", async () => {
+  it("revokes other sessions through Better Auth", async () => {
     await expect(revokeOtherSessions("access-token")).resolves.toBeUndefined();
 
-    expect(mocks.signOutOtherSessions).toHaveBeenCalledWith("access-token");
+    expect(mocks.revokeBetterAuthOtherSessions).toHaveBeenCalledWith(
+      "access-token"
+    );
   });
 
-  it("resets legacy passwords by verifying the recovery OTP first", async () => {
+  it("resets passwords with Better Auth OTP confirmation", async () => {
     await expect(
       resetPasswordWithOtp("user@example.com", "123456", "password-123")
     ).resolves.toBeUndefined();
 
-    expect(mocks.verifyRecoveryOtp).toHaveBeenCalledWith(
+    expect(mocks.resetBetterAuthPasswordWithOtp).toHaveBeenCalledWith(
       "user@example.com",
-      "123456"
+      "123456",
+      "password-123"
     );
-    expect(mocks.signOutOtherSessions).toHaveBeenCalledWith("access-token");
   });
 });

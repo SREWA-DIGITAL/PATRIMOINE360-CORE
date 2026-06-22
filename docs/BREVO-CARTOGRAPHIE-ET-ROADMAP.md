@@ -319,3 +319,161 @@ Ce lot ne couvre pas encore :
 - la refonte des sessions
 - la suppression de tous les accès au schéma `auth`
 - la migration des briques non-email vers un autre backend d'identité
+
+## Etat de `CORE-BREVO-06H`
+
+Le lot `06H` est maintenant cadre et outille cote Core pour preparer la
+migration des comptes Supabase existants vers Better Auth :
+
+- support des hash Supabase `bcrypt` importes via
+  `apps/webapp/app/modules/auth/legacy-password-hash.server.ts`
+- branchement de cette verification dans `better-auth.server.ts` afin de
+  preserver les connexions email/mot de passe apres import
+- script d'audit de migration `apps/webapp/scripts/audit-supabase-auth-migration.ts`
+- script d'execution controlee `apps/webapp/scripts/migrate-supabase-auth-to-better-auth.ts`
+- runbook dedie `docs/BETTER-AUTH-SUPABASE-MIGRATION.md`
+
+### Decisions operationnelles
+
+- `auth.users.id` reste l'identifiant cible pour `BetterAuthUser.id`
+- les comptes mot de passe migres creent un `BetterAuthAccount` avec
+  `providerId = "credential"`
+- les nouveaux mots de passe et resets restent hashes nativement par Better
+  Auth ; seuls les hash herites Supabase gardent une compatibilite legacy
+- les sessions actives Supabase ne sont pas migrees dans `BetterAuthSession`
+
+### Contraintes documentees avant `06I`
+
+- un compte ne peut pas etre migre automatiquement si le `User` metier n'existe
+  pas deja avec le meme `id`
+- les collisions d'email entre `auth.users`, `User` et `BetterAuthUser`
+  doivent etre resolues avant execution finale
+- les identites OAuth/SSO importees doivent rester alignees avec les
+  `providerId` reellement configures dans Better Auth
+- la bascule finale exigera une reconnexion controlee, car les refresh tokens
+  Supabase restent legacy
+
+### Validation attendue
+
+- audit staging via `auth:audit:supabase-migration`
+- backup PostgreSQL avant `--apply`
+- migration staging d'un lot reel de comptes
+- smoke tests login, reset password, OTP, changement d'email et OAuth/SSO
+  avant lancement de `CORE-BREVO-06I`
+
+## Etat de `CORE-BREVO-06I`
+
+Le lot `06I` est maintenant implemente sur le chemin actif Core :
+
+- `apps/webapp/app/modules/auth/service.server.ts` route desormais les
+  parcours login, OTP, reset password, changement d'email, session refresh,
+  verification de session et bearer mobile vers Better Auth
+- `apps/webapp/app/modules/user/service.server.ts` cree et rattache les
+  identites invitees via Better Auth au lieu de Supabase Auth
+- `apps/webapp/app/routes/_auth+/oauth.callback.tsx` ne depend plus du
+  listener client Supabase pour finaliser le callback SSO principal
+- `.env.example` et `apps/docs/supabase-setup.md` documentent Better Auth
+  comme cible auth active, Supabase restant positionne sur PostgreSQL et
+  Storage
+
+### Resultat de cadrage
+
+- Supabase Auth n'est plus le provider actif sur le chemin principal Core
+- les dependances legacy Supabase encore presentes sont residuelles,
+  documentaires ou de compatibilite hors chemin principal
+- le prochain lot logique devient `CORE-BREVO-06J` pour inventorier et
+  reprioriser le reliquat Supabase hors auth
+
+### Validation actuelle
+
+Validations ciblees passees :
+
+- `pnpm --filter @shelf/webapp exec tsc --noEmit --pretty false`
+- `pnpm --filter @shelf/webapp exec vitest run app/modules/auth/service.provider-routing.server.test.ts app/modules/auth/service.server.test.ts app/modules/user/service.server.test.ts app/routes/_auth+/oauth.callback.test.ts`
+
+## Etat de `CORE-BREVO-06J`
+
+Le lot `06J` est maintenant cadre pour la suite apres la bascule Better Auth,
+avec un reliquat Supabase limite aux domaines hors chemin auth principal.
+
+### Reliquat Supabase restant par domaine
+
+#### 1. Storage applicatif
+
+Criticite : haute
+
+Dependances encore actives :
+
+- `apps/webapp/app/utils/supabase-storage-provider.server.ts`
+- `apps/webapp/app/utils/supabase-storage-url-resolver.server.ts`
+- `apps/webapp/app/utils/supabase-storage-error-classifier.server.ts`
+- `apps/webapp/app/integrations/supabase/client.ts`
+
+Couche d'abstraction deja en place :
+
+- `apps/webapp/app/utils/storage-provider.server.ts`
+- `apps/webapp/app/utils/storage-url-resolver.server.ts`
+- `apps/webapp/app/utils/storage-error-classifier.server.ts`
+
+Conclusion :
+
+- le prochain lot technique prioritaire apres Better Auth est la sortie ou
+  l'abstraction finale de Supabase Storage
+- le metier consomme deja une facade generique, ce qui borne le chantier
+  suivant aux implementations storage et a leurs derniers appelants directs
+
+#### 2. SQL legacy du schema `auth`
+
+Criticite : moyenne a haute
+
+Dependances encore actives :
+
+- `apps/webapp/app/modules/auth/auth-state.server.ts`
+- scripts de migration Better Auth lisant `auth.users` :
+  `apps/webapp/scripts/better-auth-migration/*`
+
+Conclusion :
+
+- ces acces ne pilotent plus le chemin auth principal, mais restent utiles
+  pour la verification legacy et les operations de migration controlee
+- ils doivent etre conserves jusqu'a validation complete du runbook de
+  migration, puis reduits ou supprimes dans un lot backend distinct
+
+#### 3. Outils et diagnostics d'administration
+
+Criticite : basse a moyenne
+
+Dependances encore actives :
+
+- `apps/webapp/app/routes/_layout+/admin-dashboard+/test-supabase-rls.tsx`
+
+Conclusion :
+
+- ce reliquat n'est pas bloquant pour la sortie de Supabase Auth
+- il devra etre soit adapte au backend cible, soit retire si le besoin
+  d'observabilite change avec la future architecture
+
+### Prochain lot clairement priorise
+
+Ordre recommande apres `06J` :
+
+1. stabiliser la documentation et le runbook Better Auth en staging
+2. traiter le reliquat storage Supabase comme prochain chantier technique
+3. reevaluer ensuite les acces SQL legacy `auth.*` qui ne servent plus qu'a la
+   migration et au diagnostic
+
+### Sequence Core -> Enterprise
+
+- Core reste la source des abstractions generiques Better Auth et Storage
+- Enterprise devra seulement consommer ou etendre ces contrats sans
+  reintroduire de dependance directe a Supabase Auth
+- toute adaptation privee de SSO, RBAC avance ou workflow metier doit rester
+  synchronisee apres stabilisation du socle Core
+
+### Validation de cloture
+
+- audit de code par recherche `supabase` sur `apps/webapp/app`,
+  `apps/webapp/scripts`, `packages/database` et `docs`
+- verification que `CORE-BREVO-06I` reste `Done` et que `06J` devient le point
+  de sortie documentaire du reliquat
+- nettoyage du code mort sur le callback OAuth et les helpers de test Better Auth

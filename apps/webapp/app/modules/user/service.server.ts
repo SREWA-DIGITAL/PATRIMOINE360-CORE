@@ -21,10 +21,9 @@ import { db } from "~/database/db.server";
 
 import { SOFT_DELETED_EMAIL_DOMAIN } from "~/emails/email.worker.server";
 import { sendEmail } from "~/emails/mail.server";
+import { ensureBetterAuthCredentialIdentity } from "~/modules/auth/better-auth-identity.server";
 import {
   deleteAuthAccount,
-  createEmailAuthAccount,
-  confirmExistingAuthAccount,
   setAuthUserEmail,
   signInWithEmail,
   softDeleteAuthUser,
@@ -236,47 +235,47 @@ export async function createUserOrAttachOrg({
     createdWithInvite: boolean;
   }) {
   try {
+    const normalizedEmail = email.toLowerCase();
     const shelfUser = await db.user.findFirst({
-      where: { email },
+      where: { email: normalizedEmail },
       select: USER_WITH_SSO_DETAILS_SELECT,
     });
 
-    // If no Prisma User exists, create one.
-    // First try creating a fresh auth account. If that fails (email already
-    // exists in Supabase from a previous unconfirmed signup), fall back to
-    // confirming the existing auth account. The invite JWT (sent to the
-    // user's email) serves as proof of email ownership.
     if (!shelfUser?.id) {
-      let authAccount = await createEmailAuthAccount(email, password).catch(
-        () => null
-      );
+      const userId = generateId();
+      let newUser: Awaited<ReturnType<typeof createUser>> | null = null;
+      const displayName = [firstName, lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
 
-      if (!authAccount) {
-        authAccount = await confirmExistingAuthAccount(email, password).catch(
-          () => null
-        );
-      }
-
-      if (!authAccount) {
-        throw new ShelfError({
-          cause: null,
-          message:
-            "We are facing some issue with your account. " +
-            "Please try again or contact support.",
-          label,
+      try {
+        newUser = await createUser({
+          email: normalizedEmail,
+          userId,
+          username: randomUsernameFromEmail(normalizedEmail),
+          organizationId,
+          roles,
+          firstName,
+          lastName,
+          createdWithInvite,
         });
-      }
 
-      const newUser = await createUser({
-        email,
-        userId: authAccount.id,
-        username: randomUsernameFromEmail(email),
-        organizationId,
-        roles,
-        firstName,
-        lastName,
-        createdWithInvite,
-      });
+        await ensureBetterAuthCredentialIdentity({
+          email: normalizedEmail,
+          emailVerified: true,
+          invitedAt: new Date(),
+          name: displayName || normalizedEmail.split("@")[0] || normalizedEmail,
+          password,
+          userId: newUser.id,
+        });
+      } catch (cause) {
+        if (newUser?.id) {
+          await db.user.delete({ where: { id: newUser.id } }).catch(() => null);
+        }
+
+        throw cause;
+      }
 
       await ensureAssetIndexModeForRole({
         userId: newUser.id,
@@ -285,6 +284,24 @@ export async function createUserOrAttachOrg({
       });
 
       return newUser;
+    }
+
+    if (!shelfUser.sso && createdWithInvite) {
+      await ensureBetterAuthCredentialIdentity({
+        email: normalizedEmail,
+        emailVerified: true,
+        invitedAt: new Date(),
+        name:
+          [shelfUser.firstName, shelfUser.lastName]
+            .filter(Boolean)
+            .join(" ")
+            .trim() ||
+          firstName ||
+          normalizedEmail.split("@")[0] ||
+          normalizedEmail,
+        password,
+        userId: shelfUser.id,
+      });
     }
 
     /** If the user already exists, we just attach the new org to it */
@@ -878,7 +895,7 @@ export async function updateUserEmail({
 }) {
   try {
     /**
-     * Update the user in supabase auth
+     * Update the user in the active auth provider.
      */
     const { error } = await setAuthUserEmail(userId, newEmail);
 
@@ -1212,10 +1229,10 @@ export async function softDeleteUser(id: User["id"]) {
 
     if (error) {
       // If the auth user is already gone (e.g., deleted externally),
-      // that's fine — we can proceed with the rest of the cleanup
+      // that's fine вЂ” we can proceed with the rest of the cleanup
+      const authError = error as { code?: string; status?: number };
       const isUserNotFound =
-        error.status === 404 ||
-        ("code" in error && error.code === "user_not_found");
+        authError.status === 404 || authError.code === "user_not_found";
 
       if (!isUserNotFound) {
         throw new ShelfError({
@@ -1246,36 +1263,42 @@ export async function softDeleteUser(id: User["id"]) {
 
 export { defaultUserCategories };
 
-/** THis function is used just for integration tests as it combines the creation of auth account and user entry */
+/** This helper is used in integration tests to create both the auth identity and the user entry. */
 export async function createUserAccountForTesting(
   email: string,
   password: string,
   username: string
 ): Promise<AuthSession | null> {
-  const authAccount = await createEmailAuthAccount(email, password).catch(
-    () => null
-  );
-
-  if (!authAccount) {
-    return null;
-  }
-
-  const authSession = await signInWithEmail(email, password).catch(() => null);
-
-  // user account created but no session 😱
-  // we should delete the user account to allow retry create account again
-  if (!authSession) {
-    await deleteAuthAccount(authAccount.id);
-    return null;
-  }
-
+  const normalizedEmail = email.toLowerCase();
+  const userId = generateId();
   const user = await createUser({
-    email: authSession.email,
-    userId: authSession.userId,
+    email: normalizedEmail,
+    userId,
     username,
   }).catch(() => null);
 
   if (!user) {
+    return null;
+  }
+
+  const authAccount = await ensureBetterAuthCredentialIdentity({
+    email: normalizedEmail,
+    emailVerified: true,
+    name: normalizedEmail.split("@")[0] || normalizedEmail,
+    password,
+    userId: user.id,
+  }).catch(() => null);
+
+  if (!authAccount) {
+    await db.user.delete({ where: { id: user.id } }).catch(() => null);
+    return null;
+  }
+
+  const authSession = await signInWithEmail(normalizedEmail, password).catch(
+    () => null
+  );
+
+  if (!authSession) {
     await deleteAuthAccount(authAccount.id);
     return null;
   }
@@ -1486,7 +1509,7 @@ export async function changeUserRole({
  *   - [x] AssetReminder
  *
  * Note: Notes (Note, BookingNote, LocationNote) are intentionally NOT
- * transferred — their userId represents authorship, not ownership.
+ * transferred вЂ” their userId represents authorship, not ownership.
  *
  * Invites can be skipped via `skipInvites` (used during demotion) because
  * inviterId represents "who sent this" (authorship), not ownership.
@@ -1561,7 +1584,7 @@ export async function transferEntitiesToNewOwner({
     },
   });
 
-  /** Update invites (skipped during demotion — inviterId is authorship) */
+  /** Update invites (skipped during demotion вЂ” inviterId is authorship) */
   if (!skipInvites) {
     await tx.invite.updateMany({
       where: {

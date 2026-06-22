@@ -197,34 +197,28 @@ describe("auth provider routing", () => {
     expect(mocks.signInWithPassword).not.toHaveBeenCalled();
   });
 
-  it("keeps Supabase password login for legacy emails", async () => {
-    mocks.betterAuthFindUnique.mockResolvedValue(null);
-    mocks.signInWithPassword.mockResolvedValue({
-      data: {
-        session: {
-          access_token: "legacy-access",
-          refresh_token: "legacy-refresh",
-          expires_in: 3600,
-          expires_at: 1_718_968_000,
-          user: {
-            id: "legacy-user-1",
-            email: "legacy@example.com",
-          },
-        },
-      },
-      error: null,
+  it("routes all password logins through Better Auth", async () => {
+    mocks.signInWithBetterAuthEmail.mockResolvedValue({
+      provider: "better-auth",
+      accessToken: "better-access",
+      refreshToken: "better-access",
+      expiresAt: 1_718_968_000,
+      expiresIn: 3600,
+      userId: "better-user-legacy",
+      email: "legacy@example.com",
     });
 
     await expect(
       signInWithEmail("legacy@example.com", "password-123")
     ).resolves.toMatchObject({
-      provider: "supabase",
-      userId: "legacy-user-1",
+      provider: "better-auth",
+      userId: "better-user-legacy",
     });
 
-    expect(mocks.signInWithPassword).toHaveBeenCalledWith(
+    expect(mocks.signInWithBetterAuthEmail).toHaveBeenCalledWith(
       "legacy@example.com",
-      "password-123"
+      "password-123",
+      "http://localhost:3000/login?email=legacy%40example.com&email_verified=true"
     );
   });
 
@@ -308,37 +302,26 @@ describe("auth provider routing", () => {
     );
   });
 
-  it("falls back to the legacy auth provider when Better Auth rejects a legacy bearer token", async () => {
+  it("returns an auth error when Better Auth rejects an unknown bearer token", async () => {
     mocks.getBetterAuthSession.mockRejectedValue({
       message: "invalid session",
       status: 401,
     });
     mocks.isBetterAuthApiError.mockReturnValue(true);
-    mocks.getAuthUserByAccessToken.mockResolvedValue({
-      data: {
-        user: {
-          id: "legacy-user-3",
-          email: "legacy-mobile@example.com",
-        },
-      },
-      error: null,
-    });
 
     await expect(
       getAuthResponseByAccessToken("legacy-mobile-token")
     ).resolves.toMatchObject({
       data: {
-        user: {
-          id: "legacy-user-3",
-          email: "legacy-mobile@example.com",
-        },
+        user: null,
       },
-      error: null,
+      error: {
+        message: "invalid session",
+        status: 401,
+      },
     });
 
-    expect(mocks.getAuthUserByAccessToken).toHaveBeenCalledWith(
-      "legacy-mobile-token"
-    );
+    expect(mocks.getAuthUserByAccessToken).not.toHaveBeenCalled();
   });
 
   it("builds Better Auth signup callback URLs for the login verification page", async () => {
@@ -412,22 +395,15 @@ describe("auth provider routing", () => {
     expect(mocks.signInWithSSOProvider).not.toHaveBeenCalled();
   });
 
-  it("falls back to the legacy SSO provider when no Better Auth SSO provider is configured", async () => {
-    mocks.signInWithSSOProvider.mockResolvedValue({
-      data: {
-        url: "https://legacy.example.com/saml",
-      },
-      error: null,
+  it("rejects SSO when no Better Auth provider is configured for the domain", async () => {
+    await expect(
+      signInWithSSO("legacy.com", "/bookings")
+    ).rejects.toMatchObject({
+      message: "No SSO provider assigned for your organization's domain",
+      status: 404,
     });
 
-    await expect(signInWithSSO("legacy.com", "/bookings")).resolves.toBe(
-      "https://legacy.example.com/saml"
-    );
-
-    expect(mocks.signInWithSSOProvider).toHaveBeenCalledWith(
-      "legacy.com",
-      "http://localhost:3000/oauth/callback?redirectTo=%2Fbookings"
-    );
+    expect(mocks.signInWithSSOProvider).not.toHaveBeenCalled();
   });
 
   it("uses Better Auth OTP delivery when the email is already migrated", async () => {

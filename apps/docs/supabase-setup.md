@@ -1,6 +1,6 @@
 # Supabase Setup Guide 🗄️
 
-This guide will walk you through setting up Supabase for your Shelf.nu application. Supabase provides our database, authentication, and file storage.
+This guide will walk you through setting up Supabase for your Shelf.nu application. In the current Core target, Supabase provides PostgreSQL and file storage, while active authentication runs through Better Auth behind the Hono API.
 
 ## Prerequisites ✅
 
@@ -66,9 +66,21 @@ SUPABASE_SERVICE_ROLE="your-service-role-key"
 
 ---
 
-## Step 4: Setup Authentication 🔐
+## Step 4: Configure Better Auth and legacy Supabase auth prerequisites 🔐
 
-### Configure Auth Settings
+### Better Auth is the active auth provider
+
+Core now authenticates through Better Auth on the backend. Define these variables in the root `.env`:
+
+```bash
+BETTER_AUTH_SECRET="replace-with-a-long-random-secret"
+BETTER_AUTH_URL="http://localhost:3000"
+BETTER_AUTH_BASE_PATH="/api/auth"
+```
+
+If you use SSO with Better Auth generic OAuth providers, also define `BETTER_AUTH_SSO_PROVIDERS`.
+
+### Legacy Supabase auth prerequisites still worth keeping
 
 1. **Go to Authentication** → **URL Configuration**
 2. **Site URL**: Set to `https://localhost:3000` (for development with SSL) or `http://localhost:3000` (without SSL)
@@ -96,8 +108,8 @@ SUPABASE_SERVICE_ROLE="your-service-role-key"
 ### Auth emails after the Brevo migration
 
 Shelf now sends the main authentication emails from the application backend.
-Supabase still generates and verifies OTP values, but it is no longer expected
-to be the email sender for the main Core auth flows.
+Better Auth owns the active auth path, and Supabase is no longer expected to be
+the primary identity provider or email sender for the main Core auth flows.
 
 Current backend-sent flows include:
 
@@ -109,9 +121,9 @@ Current backend-sent flows include:
 
 As a result:
 
-1. **You still need Supabase OTP length set to 6 digits**
-2. **You do not need Supabase email templates to be the primary delivery path**
-3. **You do not need Supabase SMTP to be the primary sender once Brevo is enabled in the app**
+1. **You do not need Supabase email templates to be the primary delivery path**
+2. **You do not need Supabase SMTP to be the primary sender once Brevo is enabled in the app**
+3. **Keep Supabase auth settings only if you still operate a temporary fallback environment during migration cleanup**
 
 If you are operating a legacy deployment or a temporary fallback environment,
 you may still configure Supabase email templates and SMTP. In the target Core
@@ -173,6 +185,11 @@ DIRECT_URL="postgres://postgres.xxxxx:[YOUR-PASSWORD]@xxx.supabase.com:5432/post
 SUPABASE_URL="https://your-project-ref.supabase.co"
 SUPABASE_ANON_PUBLIC="your-anon-public-key"
 SUPABASE_SERVICE_ROLE="your-service-role-key"
+
+# Better Auth
+BETTER_AUTH_SECRET="replace-with-a-long-random-secret"
+BETTER_AUTH_URL="https://localhost:3000"
+BETTER_AUTH_BASE_PATH="/api/auth"
 
 # App configuration
 SESSION_SECRET="your-super-secret-session-key"
@@ -329,7 +346,7 @@ Your app should connect to Supabase successfully!
 ### Common Issues
 
 **Connection Error**: Double-check your database password and connection strings  
-**Auth Not Working**: Verify email templates use the escaped token syntax instead of URLs  
+**Auth Not Working**: Verify `BETTER_AUTH_*` variables are present and that the Hono auth handler is mounted correctly  
 **File Upload Fails**: Ensure storage buckets exist and have proper policies  
 **Email Issues**: Test your SMTP settings with a simple email client first
 

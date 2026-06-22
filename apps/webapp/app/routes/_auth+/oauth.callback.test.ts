@@ -9,13 +9,6 @@ const mocks = vi.hoisted(() => ({
   mapBetterAuthSession: vi.fn(),
   resolveUserAndOrgForSsoCallback: vi.fn(),
   setSelectedOrganizationIdCookie: vi.fn(),
-  supabaseOnAuthStateChange: vi.fn(() => ({
-    data: {
-      subscription: {
-        unsubscribe: vi.fn(),
-      },
-    },
-  })),
 }));
 
 vi.mock("~/config/shelf.config", () => ({
@@ -32,14 +25,6 @@ vi.mock("~/database/db.server", () => ({
   db: {
     betterAuthUser: {
       findUnique: mocks.betterAuthUserFindUnique,
-    },
-  },
-}));
-
-vi.mock("~/integrations/supabase/client", () => ({
-  supabaseClient: {
-    auth: {
-      onAuthStateChange: mocks.supabaseOnAuthStateChange,
     },
   },
 }));
@@ -77,7 +62,6 @@ describe("oauth callback loader", () => {
     mocks.mapBetterAuthSession.mockReset();
     mocks.resolveUserAndOrgForSsoCallback.mockReset();
     mocks.setSelectedOrganizationIdCookie.mockReset();
-    mocks.supabaseOnAuthStateChange.mockClear();
 
     mocks.getUserOrganizations.mockResolvedValue([]);
   });

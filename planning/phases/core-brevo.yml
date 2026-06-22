@@ -321,7 +321,7 @@ tasks:
 
   - id: CORE-BREVO-06H
     title: Migrer les comptes Supabase existants vers Better Auth
-    status: Backlog
+    status: Done
     priority: P1
     component: Base de données
     labels:
@@ -345,7 +345,7 @@ tasks:
 
   - id: CORE-BREVO-06I
     title: Basculer définitivement Core sur Better Auth et retirer Supabase Auth du backend actif
-    status: Backlog
+    status: Done
     priority: P1
     component: API
     labels:
@@ -369,7 +369,7 @@ tasks:
 
   - id: CORE-BREVO-06J
     title: Reprioriser le reliquat Supabase hors auth après la bascule Better Auth
-    status: Backlog
+    status: Done
     priority: P2
     component: Documentation
     labels:

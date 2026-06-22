@@ -14,25 +14,20 @@ import {
   isAuthApiErrorLike,
   isRetryableAuthError,
 } from "./auth-error-classifier.server";
+import type { getAuthUserByAccessToken } from "./auth-provider.server";
 import {
   createAuthUser,
-  deleteAuthUser,
   findAuthUserIdByEmail,
   generateAuthOtpCode,
-  generateEmailChangeOtpCode,
-  generateRecoveryOtpCode,
-  getAuthUserByAccessToken,
-  getAuthUserByIdFromProvider,
-  isRefreshTokenActive,
-  refreshAuthSession,
-  signInWithPassword,
-  signInWithSSO as signInWithSSOProvider,
-  signOutOtherSessions,
   updateAuthUserById,
-  verifyEmailChangeOtpWithProvider,
-  verifyEmailOtp,
   verifyRecoveryOtpWithProvider,
 } from "./auth-provider.server";
+import {
+  deleteBetterAuthUserIdentity,
+  getBetterAuthProviderUserById,
+  updateBetterAuthCredentialPassword,
+  updateBetterAuthUserEmail,
+} from "./better-auth-identity.server";
 import {
   changeBetterAuthEmail,
   getBetterAuthErrorCode,
@@ -50,11 +45,7 @@ import {
   signUpWithBetterAuthEmail,
   signOutBetterAuthSession,
 } from "./better-auth-session.server";
-import {
-  findBetterAuthSsoProviderByDomain,
-  isBetterAuthConfigured,
-} from "./better-auth.server";
-import { mapAuthSession } from "./mappers.server";
+import { findBetterAuthSsoProviderByDomain } from "./better-auth.server";
 
 const label: ErrorLabel = "Auth";
 type AuthOtpMode = "login" | "signup" | "confirm_signup";
@@ -96,13 +87,13 @@ function mapBetterAuthAccessTokenResponse(
 function getAuthSessionProvider(
   authSession: Pick<AuthSession, "provider"> | null | undefined
 ) {
-  return authSession?.provider ?? "supabase";
+  return authSession?.provider ?? "better-auth";
 }
 
 function getAuthSessionToken(input: SessionValidationInput) {
   if (typeof input === "string") {
     return {
-      provider: "supabase" as const,
+      provider: "better-auth" as const,
       token: input,
     };
   }
@@ -113,17 +104,6 @@ function getAuthSessionToken(input: SessionValidationInput) {
     provider,
     token: provider === "better-auth" ? input.accessToken : input.refreshToken,
   };
-}
-
-async function findBetterAuthUserByEmail(email: string) {
-  if (!isBetterAuthConfigured()) {
-    return null;
-  }
-
-  return db.betterAuthUser.findUnique({
-    where: { email: email.toLowerCase() },
-    select: { id: true },
-  });
 }
 
 function getBetterAuthSignupName(email: string) {
@@ -455,32 +435,14 @@ export async function signInWithEmail(
   email: string,
   password: string,
   redirectTo?: string
-) {
+): Promise<AuthSession | null> {
   try {
     const normalizedEmail = email.toLowerCase();
-    const betterAuthUser = await findBetterAuthUserByEmail(normalizedEmail);
-
-    if (betterAuthUser) {
-      return await signInWithBetterAuthEmail(
-        normalizedEmail,
-        password,
-        buildSignupVerificationCallbackURL(normalizedEmail, redirectTo)
-      );
-    }
-
-    const { data, error } = await signInWithPassword(normalizedEmail, password);
-
-    if (error?.message === "Email not confirmed") {
-      return null;
-    }
-
-    if (error) {
-      throw error;
-    }
-
-    const { session } = data;
-
-    return mapAuthSession(session);
+    return await signInWithBetterAuthEmail(
+      normalizedEmail,
+      password,
+      buildSignupVerificationCallbackURL(normalizedEmail, redirectTo)
+    );
   } catch (cause) {
     const betterAuthErrorCode = getBetterAuthErrorCode(cause);
     if (betterAuthErrorCode === "EMAIL_NOT_VERIFIED") {
@@ -543,31 +505,29 @@ export async function signInWithSSO(domain: string, redirectTo?: string) {
   try {
     const betterAuthSsoProvider = findBetterAuthSsoProviderByDomain(domain);
 
-    if (betterAuthSsoProvider) {
-      const result = await signInWithBetterAuthOAuthProvider({
-        callbackURL: buildSsoCallbackURL(redirectTo),
-        providerId: betterAuthSsoProvider.providerId,
+    if (!betterAuthSsoProvider) {
+      throw new ShelfError({
+        cause: null,
+        message: "No SSO provider assigned for your organization's domain",
+        additionalData: { domain },
+        label,
+        shouldBeCaptured: false,
+        status: 404,
       });
-
-      return result.url;
     }
 
-    const { data, error } = await signInWithSSOProvider(
-      domain,
-      buildSsoCallbackURL(redirectTo)
-    );
+    const result = await signInWithBetterAuthOAuthProvider({
+      callbackURL: buildSsoCallbackURL(redirectTo),
+      providerId: betterAuthSsoProvider.providerId,
+    });
 
-    if (error) {
-      throw error;
-    }
-
-    return data.url;
+    return result.url;
   } catch (cause) {
     let message =
       "Something went wrong. Please try again later or contact support.";
     let shouldBeCaptured = true;
 
-    if (getAuthErrorCode(cause) === "sso_provider_not_found") {
+    if (isLikeShelfError(cause) && cause.shouldBeCaptured === false) {
       message = "No SSO provider assigned for your organization's domain";
       shouldBeCaptured = false;
     }
@@ -613,12 +573,8 @@ export async function sendOTP(email: string, mode: AuthOtpMode = "login") {
     await validateNonSSOUser(normalizedEmail);
 
     if (mode === "login") {
-      const betterAuthUser = await findBetterAuthUserByEmail(normalizedEmail);
-
-      if (betterAuthUser) {
-        await sendBetterAuthSignInOtp(normalizedEmail);
-        return;
-      }
+      await sendBetterAuthSignInOtp(normalizedEmail);
+      return;
     }
 
     await sendGeneratedAuthOtp(normalizedEmail, mode);
@@ -671,48 +627,7 @@ export async function sendResetPasswordLink(email: string) {
   try {
     const normalizedEmail = email.toLowerCase();
     await validateNonSSOUser(normalizedEmail);
-
-    const betterAuthUser = await findBetterAuthUserByEmail(normalizedEmail);
-
-    if (betterAuthUser) {
-      await requestBetterAuthPasswordResetOtp(normalizedEmail);
-      return;
-    }
-
-    const { otp, error } = await generateRecoveryOtpCode(normalizedEmail);
-
-    if (error) {
-      throw error;
-    }
-
-    if (!otp) {
-      throw new ShelfError({
-        cause: null,
-        message: "Auth provider did not return a recovery OTP",
-        additionalData: { email: normalizedEmail },
-        label,
-      });
-    }
-
-    sendEmail({
-      to: normalizedEmail,
-      subject: `Reset password code: ${otp}`,
-      text: [
-        "Reset Password",
-        "",
-        "To reset your password, please use the following one-time code:",
-        otp,
-        "",
-        "Do not share this code with anyone.",
-      ].join("\n"),
-      html: [
-        "<h2>Reset Password</h2>",
-        "<p>To reset your password, please use the following one-time code:</p>",
-        `<h2><b>${otp}</b></h2>`,
-        "<p>Do not share this code with anyone.</p>",
-      ].join(""),
-      tags: ["auth", "password-reset"],
-    });
+    await requestBetterAuthPasswordResetOtp(normalizedEmail);
   } catch (cause) {
     const isRateLimitError =
       (isAuthApiErrorLike(cause) && cause.status === 429) ||
@@ -735,50 +650,13 @@ export async function requestEmailChangeOtp(
 ): Promise<EmailChangeOtpRequestResult> {
   try {
     const normalizedNewEmail = newEmail.toLowerCase();
-
-    if (getAuthSessionProvider(authSession) === "better-auth") {
-      await requestBetterAuthEmailChange(
-        authSession.accessToken,
-        normalizedNewEmail
-      );
-
-      return {
-        provider: "better-auth",
-      };
-    }
-
-    const currentEmail = authSession.email.toLowerCase();
-    const { otp, error } = await generateEmailChangeOtpCode(
-      currentEmail,
+    await requestBetterAuthEmailChange(
+      authSession.accessToken,
       normalizedNewEmail
     );
 
-    if (error) {
-      const emailExists = getAuthErrorCode(error) === "email_exists";
-      throw new ShelfError({
-        cause: error,
-        ...(emailExists && { title: "Email is already taken." }),
-        message: emailExists
-          ? "Please choose a different email address which is not already in use."
-          : "Failed to initiate email change",
-        additionalData: { currentEmail, newEmail: normalizedNewEmail },
-        label: "Auth",
-        shouldBeCaptured: !emailExists,
-      });
-    }
-
-    if (!otp) {
-      throw new ShelfError({
-        cause: null,
-        message: "Auth provider did not return an email change OTP",
-        additionalData: { currentEmail, newEmail: normalizedNewEmail },
-        label,
-      });
-    }
-
     return {
-      otp,
-      provider: "supabase",
+      provider: "better-auth",
     };
   } catch (cause) {
     if (isLikeShelfError(cause)) {
@@ -805,31 +683,11 @@ export async function verifyEmailChangeOtp(
 ) {
   try {
     const normalizedNewEmail = newEmail.toLowerCase();
-
-    if (getAuthSessionProvider(authSession) === "better-auth") {
-      await changeBetterAuthEmail(
-        authSession.accessToken,
-        normalizedNewEmail,
-        otp
-      );
-
-      return;
-    }
-
-    const { error } = await verifyEmailChangeOtpWithProvider(
+    await changeBetterAuthEmail(
+      authSession.accessToken,
       normalizedNewEmail,
       otp
     );
-
-    if (error) {
-      throw new ShelfError({
-        cause: error,
-        message: "Invalid or expired verification code",
-        additionalData: { email: normalizedNewEmail },
-        label: "Auth",
-        shouldBeCaptured: false,
-      });
-    }
   } catch (cause) {
     if (isLikeShelfError(cause)) {
       throw cause;
@@ -849,24 +707,12 @@ export async function revokeOtherSessions(
   authSessionOrAccessToken: AuthSession | string
 ) {
   try {
-    if (
-      typeof authSessionOrAccessToken !== "string" &&
-      getAuthSessionProvider(authSessionOrAccessToken) === "better-auth"
-    ) {
-      await revokeBetterAuthOtherSessions(authSessionOrAccessToken.accessToken);
-      return;
-    }
-
     const accessToken =
       typeof authSessionOrAccessToken === "string"
         ? authSessionOrAccessToken
         : authSessionOrAccessToken.accessToken;
 
-    const { error } = await signOutOtherSessions(accessToken);
-
-    if (error) {
-      throw error;
-    }
+    await revokeBetterAuthOtherSessions(accessToken);
   } catch (cause) {
     throw new ShelfError({
       cause,
@@ -893,13 +739,11 @@ export async function signOutCurrentAuthSession(authSession: AuthSession) {
 }
 
 export async function setAuthUserEmail(userId: string, email: string) {
-  return updateAuthUserById(userId, {
-    email,
-  });
+  return updateBetterAuthUserEmail(userId, email);
 }
 
 export async function softDeleteAuthUser(userId: string) {
-  return deleteAuthUser(userId, true);
+  return deleteBetterAuthUserIdentity(userId);
 }
 
 export async function updateAccountPassword(
@@ -923,16 +767,9 @@ export async function updateAccountPassword(
     }
     //logout all the others session expect the current sesssion.
     if (accessToken) {
-      await signOutOtherSessions(accessToken);
+      await revokeOtherSessions(accessToken);
     }
-    //on password update, it is remvoing the session in th supbase.
-    const { error } = await updateAuthUserById(id, {
-      password,
-    });
-
-    if (error) {
-      throw error;
-    }
+    await updateBetterAuthCredentialPassword(id, password);
   } catch (cause) {
     throw new ShelfError({
       cause,
@@ -946,7 +783,7 @@ export async function updateAccountPassword(
 
 export async function deleteAuthAccount(userId: string) {
   try {
-    const { error } = await deleteAuthUser(userId);
+    const { error } = await deleteBetterAuthUserIdentity(userId);
 
     if (error) {
       throw error;
@@ -966,13 +803,18 @@ export async function deleteAuthAccount(userId: string) {
 
 export async function getAuthUserById(userId: string) {
   try {
-    const { data, error } = await getAuthUserByIdFromProvider(userId);
+    const user = await getBetterAuthProviderUserById(userId);
 
-    if (error) {
-      throw error;
+    if (!user) {
+      throw new ShelfError({
+        cause: null,
+        message: "Auth user was not found",
+        additionalData: { userId },
+        label,
+        shouldBeCaptured: false,
+        status: 404,
+      });
     }
-
-    const { user } = data;
 
     return user;
   } catch (cause) {
@@ -988,23 +830,28 @@ export async function getAuthUserById(userId: string) {
 
 export async function getAuthResponseByAccessToken(accessToken: string) {
   try {
-    let betterAuthSession: Awaited<ReturnType<typeof getBetterAuthSession>> =
-      null;
+    const betterAuthSession = await getBetterAuthSession(accessToken);
 
-    try {
-      betterAuthSession = await getBetterAuthSession(accessToken);
-    } catch (cause) {
-      if (!isBetterAuthApiError(cause)) {
-        throw cause;
-      }
+    if (!betterAuthSession) {
+      return {
+        data: {
+          user: null,
+        },
+        error: null,
+      };
     }
 
-    if (betterAuthSession) {
-      return mapBetterAuthAccessTokenResponse(betterAuthSession);
-    }
-
-    return await getAuthUserByAccessToken(accessToken);
+    return mapBetterAuthAccessTokenResponse(betterAuthSession);
   } catch (cause) {
+    if (isBetterAuthApiError(cause)) {
+      return {
+        data: {
+          user: null,
+        },
+        error: cause,
+      };
+    }
+
     throw new ShelfError({
       cause,
       message:
@@ -1016,32 +863,15 @@ export async function getAuthResponseByAccessToken(accessToken: string) {
 
 export async function validateSession(input: SessionValidationInput) {
   try {
-    const { provider, token } = getAuthSessionToken(input);
+    const { token } = getAuthSessionToken(input);
 
     if (!token) {
       return false;
     }
 
-    if (provider === "better-auth") {
-      const session = await getBetterAuthSession(token);
+    const session = await getBetterAuthSession(token);
 
-      return Boolean(session);
-    }
-
-    const isActive = await isRefreshTokenActive(token);
-
-    if (!isActive) {
-      //logging for debug
-      Logger.error(
-        new ShelfError({
-          cause: null,
-          message: "Refresh token is invalid or has been revoked",
-          label,
-          shouldBeCaptured: false,
-        })
-      );
-    }
-    return isActive;
+    return Boolean(session);
   } catch (_err) {
     Logger.error(
       new ShelfError({
@@ -1059,46 +889,20 @@ export async function refreshAccessToken(
   authSessionOrRefreshToken?: AuthSession | string
 ): Promise<AuthSession> {
   try {
-    if (
-      authSessionOrRefreshToken &&
-      typeof authSessionOrRefreshToken !== "string" &&
-      getAuthSessionProvider(authSessionOrRefreshToken) === "better-auth"
-    ) {
-      return await refreshBetterAuthAppSession(
-        authSessionOrRefreshToken.accessToken
-      );
-    }
-
-    const refreshToken =
+    const accessToken =
       typeof authSessionOrRefreshToken === "string"
         ? authSessionOrRefreshToken
-        : authSessionOrRefreshToken?.refreshToken;
+        : authSessionOrRefreshToken?.accessToken;
 
-    if (!refreshToken) {
+    if (!accessToken) {
       throw new ShelfError({
         cause: null,
-        message: "Refresh token is required",
+        message: "Access token is required",
         label,
       });
     }
 
-    const { data, error } = await refreshAuthSession(refreshToken);
-
-    if (error) {
-      throw error;
-    }
-
-    const { session } = data;
-
-    if (!session) {
-      throw new ShelfError({
-        cause: null,
-        message: "The auth provider returned a null session",
-        label,
-      });
-    }
-
-    return mapAuthSession(session);
+    return await refreshBetterAuthAppSession(accessToken);
   } catch (cause) {
     throw new ShelfError({
       cause,
@@ -1106,10 +910,10 @@ export async function refreshAccessToken(
         "Unable to refresh access token. Please try again. If the issue persists, contact support",
       label,
       additionalData: {
-        refreshToken:
+        accessToken:
           typeof authSessionOrRefreshToken === "string"
             ? authSessionOrRefreshToken
-            : authSessionOrRefreshToken?.refreshToken,
+            : authSessionOrRefreshToken?.accessToken,
       },
     });
   }
@@ -1117,17 +921,9 @@ export async function refreshAccessToken(
 
 export async function verifyAuthSession(authSession: AuthSession) {
   try {
-    if (getAuthSessionProvider(authSession) === "better-auth") {
-      const session = await getBetterAuthSession(authSession.accessToken);
+    const session = await getBetterAuthSession(authSession.accessToken);
 
-      return Boolean(session);
-    }
-
-    const authAccount = await getAuthResponseByAccessToken(
-      authSession.accessToken
-    );
-
-    return Boolean(authAccount.data.user && !authAccount.error);
+    return Boolean(session);
   } catch (cause) {
     throw new ShelfError({
       cause,
@@ -1141,29 +937,7 @@ export async function verifyAuthSession(authSession: AuthSession) {
 export async function verifyOtpAndSignin(email: string, otp: string) {
   try {
     const normalizedEmail = email.toLowerCase();
-    const betterAuthUser = await findBetterAuthUserByEmail(normalizedEmail);
-
-    if (betterAuthUser) {
-      return await signInWithBetterAuthEmailOtp(normalizedEmail, otp);
-    }
-
-    const { data, error } = await verifyEmailOtp(normalizedEmail, otp);
-
-    if (error) {
-      throw error;
-    }
-
-    const { session } = data;
-
-    if (!session) {
-      throw new ShelfError({
-        cause: null,
-        message: "The auth provider returned a null session",
-        label,
-      });
-    }
-
-    return mapAuthSession(session);
+    return await signInWithBetterAuthEmailOtp(normalizedEmail, otp);
   } catch (cause) {
     let message =
       "Something went wrong. Please try again later or contact support.";
@@ -1235,20 +1009,7 @@ export async function resetPasswordWithOtp(
 ) {
   try {
     const normalizedEmail = email.toLowerCase();
-    const betterAuthUser = await findBetterAuthUserByEmail(normalizedEmail);
-
-    if (betterAuthUser) {
-      await resetBetterAuthPasswordWithOtp(normalizedEmail, otp, password);
-      return;
-    }
-
-    const recovery = await verifyRecoveryOtp(normalizedEmail, otp);
-
-    await updateAccountPassword(
-      recovery.userId,
-      password,
-      recovery.accessToken
-    );
+    await resetBetterAuthPasswordWithOtp(normalizedEmail, otp, password);
   } catch (cause) {
     const betterAuthOtpError = getBetterAuthOtpErrorState(cause);
 

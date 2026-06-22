@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import type {
   ActionFunctionArgs,
@@ -6,14 +6,12 @@ import type {
   LoaderFunctionArgs,
   MetaFunction,
 } from "react-router";
-import { data, redirect, useFetcher, useLoaderData } from "react-router";
+import { data, redirect, useLoaderData } from "react-router";
 import { z } from "zod";
 import type { AuthSession } from "@server/session";
 import { Button } from "~/components/shared/button";
 import { Spinner } from "~/components/shared/spinner";
 import { db } from "~/database/db.server";
-import { useSearchParams } from "~/hooks/search-params";
-import { supabaseClient } from "~/integrations/supabase/client";
 import {
   getBetterAuthSessionFromHeaders,
   mapBetterAuthSession,
@@ -22,7 +20,6 @@ import { refreshAccessToken } from "~/modules/auth/service.server";
 import { setSelectedOrganizationIdCookie } from "~/modules/organization/context.server";
 import { getUserOrganizations } from "~/modules/organization/service.server";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
-import { createSSOFormData } from "~/utils/auth";
 import { setCookie } from "~/utils/cookies.server";
 import { ShelfError, makeShelfError, notAllowedMethod } from "~/utils/error";
 import {
@@ -326,7 +323,17 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
       return await finalizeSsoAuthentication(context, betterAuthInput);
     }
 
-    return data(payload({ error: null, title, subHeading }));
+    return data(
+      payload({
+        error: {
+          message:
+            "Unable to complete SSO sign-in with Better Auth. Please try again from the login page.",
+        },
+        title,
+        subHeading,
+      }),
+      { status: 400 }
+    );
   } catch (cause) {
     const reason = makeShelfError(cause);
 
@@ -336,53 +343,27 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
   }
 }
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => [
-  { title: data ? appendToMetaTitle(data.title) : "" },
+export const meta: MetaFunction = ({ data }) => [
+  { title: data ? appendToMetaTitle((data as LoaderDataShape).title) : "" },
 ];
 
-export default function LoginCallback() {
-  const loaderData = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<typeof action>();
-  const { data } = fetcher;
-  const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") ?? "/assets";
-  const callbackError = data?.error ?? loaderData.error;
-
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabaseClient.auth.onAuthStateChange((event, supabaseSession) => {
-      if (event === "SIGNED_IN") {
-        // supabase sdk has ability to read url fragment that contains your token after third party provider redirects you here
-        // this fragment url looks like https://.....#access_token=evxxxxxxxx&refresh_token=xxxxxx, and it's not readable server-side (Oauth security)
-        // supabase auth listener gives us a user session, based on what it founds in this fragment url
-        // we can't use it directly, client-side, because we can't access sessionStorage from here
-
-        // we should not trust what's happen client side
-        // so, we only pick the refresh token, and let's back-end getting user session from it
-        const refreshToken = supabaseSession?.refresh_token;
-
-        if (!refreshToken) return;
-
-        const formData = createSSOFormData(
-          supabaseSession,
-          refreshToken,
-          redirectTo
-        );
-
-        void fetcher.submit(formData, { method: "post" });
-      }
-    });
-
-    return () => {
-      // prevent memory leak. Listener stays alive 👨‍🎤
-      subscription.unsubscribe();
+type LoaderDataShape = {
+  error: {
+    additionalData?: {
+      validationErrors?: Record<string, { message: string }>;
     };
-  }, [fetcher, redirectTo]);
+    message: string;
+  } | null;
+  subHeading: string;
+  title: string;
+};
 
+export default function LoginCallback() {
+  const loaderData = useLoaderData() as LoaderDataShape;
+  const callbackError = loaderData.error;
   const validationErrors = useMemo(
-    () => data?.error?.additionalData?.validationErrors,
-    [data?.error]
+    () => loaderData.error?.additionalData?.validationErrors,
+    [loaderData.error]
   );
 
   return (

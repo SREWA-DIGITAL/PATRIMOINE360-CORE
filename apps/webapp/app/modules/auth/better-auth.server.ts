@@ -21,6 +21,7 @@ import {
   ensureDomainUserForBetterAuthUser,
   syncDomainUserProfileFromBetterAuthUser,
 } from "./better-auth-user-sync.server";
+import { verifyPasswordWithLegacySupport } from "./legacy-password-hash.server";
 
 const DEFAULT_BETTER_AUTH_BASE_PATH = "/api/auth";
 
@@ -478,6 +479,11 @@ export function getBetterAuthOptions(): BetterAuthOptions {
     }),
     emailAndPassword: {
       enabled: true,
+      password: {
+        // Preserve access for migrated Supabase users while new and reset
+        // passwords continue to use Better Auth's native hashing.
+        verify: verifyPasswordWithLegacySupport,
+      },
       requireEmailVerification: true,
     },
     emailVerification: {
