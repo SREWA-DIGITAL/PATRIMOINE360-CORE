@@ -122,34 +122,34 @@ Sources vérifiées :
 
 Cartographie du dépôt actuel :
 
-| Zone | État constaté | Lecture phase 1 |
-| --- | --- | --- |
-| Racine | `package.json` nommé `shelf`, scripts pnpm + Turbo, `pnpm-workspace.yaml` sur `apps/*`, `packages/*`, `tooling/*` | Base Shelf.nu conservée, cohérente avec le monorepo cible |
-| Webapp | `apps/webapp` / `@shelf/webapp`, React Router `7.14.0`, React `19.2.1`, Vite, Vitest, Playwright | Application principale déjà au bon emplacement |
-| Base de données | `packages/database` / `@shelf/database`, Prisma `6.19.3`, migrations nombreuses, client partagé | Le paquet cible existe déjà, mais son modèle reste Shelf.nu |
-| Documentation | `apps/docs` / VitePress, documentation Shelf.nu | Utile pour les pratiques existantes, à rebrander et compléter plus tard |
-| Companion mobile | `apps/companion` / Expo | Présent dans le dépôt, hors cible immédiate du PRD Core web |
-| Tooling | `tooling/typescript` | Conforme à l'approche monorepo |
-| Docker | Pas de dossier racine `docker/`; Dockerfiles dans `apps/webapp`; docs Docker encore dépendantes de Supabase Cloud | Écart avec la cible on-prem Docker Compose |
+| Zone             | État constaté                                                                                                     | Lecture phase 1                                                         |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Racine           | `package.json` nommé `shelf`, scripts pnpm + Turbo, `pnpm-workspace.yaml` sur `apps/*`, `packages/*`, `tooling/*` | Base Shelf.nu conservée, cohérente avec le monorepo cible               |
+| Webapp           | `apps/webapp` / `@shelf/webapp`, React Router `7.14.0`, React `19.2.1`, Vite, Vitest, Playwright                  | Application principale déjà au bon emplacement                          |
+| Base de données  | `packages/database` / `@shelf/database`, Prisma `6.19.3`, migrations nombreuses, client partagé                   | Le paquet cible existe déjà, mais son modèle reste Shelf.nu             |
+| Documentation    | `apps/docs` / VitePress, documentation Shelf.nu                                                                   | Utile pour les pratiques existantes, à rebrander et compléter plus tard |
+| Companion mobile | `apps/companion` / Expo                                                                                           | Présent dans le dépôt, hors cible immédiate du PRD Core web             |
+| Tooling          | `tooling/typescript`                                                                                              | Conforme à l'approche monorepo                                          |
+| Docker           | Pas de dossier racine `docker/`; Dockerfiles dans `apps/webapp`; docs Docker encore dépendantes de Supabase Cloud | Écart avec la cible on-prem Docker Compose                              |
 
 Correspondance entre le PRD et l'existant :
 
-| PRD Patrimoine360 | Existant Shelf.nu | Décision de recalage |
-| --- | --- | --- |
-| `apps/webapp` comme application principale | Présent | Conserver |
-| `packages/database` comme propriétaire Prisma | Présent | Conserver |
-| Remix / React Router v7 | React Router v7 présent, traces Remix encore dans conventions et dépendances | Conserver l'architecture actuelle |
-| PostgreSQL + Prisma | Présent via Prisma et Supabase PostgreSQL | Conserver PostgreSQL / Prisma, retirer progressivement la dépendance Supabase là où le PRD l'exige |
-| Better Auth | Non présent ; intégration Supabase active | Traiter en phase 3, sans migration précipitée en phase 1 |
-| MinIO on-prem | Non présent ; stockage et images liés à Supabase | Traiter en phase 2 ou phase 9 selon la trajectoire Docker |
-| Sites / Locaux | Module `location` et routes `locations.*` présents | Mapper progressivement vers le vocabulaire `Site` / `Local` |
-| Biens / Équipements | Module `asset` et routes `assets.*` présents | Mapper progressivement vers `Bien` / `Équipement` |
-| Custody / Responsables | Module `custody`, `team-member`, relations Prisma existantes | Réutiliser et renommer au bon moment |
-| Rappels | Module `asset-reminder` et routes `reminders.*` présents | Réutiliser comme base des rappels Core |
-| Réservations | Module `booking` présent | Réutiliser comme module Core |
-| Contrats, fiches de visite, travaux | Non observés comme modules métier Patrimoine360 | Réserver au dépôt Enterprise privé |
-| Feature flags `LICENSE_TYPE` | `ENABLE_PREMIUM_FEATURES` existe, pas `LICENSE_TYPE` | Introduire une frontière licence en phase 7 |
-| Branding Patrimoine360 | Nombreux libellés et paquets `shelf`, `@shelf/*` | Rebranding progressif en phase 6 |
+| PRD Patrimoine360                             | Existant Shelf.nu                                                            | Décision de recalage                                                                               |
+| --------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `apps/webapp` comme application principale    | Présent                                                                      | Conserver                                                                                          |
+| `packages/database` comme propriétaire Prisma | Présent                                                                      | Conserver                                                                                          |
+| Remix / React Router v7                       | React Router v7 présent, traces Remix encore dans conventions et dépendances | Conserver l'architecture actuelle                                                                  |
+| PostgreSQL + Prisma                           | Présent via Prisma et Supabase PostgreSQL                                    | Conserver PostgreSQL / Prisma, retirer progressivement la dépendance Supabase là où le PRD l'exige |
+| Better Auth                                   | Non présent ; intégration Supabase active                                    | Traiter en phase 3, sans migration précipitée en phase 1                                           |
+| MinIO on-prem                                 | Non présent ; stockage et images liés à Supabase                             | Traiter en phase 2 ou phase 9 selon la trajectoire Docker                                          |
+| Sites / Locaux                                | Module `location` et routes `locations.*` présents                           | Mapper progressivement vers le vocabulaire `Site` / `Local`                                        |
+| Biens / Équipements                           | Module `asset` et routes `assets.*` présents                                 | Mapper progressivement vers `Bien` / `Équipement`                                                  |
+| Custody / Responsables                        | Module `custody`, `team-member`, relations Prisma existantes                 | Réutiliser et renommer au bon moment                                                               |
+| Rappels                                       | Module `asset-reminder` et routes `reminders.*` présents                     | Réutiliser comme base des rappels Core                                                             |
+| Réservations                                  | Module `booking` présent                                                     | Réutiliser comme module Core                                                                       |
+| Contrats, fiches de visite, travaux           | Non observés comme modules métier Patrimoine360                              | Réserver au dépôt Enterprise privé                                                                 |
+| Feature flags `LICENSE_TYPE`                  | `ENABLE_PREMIUM_FEATURES` existe, pas `LICENSE_TYPE`                         | Introduire une frontière licence en phase 7                                                        |
+| Branding Patrimoine360                        | Nombreux libellés et paquets `shelf`, `@shelf/*`                             | Rebranding progressif en phase 6                                                                   |
 
 Écarts principaux :
 
@@ -275,21 +275,21 @@ Règles de fondation Core :
 
 Scripts retenus comme base :
 
-| Besoin | Script actuel | Décision |
-| --- | --- | --- |
-| Installation | `pnpm install --frozen-lockfile` | À utiliser en CI et onboarding |
-| Développement web | `pnpm webapp:dev` | À conserver |
-| Build global | `pnpm turbo build` ou `pnpm run build` | À conserver |
-| Build webapp | `pnpm webapp:build` | À conserver |
-| Lint global | `pnpm turbo lint` ou `pnpm run lint` | À conserver |
-| Typecheck global | `pnpm turbo typecheck` ou `pnpm run typecheck` | À conserver |
-| Tests webapp | `pnpm webapp:test -- --run` | À conserver avec `--run` |
-| Validation webapp | `pnpm webapp:validate` | À conserver comme contrôle fort |
-| Prisma generate | `pnpm db:generate` | À conserver |
-| Préparer migration | `pnpm db:prepare-migration` | À conserver |
-| Déployer migration | `pnpm db:deploy-migration` | À conserver |
-| Reset base | `pnpm db:reset` | Destructif, ne pas utiliser sans demande explicite |
-| Documentation | `pnpm docs:build`, `pnpm docs:dev` | À conserver |
+| Besoin             | Script actuel                                  | Décision                                           |
+| ------------------ | ---------------------------------------------- | -------------------------------------------------- |
+| Installation       | `pnpm install --frozen-lockfile`               | À utiliser en CI et onboarding                     |
+| Développement web  | `pnpm webapp:dev`                              | À conserver                                        |
+| Build global       | `pnpm turbo build` ou `pnpm run build`         | À conserver                                        |
+| Build webapp       | `pnpm webapp:build`                            | À conserver                                        |
+| Lint global        | `pnpm turbo lint` ou `pnpm run lint`           | À conserver                                        |
+| Typecheck global   | `pnpm turbo typecheck` ou `pnpm run typecheck` | À conserver                                        |
+| Tests webapp       | `pnpm webapp:test -- --run`                    | À conserver avec `--run`                           |
+| Validation webapp  | `pnpm webapp:validate`                         | À conserver comme contrôle fort                    |
+| Prisma generate    | `pnpm db:generate`                             | À conserver                                        |
+| Préparer migration | `pnpm db:prepare-migration`                    | À conserver                                        |
+| Déployer migration | `pnpm db:deploy-migration`                     | À conserver                                        |
+| Reset base         | `pnpm db:reset`                                | Destructif, ne pas utiliser sans demande explicite |
+| Documentation      | `pnpm docs:build`, `pnpm docs:dev`             | À conserver                                        |
 
 Variables d'environnement à aligner :
 
@@ -536,17 +536,17 @@ Sources auditées :
 
 Équivalences Core retenues :
 
-| PRD Patrimoine360 | Modèle technique actuel | Décision |
-| --- | --- | --- |
-| `Organization` | `Organization` | Conserver le modèle existant comme racine multi-tenant. Nettoyer plus tard les champs Shelf/premium seulement si nécessaire. |
-| `Site` / local / bâtiment / salle | `Location` | Utiliser `Location` comme modèle technique des sites et locaux. La hiérarchie parent/enfants existe déjà. |
-| `Bien` / équipement | `Asset` | Utiliser `Asset` comme modèle technique des biens. Les relations organisation, catégorie, site, responsable, rappels, réservations et tags existent déjà. |
-| `CustodyRecord` / affectation | `Custody` | Utiliser `Custody` comme affectation active. Ajouter un historique séparé uniquement si le besoin métier l'exige. |
-| `Rappel` | `AssetReminder` | Conserver les rappels liés aux biens. Prévoir une extension ultérieure si des rappels doivent cibler un site sans bien. |
-| Responsable / détenteur | `TeamMember` | Conserver `TeamMember` comme responsable opérationnel, avec lien optionnel vers `User`. |
-| Permissions de base | `OrganizationRoles` + `Role2PermissionMap` | Garder la base technique existante jusqu'à l'introduction du mapping de rôles Patrimoine360 défini en phase 3. |
-| Réservation | `Booking` | Conserver comme flux Core adjacent aux biens. Ne pas modifier en phase 4. |
-| Kit / lot | `Kit` | Conserver comme capacité héritée utile, sans en faire un pilier du modèle Core initial. |
+| PRD Patrimoine360                 | Modèle technique actuel                    | Décision                                                                                                                                                  |
+| --------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Organization`                    | `Organization`                             | Conserver le modèle existant comme racine multi-tenant. Nettoyer plus tard les champs Shelf/premium seulement si nécessaire.                              |
+| `Site` / local / bâtiment / salle | `Location`                                 | Utiliser `Location` comme modèle technique des sites et locaux. La hiérarchie parent/enfants existe déjà.                                                 |
+| `Bien` / équipement               | `Asset`                                    | Utiliser `Asset` comme modèle technique des biens. Les relations organisation, catégorie, site, responsable, rappels, réservations et tags existent déjà. |
+| `CustodyRecord` / affectation     | `Custody`                                  | Utiliser `Custody` comme affectation active. Ajouter un historique séparé uniquement si le besoin métier l'exige.                                         |
+| `Rappel`                          | `AssetReminder`                            | Conserver les rappels liés aux biens. Prévoir une extension ultérieure si des rappels doivent cibler un site sans bien.                                   |
+| Responsable / détenteur           | `TeamMember`                               | Conserver `TeamMember` comme responsable opérationnel, avec lien optionnel vers `User`.                                                                   |
+| Permissions de base               | `OrganizationRoles` + `Role2PermissionMap` | Garder la base technique existante jusqu'à l'introduction du mapping de rôles Patrimoine360 défini en phase 3.                                            |
+| Réservation                       | `Booking`                                  | Conserver comme flux Core adjacent aux biens. Ne pas modifier en phase 4.                                                                                 |
+| Kit / lot                         | `Kit`                                      | Conserver comme capacité héritée utile, sans en faire un pilier du modèle Core initial.                                                                   |
 
 Décision structurante :
 
@@ -642,16 +642,16 @@ Constat global :
 
 Flux Core disponibles :
 
-| Besoin Patrimoine360 Core | Implémentation actuelle | État |
-| --- | --- | --- |
-| Dashboard basique | `/home`, `apps/webapp/app/components/home`, `apps/webapp/app/components/dashboard` | Disponible avec KPI, biens récents, valeur, statuts, sites, rappels et réservations. |
-| Sites et locaux | `/locations`, `/locations/new`, `/locations/:id`, `/locations/:id/edit`, API tree et bulk actions | Disponible avec CRUD, hiérarchie, notes, activité, biens et kits rattachés. |
-| Biens et équipements | `/assets`, `/assets/new`, `/assets/:id`, import/export, API bulk actions | Disponible avec CRUD, recherche, filtres, catégorie, site, responsable, images, QR, tags, notes, rappels et réservations. |
-| Responsables | `/settings/team`, `/settings/team/nrm`, profils utilisateurs et membres non enregistrés | Disponible avec création, import, édition, consultation des biens/réservations/notes. |
-| Affectations | routes `assign-custody`, `release-custody`, API bulk et mobile | Disponible avec mise à jour atomique du statut du bien. |
-| Rappels | `/reminders`, onglet rappels d'un bien, scheduler et emails | Disponible pour les rappels rattachés à un bien. |
-| Réservations | `/bookings`, lifecycle, paramètres, exports, calendrier et mobile | Disponible comme flux Core adjacent aux biens. |
-| Rapports simples | `/reports`, `/reports/:reportId`, export CSV et PDF | Disponible avec rapports inventaire, activité, utilisation, réservations, retards et affectations. |
+| Besoin Patrimoine360 Core | Implémentation actuelle                                                                           | État                                                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Dashboard basique         | `/home`, `apps/webapp/app/components/home`, `apps/webapp/app/components/dashboard`                | Disponible avec KPI, biens récents, valeur, statuts, sites, rappels et réservations.                                      |
+| Sites et locaux           | `/locations`, `/locations/new`, `/locations/:id`, `/locations/:id/edit`, API tree et bulk actions | Disponible avec CRUD, hiérarchie, notes, activité, biens et kits rattachés.                                               |
+| Biens et équipements      | `/assets`, `/assets/new`, `/assets/:id`, import/export, API bulk actions                          | Disponible avec CRUD, recherche, filtres, catégorie, site, responsable, images, QR, tags, notes, rappels et réservations. |
+| Responsables              | `/settings/team`, `/settings/team/nrm`, profils utilisateurs et membres non enregistrés           | Disponible avec création, import, édition, consultation des biens/réservations/notes.                                     |
+| Affectations              | routes `assign-custody`, `release-custody`, API bulk et mobile                                    | Disponible avec mise à jour atomique du statut du bien.                                                                   |
+| Rappels                   | `/reminders`, onglet rappels d'un bien, scheduler et emails                                       | Disponible pour les rappels rattachés à un bien.                                                                          |
+| Réservations              | `/bookings`, lifecycle, paramètres, exports, calendrier et mobile                                 | Disponible comme flux Core adjacent aux biens.                                                                            |
+| Rapports simples          | `/reports`, `/reports/:reportId`, export CSV et PDF                                               | Disponible avec rapports inventaire, activité, utilisation, réservations, retards et affectations.                        |
 
 Flux métier principaux :
 
@@ -864,6 +864,10 @@ Statut : À faire
 
 Objectif : préparer les extensions privées : contrats, prestataires, fiches de visite, travaux, dashboard avancé, Excel CNPS, RBAC géographique, SSO, WhatsApp et licence Enterprise.
 
+Plan opérationnel :
+
+- Voir [PLAN-OPERATIONNEL-PHASES-8-9.md](./PLAN-OPERATIONNEL-PHASES-8-9.md), section `Phase 8 - Fermeture des écarts Core et socle Enterprise`.
+
 Critères d'acceptation :
 
 - Les extensions privées ont une convention d'isolation.
@@ -874,6 +878,10 @@ Critères d'acceptation :
 Statut : À faire
 
 Objectif : définir CI/CD, migrations, seeds, tests unitaires, intégration, E2E, Docker on-prem, sauvegardes, monitoring, sécurité, release Core et propagation vers Enterprise.
+
+Plan opérationnel :
+
+- Voir [PLAN-OPERATIONNEL-PHASES-8-9.md](./PLAN-OPERATIONNEL-PHASES-8-9.md), section `Phase 9 - DevOps, qualité et livraison séparée`.
 
 Critères d'acceptation :
 

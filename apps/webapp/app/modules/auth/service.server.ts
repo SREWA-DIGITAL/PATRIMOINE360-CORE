@@ -1,7 +1,6 @@
 import type { AuthSession } from "@server/session";
 import { config } from "~/config/shelf.config";
 import { db } from "~/database/db.server";
-import { sendEmail } from "~/emails/mail.server";
 import { SERVER_URL } from "~/utils/env";
 
 import type { ErrorLabel } from "~/utils/error";
@@ -9,19 +8,10 @@ import { isLikeShelfError, ShelfError } from "~/utils/error";
 import { assertEnterpriseFeature } from "~/utils/license";
 import { Logger } from "~/utils/logger";
 import {
-  getAuthErrorCode,
   getAuthErrorMessage,
   isAuthApiErrorLike,
   isRetryableAuthError,
 } from "./auth-error-classifier.server";
-import type { getAuthUserByAccessToken } from "./auth-provider.server";
-import {
-  createAuthUser,
-  findAuthUserIdByEmail,
-  generateAuthOtpCode,
-  updateAuthUserById,
-  verifyRecoveryOtpWithProvider,
-} from "./auth-provider.server";
 import {
   deleteBetterAuthUserIdentity,
   getBetterAuthProviderUserById,
@@ -48,16 +38,22 @@ import {
 import { findBetterAuthSsoProviderByDomain } from "./better-auth.server";
 
 const label: ErrorLabel = "Auth";
-type AuthOtpMode = "login" | "signup" | "confirm_signup";
+type AuthOtpMode = "login";
 type EmailChangeOtpRequestResult =
   | { provider: "better-auth" }
   | { otp: string; provider: "supabase" };
 type SessionValidationInput =
   | string
   | Pick<AuthSession, "provider" | "accessToken" | "refreshToken">;
-type AuthAccessTokenResponse = Awaited<
-  ReturnType<typeof getAuthUserByAccessToken>
->;
+type AuthAccessTokenResponse = {
+  data: {
+    user: {
+      email: string;
+      id: string;
+    } | null;
+  };
+  error: unknown | null;
+};
 
 function mapBetterAuthAccessTokenResponse(
   session: NonNullable<Awaited<ReturnType<typeof getBetterAuthSession>>>
@@ -134,199 +130,6 @@ function buildSsoCallbackURL(redirectTo?: string | undefined) {
   }
 
   return callbackURL.toString();
-}
-
-function getAuthOtpModeCopy(mode: AuthOtpMode) {
-  switch (mode) {
-    case "login":
-      return {
-        headline: "Login code",
-        intro: "To log in, please use the following one-time code:",
-        subject: "Your login code",
-        tags: ["auth", "otp", "login"],
-      };
-    case "signup":
-      return {
-        headline: "Create your account",
-        intro:
-          "To create your account, please use the following one-time code:",
-        subject: "Your signup code",
-        tags: ["auth", "otp", "signup"],
-      };
-    case "confirm_signup":
-      return {
-        headline: "Confirm your email",
-        intro:
-          "To confirm your email address, please use the following one-time code:",
-        subject: "Confirm your email address",
-        tags: ["auth", "otp", "confirm-signup"],
-      };
-  }
-}
-
-async function sendGeneratedAuthOtp(email: string, mode: AuthOtpMode) {
-  const linkType = mode === "login" ? "magiclink" : "signup";
-  const { otp, error } =
-    mode === "login"
-      ? await generateAuthOtpCode("magiclink", email)
-      : await generateAuthOtpCode("signup", email);
-
-  if (error) {
-    throw error;
-  }
-
-  if (!otp) {
-    throw new ShelfError({
-      cause: null,
-      message: "Auth provider did not return an email OTP",
-      additionalData: { email, mode, linkType },
-      label,
-    });
-  }
-
-  const copy = getAuthOtpModeCopy(mode);
-
-  sendEmail({
-    to: email,
-    subject: `${copy.subject}: ${otp}`,
-    text: [
-      copy.headline,
-      "",
-      copy.intro,
-      otp,
-      "",
-      "Do not share this code with anyone.",
-    ].join("\n"),
-    html: [
-      `<h2>${copy.headline}</h2>`,
-      `<p>${copy.intro}</p>`,
-      `<h2><b>${otp}</b></h2>`,
-      "<p>Do not share this code with anyone.</p>",
-    ].join(""),
-    tags: copy.tags,
-  });
-}
-
-export async function createEmailAuthAccount(email: string, password: string) {
-  try {
-    const { data, error } = await createAuthUser({
-      email,
-      password,
-      email_confirm: true,
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    const { user } = data;
-
-    return user;
-  } catch (cause) {
-    throw new ShelfError({
-      cause,
-      message: "Failed to create email auth account",
-      additionalData: { email },
-      label,
-    });
-  }
-}
-
-/**
- * Looks up an existing Supabase auth account by email and confirms it.
- *
- * Used as a fallback during invite acceptance when `createEmailAuthAccount`
- * fails because the email already exists in Supabase (e.g. user signed up
- * but never confirmed their email). The invite JWT serves as proof of email
- * ownership, making direct confirmation safe.
- *
- * @returns The confirmed auth user, or `null` if no auth account exists
- *          for the given email.
- */
-export async function confirmExistingAuthAccount(
-  email: string,
-  password: string
-) {
-  try {
-    const authUserId = await findAuthUserIdByEmail(email);
-
-    if (!authUserId) {
-      return null;
-    }
-
-    const { data, error } = await updateAuthUserById(authUserId, {
-      email_confirm: true,
-      password,
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    return data.user;
-  } catch (cause) {
-    throw new ShelfError({
-      cause,
-      message: "Failed to confirm existing auth account",
-      additionalData: { email },
-      label,
-    });
-  }
-}
-
-export async function signUpWithEmailPass(email: string, password: string) {
-  try {
-    const { data, error } = await createAuthUser({
-      email: email,
-      password: password,
-      email_confirm: false,
-      user_metadata: {
-        signup_method: "email-password",
-      },
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    const { user } = data;
-
-    if (!user) {
-      throw new ShelfError({
-        cause: null,
-        message: "The user returned by Supabase is null",
-        label,
-      });
-    }
-
-    await sendGeneratedAuthOtp(email, "confirm_signup");
-
-    return user;
-  } catch (cause) {
-    const isRateLimitError =
-      isAuthApiErrorLike(cause) &&
-      (cause.status === 429 ||
-        cause.message.includes("request this after 5 seconds"));
-    const isTransientFetchError = isRetryableAuthError(cause);
-    /** Supabase can return transient database errors during user creation
-     * that resolve on retry — suppress these from Sentry. */
-    const isDatabaseError =
-      isAuthApiErrorLike(cause) && cause.message.includes("Database error");
-    const message = isRateLimitError
-      ? "You're trying too fast. Please wait a few seconds and try again."
-      : "Something went wrong, refresh page and try to signup again.";
-    throw new ShelfError({
-      cause,
-      message,
-      additionalData: { email },
-      label,
-      shouldBeCaptured: !(
-        isRateLimitError ||
-        isTransientFetchError ||
-        isDatabaseError
-      ),
-    });
-  }
 }
 
 export async function signUpWithBetterAuthEmailPass(
@@ -411,23 +214,6 @@ function getBetterAuthOtpErrorState(cause: unknown) {
       };
     default:
       return null;
-  }
-}
-
-export async function resendVerificationEmail(email: string) {
-  try {
-    await sendGeneratedAuthOtp(email, "confirm_signup");
-  } catch (cause) {
-    const isRateLimitError =
-      getAuthErrorCode(cause) === "over_email_send_rate_limit";
-    throw new ShelfError({
-      cause,
-      message:
-        "Something went wrong while resending the verification email. Please try again later or contact support.",
-      additionalData: { email },
-      label,
-      shouldBeCaptured: !isRateLimitError,
-    });
   }
 }
 
@@ -571,32 +357,10 @@ export async function sendOTP(email: string, mode: AuthOtpMode = "login") {
     const normalizedEmail = email.toLowerCase();
 
     await validateNonSSOUser(normalizedEmail);
-
-    if (mode === "login") {
-      await sendBetterAuthSignInOtp(normalizedEmail);
-      return;
-    }
-
-    await sendGeneratedAuthOtp(normalizedEmail, mode);
+    await sendBetterAuthSignInOtp(normalizedEmail);
   } catch (cause) {
-    // Read `code` via narrowing instead of `@ts-expect-error` — `cause` is
-    // `unknown`, and a bare property access would throw at runtime if it
-    // were null/undefined.
-    const errorCode = getAuthErrorCode(cause);
-    // Match `signInWithEmail`'s rate-limit handling: cover both the
-    // Supabase OTP-specific `over_email_send_rate_limit` code and the
-    // generic HTTP 429 `AuthApiError` (which can carry a different code).
     const isRateLimitError =
-      errorCode === "over_email_send_rate_limit" ||
-      (isAuthApiErrorLike(cause) && cause.status === 429) ||
-      (isBetterAuthApiError(cause) && cause.status === 429);
-    // Supabase 504s and intermittent fetch failures resolve on retry.
-    const isTransientFetchError = isRetryableAuthError(cause);
-    // "Database error finding user" — Supabase backend hiccup, not actionable.
-    const isDatabaseError =
-      isAuthApiErrorLike(cause) && cause.message.includes("Database error");
-    // SSO-mismatch / similar `validateNonSSOUser` rejections already opt out
-    // via their own `shouldBeCaptured: false` — preserve that decision.
+      isBetterAuthApiError(cause) && cause.status === 429;
     const inheritedShouldBeCaptured = isLikeShelfError(cause)
       ? cause.shouldBeCaptured
       : undefined;
@@ -616,9 +380,7 @@ export async function sendOTP(email: string, mode: AuthOtpMode = "login") {
       additionalData: { email: email.toLowerCase(), mode },
       label,
       shouldBeCaptured:
-        inheritedShouldBeCaptured === false
-          ? false
-          : !(isRateLimitError || isTransientFetchError || isDatabaseError),
+        inheritedShouldBeCaptured === false ? false : !isRateLimitError,
     });
   }
 }
@@ -965,39 +727,6 @@ export async function verifyOtpAndSignin(email: string, otp: string) {
       label,
       shouldBeCaptured,
       additionalData: { email: email.toLowerCase() },
-    });
-  }
-}
-
-export async function verifyRecoveryOtp(email: string, otp: string) {
-  try {
-    const { data, error } = await verifyRecoveryOtpWithProvider(email, otp);
-
-    if (error || !data.user || !data.session) {
-      throw new ShelfError({
-        cause: error,
-        message: "Invalid or expired verification code",
-        additionalData: { email },
-        label,
-        shouldBeCaptured: false,
-      });
-    }
-
-    return {
-      userId: data.user.id,
-      accessToken: data.session.access_token,
-    };
-  } catch (cause) {
-    if (isLikeShelfError(cause)) {
-      throw cause;
-    }
-
-    throw new ShelfError({
-      cause,
-      message: "Invalid or expired verification code",
-      additionalData: { email },
-      label,
-      shouldBeCaptured: false,
     });
   }
 }

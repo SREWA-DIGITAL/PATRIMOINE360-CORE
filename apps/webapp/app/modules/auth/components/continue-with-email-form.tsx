@@ -20,17 +20,16 @@ export const SendOtpSchema = z.object({
     .refine(validEmail, () => ({
       message: "Please enter a valid email",
     })),
-  mode: z.enum(["login", "signup", "confirm_signup"]).optional(),
+  mode: z.enum(["login"]).optional(),
 });
 
-export function ContinueWithEmailForm({ mode }: { mode: "login" | "signup" }) {
+export function ContinueWithEmailForm({ mode }: { mode: "login" }) {
   const sendOTP = useFetcher<typeof action>();
   const { data, state } = sendOTP;
   const zo = useZorm("NewQuestionWizardScreen", SendOtpSchema);
 
   const isLoading = state === "submitting" || state === "loading";
-  const buttontext =
-    mode === "login" ? "Continue with OTP" : "Sign up with OTP";
+  const buttontext = "Continue with OTP";
   const buttonLabel = isLoading
     ? "Sending you a one time password..."
     : buttontext;

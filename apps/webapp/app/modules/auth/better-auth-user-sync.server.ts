@@ -2,15 +2,23 @@ import { db } from "~/database/db.server";
 import { createUser } from "~/modules/user/service.server";
 import { generateUniqueUsername } from "~/modules/user/utils.server";
 import { ShelfError } from "~/utils/error";
+import { id as generateId } from "~/utils/id/id.server";
 
 const label = "Auth";
 
-type BetterAuthManagedUser = {
+type BetterAuthManagedUserBase = {
   appMetadata?: Record<string, unknown> | null;
-  id: string;
   email: string;
   name: string;
   image?: string | null;
+};
+
+type BetterAuthManagedUser = BetterAuthManagedUserBase & {
+  id?: string;
+};
+
+type BetterAuthManagedUserWithId = BetterAuthManagedUserBase & {
+  id: string;
 };
 
 function normalizeEmail(email: string) {
@@ -99,7 +107,7 @@ function isSsoManagedBetterAuthUser(user: BetterAuthManagedUser) {
 }
 
 export async function syncDomainUserProfileFromBetterAuthUser(
-  user: BetterAuthManagedUser
+  user: BetterAuthManagedUserWithId
 ) {
   const email = normalizeEmail(user.email);
   const displayName = normalizeDisplayName(user.name, email);
@@ -158,11 +166,16 @@ export async function ensureDomainUserForBetterAuthUser(
     name: displayName,
   };
 
-  const existingUserById = await getDomainUserById(user.id);
+  const existingUserById = user.id ? await getDomainUserById(user.id) : null;
 
   if (existingUserById) {
-    await syncDomainUserProfileFromBetterAuthUser(normalizedUser);
-    return normalizedUser;
+    const linkedUser = {
+      ...normalizedUser,
+      id: existingUserById.id,
+    };
+
+    await syncDomainUserProfileFromBetterAuthUser(linkedUser);
+    return linkedUser;
   }
 
   const existingUserByEmail = await getDomainUserByEmail(email);
@@ -195,7 +208,7 @@ export async function ensureDomainUserForBetterAuthUser(
   const username = await generateUniqueUsername(email);
   const { firstName, lastName } = splitDisplayName(displayName);
 
-  let userId = normalizedUser.id;
+  let userId = normalizedUser.id ?? generateId();
 
   try {
     await createUser({

@@ -17,6 +17,8 @@ vi.mock("./smtp-email-provider.server", () => ({
 vi.mock("~/utils/env", () => ({
   EMAIL_PROVIDER: "brevo",
   SMTP_FROM: '"Shelf" <hello@example.com>',
+  BREVO_SENDER_EMAIL: "ceofa@srewadigital.co",
+  BREVO_SENDER_NAME: "Patrimoine360",
   SUPPORT_EMAIL: "support@example.com",
 }));
 
@@ -42,7 +44,7 @@ describe("email-provider", () => {
     });
 
     expect(mocks.sendEmailWithBrevo).toHaveBeenCalledWith({
-      from: '"Shelf" <hello@example.com>',
+      from: '"Patrimoine360" <ceofa@srewadigital.co>',
       replyTo: "support@example.com",
       subject: "Welcome",
       text: "Hello",

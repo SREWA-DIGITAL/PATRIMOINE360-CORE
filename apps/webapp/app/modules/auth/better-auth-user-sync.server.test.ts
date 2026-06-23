@@ -6,9 +6,11 @@ const mocks = vi.hoisted(() => {
   const userUpdate = vi.fn();
   const createUser = vi.fn();
   const generateUniqueUsername = vi.fn();
+  const generateId = vi.fn();
 
   return {
     createUser,
+    generateId,
     generateUniqueUsername,
     userFindUnique,
     userUpdate,
@@ -32,6 +34,10 @@ vi.mock("~/modules/user/utils.server", () => ({
   generateUniqueUsername: mocks.generateUniqueUsername,
 }));
 
+vi.mock("~/utils/id/id.server", () => ({
+  id: mocks.generateId,
+}));
+
 const {
   ensureDomainUserForBetterAuthUser,
   syncDomainUserProfileFromBetterAuthUser,
@@ -42,8 +48,10 @@ describe("better auth domain user sync", () => {
     mocks.userFindUnique.mockReset();
     mocks.userUpdate.mockReset();
     mocks.createUser.mockReset();
+    mocks.generateId.mockReset();
     mocks.generateUniqueUsername.mockReset();
     mocks.userUpdate.mockResolvedValue(null);
+    mocks.generateId.mockReturnValue("generated-user-id");
   });
 
   it("reuses an existing domain user found by email", async () => {
@@ -114,14 +122,49 @@ describe("better auth domain user sync", () => {
     expect(mocks.generateUniqueUsername).toHaveBeenCalledWith(
       "new.user@example.com"
     );
-    expect(mocks.createUser).toHaveBeenCalledWith({
-      userId: "better-auth-user-2",
+    expect(mocks.createUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "better-auth-user-2",
+        email: "new.user@example.com",
+        username: "newuser123",
+        firstName: "New",
+        lastName: "User",
+      })
+    );
+    expect(result.id).toBe("better-auth-user-2");
+  });
+
+  it("generates a domain user id when the better auth before-hook has no id yet", async () => {
+    mocks.userFindUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({
+      id: "generated-user-id",
       email: "new.user@example.com",
-      username: "newuser123",
       firstName: "New",
       lastName: "User",
+      displayName: null,
+      profilePicture: null,
     });
-    expect(result.id).toBe("better-auth-user-2");
+    mocks.generateUniqueUsername.mockResolvedValue("newuser123");
+    mocks.createUser.mockResolvedValue({
+      id: "generated-user-id",
+    });
+
+    const result = await ensureDomainUserForBetterAuthUser({
+      email: "new.user@example.com",
+      name: "New User",
+      image: null,
+    });
+
+    expect(mocks.generateId).toHaveBeenCalledTimes(1);
+    expect(mocks.createUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "generated-user-id",
+        email: "new.user@example.com",
+        username: "newuser123",
+        firstName: "New",
+        lastName: "User",
+      })
+    );
+    expect(result.id).toBe("generated-user-id");
   });
 
   it("syncs profile fields onto an existing domain user by id", async () => {

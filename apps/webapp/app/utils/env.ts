@@ -55,6 +55,8 @@ declare global {
       SMTP_FROM: string;
       EMAIL_PROVIDER: "smtp" | "brevo";
       BREVO_API_KEY: string;
+      BREVO_SENDER_EMAIL: string;
+      BREVO_SENDER_NAME: string;
       BREVO_TIMEOUT_SECONDS: string;
       BETTER_AUTH_SECRET: string;
       BETTER_AUTH_URL: string;
@@ -173,21 +175,37 @@ export const STRIPE_WEBHOOK_ENDPOINT_SECRET = getEnv(
   "STRIPE_WEBHOOK_ENDPOINT_SECRET",
   { isSecret: true, isRequired: false }
 );
-export const SMTP_PWD = getEnv("SMTP_PWD", { allowEmpty: true });
-export const SMTP_HOST = getEnv("SMTP_HOST");
-export const SMTP_PORT = getEnv("SMTP_PORT", {
-  isRequired: false,
-});
-export const SMTP_USER = getEnv("SMTP_USER", { allowEmpty: true });
-export const SMTP_FROM = getEnv("SMTP_FROM", {
-  isRequired: false,
-});
 export const EMAIL_PROVIDER =
   getEnv("EMAIL_PROVIDER", {
     isSecret: false,
     isRequired: false,
   }) || "smtp";
+export const SMTP_PWD = getEnv("SMTP_PWD", {
+  allowEmpty: true,
+  isRequired: EMAIL_PROVIDER === "smtp",
+});
+export const SMTP_HOST = getEnv("SMTP_HOST", {
+  isRequired: EMAIL_PROVIDER === "smtp",
+});
+export const SMTP_PORT = getEnv("SMTP_PORT", {
+  isRequired: EMAIL_PROVIDER === "smtp",
+});
+export const SMTP_USER = getEnv("SMTP_USER", {
+  allowEmpty: true,
+  isRequired: EMAIL_PROVIDER === "smtp",
+});
+export const SMTP_FROM = getEnv("SMTP_FROM", {
+  isRequired: false,
+});
 export const BREVO_API_KEY = getEnv("BREVO_API_KEY", {
+  isRequired: false,
+});
+export const BREVO_SENDER_EMAIL = getEnv("BREVO_SENDER_EMAIL", {
+  isSecret: false,
+  isRequired: false,
+});
+export const BREVO_SENDER_NAME = getEnv("BREVO_SENDER_NAME", {
+  isSecret: false,
   isRequired: false,
 });
 export const BREVO_TIMEOUT_SECONDS = getEnv("BREVO_TIMEOUT_SECONDS", {

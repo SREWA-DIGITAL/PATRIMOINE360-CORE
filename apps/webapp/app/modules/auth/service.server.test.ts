@@ -3,34 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
   const betterAuthFindUnique = vi.fn().mockResolvedValue(null);
-  const createUser = vi.fn().mockResolvedValue({
-    data: {
-      user: {
-        id: "auth-user-id",
-        email: "user@example.com",
-      },
-    },
-    error: null,
-  });
-
-  const generateOtpCode = vi.fn().mockResolvedValue({
-    otp: "123456",
-    error: null,
-  });
-
-  const sendEmail = vi.fn();
   const signUpWithBetterAuthEmail = vi.fn();
-  const verifyRecoveryOtp = vi.fn().mockResolvedValue({
-    data: {
-      user: { id: "auth-user-id" },
-      session: { access_token: "access-token" },
-    },
-    error: null,
-  });
-  const generateEmailChangeOtpCode = vi.fn().mockResolvedValue({
-    otp: "654321",
-    error: null,
-  });
   const sendBetterAuthSignInOtp = vi.fn();
   const signInWithBetterAuthEmailOtp = vi.fn();
   const requestBetterAuthEmailChange = vi.fn();
@@ -38,36 +11,17 @@ const mocks = vi.hoisted(() => {
   const resetBetterAuthPasswordWithOtp = vi.fn();
   const revokeBetterAuthOtherSessions = vi.fn();
   const changeBetterAuthEmail = vi.fn();
-  const verifyEmailChangeOtpWithProvider = vi.fn().mockResolvedValue({
-    data: {},
-    error: null,
-  });
-  const updateAuthUserById = vi.fn().mockResolvedValue({
-    data: {},
-    error: null,
-  });
-  const signOutOtherSessions = vi.fn().mockResolvedValue({
-    error: null,
-  });
 
   return {
-    changeBetterAuthEmail,
     betterAuthFindUnique,
-    createUser,
-    generateOtpCode,
+    changeBetterAuthEmail,
     requestBetterAuthEmailChange,
     requestBetterAuthPasswordResetOtp,
     resetBetterAuthPasswordWithOtp,
     revokeBetterAuthOtherSessions,
     sendBetterAuthSignInOtp,
-    signUpWithBetterAuthEmail,
-    sendEmail,
     signInWithBetterAuthEmailOtp,
-    updateAuthUserById,
-    verifyRecoveryOtp,
-    generateEmailChangeOtpCode,
-    verifyEmailChangeOtpWithProvider,
-    signOutOtherSessions,
+    signUpWithBetterAuthEmail,
   };
 });
 
@@ -83,10 +37,6 @@ vi.mock("~/database/db.server", () => ({
   },
 }));
 
-vi.mock("~/emails/mail.server", () => ({
-  sendEmail: mocks.sendEmail,
-}));
-
 vi.mock("./better-auth.server", () => ({
   isBetterAuthConfigured: vi.fn(() => true),
 }));
@@ -95,6 +45,7 @@ vi.mock("./better-auth-session.server", () => ({
   changeBetterAuthEmail: mocks.changeBetterAuthEmail,
   getBetterAuthErrorCode: vi.fn(),
   getBetterAuthSession: vi.fn(),
+  isBetterAuthApiError: vi.fn(),
   refreshBetterAuthAppSession: vi.fn(),
   requestBetterAuthEmailChange: mocks.requestBetterAuthEmailChange,
   requestBetterAuthPasswordResetOtp: mocks.requestBetterAuthPasswordResetOtp,
@@ -105,17 +56,6 @@ vi.mock("./better-auth-session.server", () => ({
   signInWithBetterAuthEmailOtp: mocks.signInWithBetterAuthEmailOtp,
   signOutBetterAuthSession: vi.fn(),
   signUpWithBetterAuthEmail: mocks.signUpWithBetterAuthEmail,
-}));
-
-vi.mock("./auth-provider.server", () => ({
-  createAuthUser: mocks.createUser,
-  generateAuthOtpCode: mocks.generateOtpCode,
-  generateRecoveryOtpCode: mocks.generateOtpCode,
-  generateEmailChangeOtpCode: mocks.generateEmailChangeOtpCode,
-  updateAuthUserById: mocks.updateAuthUserById,
-  verifyEmailChangeOtpWithProvider: mocks.verifyEmailChangeOtpWithProvider,
-  verifyRecoveryOtpWithProvider: mocks.verifyRecoveryOtp,
-  signOutOtherSessions: mocks.signOutOtherSessions,
 }));
 
 vi.mock("~/config/shelf.config", () => ({
@@ -134,36 +74,25 @@ vi.mock("~/utils/env", () => ({
 }));
 
 const {
-  resendVerificationEmail,
   resetPasswordWithOtp,
   requestEmailChangeOtp,
   revokeOtherSessions,
   sendOTP,
   signUpWithBetterAuthEmailPass,
-  signUpWithEmailPass,
   verifyEmailChangeOtp,
-  verifyRecoveryOtp,
 } = await import("./service.server");
 
-describe("auth email otp delivery", () => {
+describe("auth service Better Auth flows", () => {
   beforeEach(() => {
-    mocks.changeBetterAuthEmail.mockClear();
     mocks.betterAuthFindUnique.mockClear();
-    mocks.createUser.mockClear();
-    mocks.generateOtpCode.mockClear();
+    mocks.changeBetterAuthEmail.mockClear();
     mocks.requestBetterAuthEmailChange.mockClear();
     mocks.requestBetterAuthPasswordResetOtp.mockClear();
     mocks.resetBetterAuthPasswordWithOtp.mockClear();
     mocks.revokeBetterAuthOtherSessions.mockClear();
     mocks.sendBetterAuthSignInOtp.mockClear();
-    mocks.signUpWithBetterAuthEmail.mockClear();
-    mocks.sendEmail.mockClear();
     mocks.signInWithBetterAuthEmailOtp.mockClear();
-    mocks.updateAuthUserById.mockClear();
-    mocks.verifyRecoveryOtp.mockClear();
-    mocks.generateEmailChangeOtpCode.mockClear();
-    mocks.verifyEmailChangeOtpWithProvider.mockClear();
-    mocks.signOutOtherSessions.mockClear();
+    mocks.signUpWithBetterAuthEmail.mockClear();
     mocks.betterAuthFindUnique.mockResolvedValue(null);
   });
 
@@ -172,46 +101,6 @@ describe("auth email otp delivery", () => {
 
     expect(mocks.sendBetterAuthSignInOtp).toHaveBeenCalledWith(
       "user@example.com"
-    );
-  });
-
-  it("sends signup verification emails through application delivery", async () => {
-    await resendVerificationEmail("new-user@example.com");
-
-    expect(mocks.generateOtpCode).toHaveBeenCalledWith(
-      "signup",
-      "new-user@example.com"
-    );
-    expect(mocks.sendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "new-user@example.com",
-        subject: "Confirm your email address: 123456",
-        tags: ["auth", "otp", "confirm-signup"],
-      })
-    );
-  });
-
-  it("creates password signups and sends the verification OTP with app email delivery", async () => {
-    await signUpWithEmailPass("user@example.com", "password-123");
-
-    expect(mocks.createUser).toHaveBeenCalledWith({
-      email: "user@example.com",
-      password: "password-123",
-      email_confirm: false,
-      user_metadata: {
-        signup_method: "email-password",
-      },
-    });
-    expect(mocks.generateOtpCode).toHaveBeenCalledWith(
-      "signup",
-      "user@example.com"
-    );
-    expect(mocks.sendEmail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "user@example.com",
-        subject: "Confirm your email address: 123456",
-        tags: ["auth", "otp", "confirm-signup"],
-      })
     );
   });
 
@@ -237,20 +126,6 @@ describe("auth email otp delivery", () => {
       name: "user",
       password: "password-123",
     });
-  });
-
-  it("verifies recovery OTPs through the auth provider facade", async () => {
-    await expect(
-      verifyRecoveryOtp("user@example.com", "123456")
-    ).resolves.toEqual({
-      userId: "auth-user-id",
-      accessToken: "access-token",
-    });
-
-    expect(mocks.verifyRecoveryOtp).toHaveBeenCalledWith(
-      "user@example.com",
-      "123456"
-    );
   });
 
   it("requests email change OTPs through Better Auth", async () => {

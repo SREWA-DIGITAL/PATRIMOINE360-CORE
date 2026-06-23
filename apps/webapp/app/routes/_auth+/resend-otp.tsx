@@ -1,6 +1,7 @@
 import type { ActionFunctionArgs } from "react-router";
 import { data } from "react-router";
 import { z } from "zod";
+import { getAuthErrorCode } from "~/modules/auth/auth-error-classifier.server";
 import { sendOTP } from "~/modules/auth/service.server";
 import { makeShelfError, notAllowedMethod } from "~/utils/error";
 
@@ -27,7 +28,7 @@ export async function action({ request }: ActionFunctionArgs) {
               .refine(validEmail, () => ({
                 message: "Please enter a valid email",
               })),
-            mode: z.enum(["login", "signup", "confirm_signup"]).optional(),
+            mode: z.enum(["login"]).optional(),
           }),
           { shouldBeCaptured: false }
         );
@@ -39,8 +40,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
     throw notAllowedMethod(method);
   } catch (cause) {
-    //@ts-expect-error
-    const isRateLimitError = cause.code === "over_email_send_rate_limit";
+    const isRateLimitError =
+      getAuthErrorCode(cause) === "over_email_send_rate_limit";
 
     const reason = makeShelfError(cause, {}, !isRateLimitError);
     return data(error(reason), { status: reason.status });

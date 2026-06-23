@@ -18,18 +18,14 @@ const mocks = vi.hoisted(() => {
   const sendBetterAuthSignInOtp = vi.fn();
   const signOutBetterAuthSession = vi.fn();
   const signInWithBetterAuthOAuthProvider = vi.fn();
-  const signInWithPassword = vi.fn();
   const signInWithBetterAuthEmailOtp = vi.fn();
-  const signInWithSSOProvider = vi.fn();
   const changeBetterAuthEmail = vi.fn();
-  const getAuthUserByAccessToken = vi.fn();
   const isBetterAuthApiError = vi.fn();
 
   return {
     betterAuthFindUnique,
     changeBetterAuthEmail,
     findBetterAuthSsoProviderByDomain,
-    getAuthUserByAccessToken,
     getBetterAuthErrorCode,
     getBetterAuthSession,
     isBetterAuthApiError,
@@ -43,8 +39,6 @@ const mocks = vi.hoisted(() => {
     signInWithBetterAuthEmailOtp,
     signInWithBetterAuthOAuthProvider,
     signUpWithBetterAuthEmail,
-    signInWithPassword,
-    signInWithSSOProvider,
     signOutBetterAuthSession,
     userFindFirst,
     userFindUnique,
@@ -90,12 +84,6 @@ vi.mock("./better-auth-session.server", () => ({
   signOutBetterAuthSession: mocks.signOutBetterAuthSession,
 }));
 
-vi.mock("./auth-provider.server", () => ({
-  getAuthUserByAccessToken: mocks.getAuthUserByAccessToken,
-  signInWithPassword: mocks.signInWithPassword,
-  signInWithSSO: mocks.signInWithSSOProvider,
-}));
-
 vi.mock("~/config/shelf.config", () => ({
   config: {
     disableSignup: false,
@@ -138,7 +126,6 @@ describe("auth provider routing", () => {
     mocks.betterAuthFindUnique.mockReset();
     mocks.changeBetterAuthEmail.mockReset();
     mocks.findBetterAuthSsoProviderByDomain.mockReset();
-    mocks.getAuthUserByAccessToken.mockReset();
     mocks.getBetterAuthErrorCode.mockReset();
     mocks.userFindFirst.mockReset();
     mocks.userFindUnique.mockReset();
@@ -153,20 +140,12 @@ describe("auth provider routing", () => {
     mocks.sendBetterAuthSignInOtp.mockReset();
     mocks.signOutBetterAuthSession.mockReset();
     mocks.signInWithBetterAuthOAuthProvider.mockReset();
-    mocks.signInWithPassword.mockReset();
     mocks.signInWithBetterAuthEmailOtp.mockReset();
-    mocks.signInWithSSOProvider.mockReset();
     mocks.isBetterAuthApiError.mockReset();
 
     mocks.findBetterAuthSsoProviderByDomain.mockReturnValue(null);
     mocks.userFindFirst.mockResolvedValue(null);
     mocks.userFindUnique.mockResolvedValue(null);
-    mocks.getAuthUserByAccessToken.mockResolvedValue({
-      data: {
-        user: null,
-      },
-      error: null,
-    });
     mocks.isBetterAuthApiError.mockReturnValue(false);
   });
 
@@ -194,7 +173,6 @@ describe("auth provider routing", () => {
       "secret-123",
       "http://localhost:3000/login?email=owner%40example.com&email_verified=true"
     );
-    expect(mocks.signInWithPassword).not.toHaveBeenCalled();
   });
 
   it("routes all password logins through Better Auth", async () => {
@@ -320,8 +298,6 @@ describe("auth provider routing", () => {
         status: 401,
       },
     });
-
-    expect(mocks.getAuthUserByAccessToken).not.toHaveBeenCalled();
   });
 
   it("builds Better Auth signup callback URLs for the login verification page", async () => {
@@ -392,7 +368,6 @@ describe("auth provider routing", () => {
       callbackURL: "http://localhost:3000/oauth/callback?redirectTo=%2Fassets",
       providerId: "example-entra",
     });
-    expect(mocks.signInWithSSOProvider).not.toHaveBeenCalled();
   });
 
   it("rejects SSO when no Better Auth provider is configured for the domain", async () => {
@@ -402,8 +377,6 @@ describe("auth provider routing", () => {
       message: "No SSO provider assigned for your organization's domain",
       status: 404,
     });
-
-    expect(mocks.signInWithSSOProvider).not.toHaveBeenCalled();
   });
 
   it("uses Better Auth OTP delivery when the email is already migrated", async () => {
