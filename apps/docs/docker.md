@@ -3,15 +3,22 @@
 > [!NOTE]
 > The Docker configuration for shelf.nu is an effort powered by people within the community, done by [@anatolinicolae](https://github.com/anatolinicolae). Shelf Asset Management Inc. does not yet provide official support for Docker, but we will accept fixes and documentation at this time. Use at your own risk.
 
+> [!IMPORTANT]
+> The current Docker path builds and runs the application container only.
+> It does not yet provide a full Community stack with bundled PostgreSQL and
+> MinIO. For Patrimoine360 Core today, Docker still expects an external
+> Supabase project for PostgreSQL and file storage.
+
 ## Prerequisites
 
 > [!IMPORTANT]
-> If you want to run shelf via docker, there are still some prerequisites you need to meet. Because our docker setup doesn't currently support self-hosting supabase, you need to complete the steps below. This means you have to take care of setting up your Supabase environment, running migrations against your database, and making sure Supabase is configured based on our requirements.
+> If you want to run shelf via docker, there are still some prerequisites you need to meet. The current Docker setup does not yet self-host PostgreSQL or file storage for you. You still need to configure an external Supabase project, run migrations against that database, and keep Supabase Storage available for runtime uploads.
 
 1. [Local Development Guide](./local-development.md) - Setup your development environment
-2. [Supabase Setup Guide](./supabase-setup.md) - Configure your database and authentication
+2. [Supabase Setup Guide](./supabase-setup.md) - Configure your database and current Core storage/auth prerequisites
 
-This will make sure you have a DATABASE that you are ready to connect to.
+This will make sure you have a database and storage backend that the current
+Core runtime can connect to.
 
 ## Instructions
 
@@ -28,12 +35,16 @@ docker run -d \
   -e 'SUPABASE_URL=https://your-instance-name.supabase.co' \
   -e 'SESSION_SECRET=super-duper-s3cret' \
   -e 'SERVER_URL=http://localhost:3000' \
+  -e 'BETTER_AUTH_SECRET=replace-with-a-long-random-secret' \
+  -e 'BETTER_AUTH_URL=http://localhost:3000' \
+  -e 'BETTER_AUTH_BASE_PATH=/api/auth' \
+  -e 'EMAIL_PROVIDER=brevo' \
+  -e 'BREVO_API_KEY=xkeysib-your-brevo-api-key' \
+  -e 'BREVO_SENDER_EMAIL=support@your-domain.com' \
+  -e 'BREVO_SENDER_NAME=Patrimoine360' \
+  -e 'EMAIL_REPLY_TO=support@your-domain.com' \
+  -e 'EMAIL_REPLY_TO_NAME=Support Patrimoine360' \
   -e 'MAPTILER_TOKEN=your-maptiler-token' \
-  -e 'SMTP_HOST=mail.example.com' \
-  -e 'SMTP_PORT=465' \
-  -e 'SMTP_USER=some-email@example.com' \
-  -e 'SMTP_FROM="Your Name from shelf.nu" <your-email@shelf.nu>' \
-  -e 'SMTP_PWD=super-safe-passw0rd' \
   -e 'INVITE_TOKEN_SECRET=another-super-duper-s3cret' \
   -p 3000:8080 \
   --restart unless-stopped \
@@ -46,9 +57,13 @@ docker run -d \
 > - `USER`, `PASSWORD`, `HOST`, `DB_NAME` - Your Supabase database details
 > - `your-anon-public-key`, `your-service-role-key` - From Supabase API settings
 > - `your-instance-name` - Your Supabase project reference
+> - Better Auth and Brevo values are required for the active Core auth/email path
 > - Other tokens and secrets as needed
 
 `DATABASE_URL` and `DIRECT_URL` are mandatory when using Supabase Cloud. Learn more in the [Supabase Setup Guide](./supabase-setup.md).
+
+There is not yet a root `docker/docker-compose.yml` Community stack in this
+repository. That future target belongs to a later delivery phase.
 
 ## Development
 

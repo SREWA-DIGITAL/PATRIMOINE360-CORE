@@ -16,10 +16,12 @@ vi.mock("./smtp-email-provider.server", () => ({
 
 vi.mock("~/utils/env", () => ({
   EMAIL_PROVIDER: "brevo",
-  SMTP_FROM: '"Shelf" <hello@example.com>',
+  SMTP_FROM: '"Legacy SMTP" <hello@example.com>',
   BREVO_SENDER_EMAIL: "ceofa@srewadigital.co",
   BREVO_SENDER_NAME: "Patrimoine360",
   SUPPORT_EMAIL: "support@example.com",
+  EMAIL_REPLY_TO: "reply@example.com",
+  EMAIL_REPLY_TO_NAME: "Support Patrimoine360",
 }));
 
 const { deliverEmail, resolveEmailProvider } = await import(
@@ -45,11 +47,45 @@ describe("email-provider", () => {
 
     expect(mocks.sendEmailWithBrevo).toHaveBeenCalledWith({
       from: '"Patrimoine360" <ceofa@srewadigital.co>',
-      replyTo: "support@example.com",
+      replyTo: '"Support Patrimoine360" <reply@example.com>',
       subject: "Welcome",
       text: "Hello",
       to: "user@example.com",
     });
     expect(mocks.sendEmailWithSmtp).not.toHaveBeenCalled();
+  });
+
+  it("does not fall back to SMTP sender metadata in Brevo mode", async () => {
+    await deliverEmail({
+      subject: "Verify your email",
+      text: "Hello",
+      to: "user@example.com",
+    });
+
+    expect(mocks.sendEmailWithBrevo).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: '"Patrimoine360" <ceofa@srewadigital.co>',
+      })
+    );
+    expect(mocks.sendEmailWithBrevo).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        from: '"Legacy SMTP" <hello@example.com>',
+      })
+    );
+  });
+
+  it("preserves explicit reply-to overrides", async () => {
+    await deliverEmail({
+      replyTo: "owner@example.com",
+      subject: "Welcome",
+      text: "Hello",
+      to: "user@example.com",
+    });
+
+    expect(mocks.sendEmailWithBrevo).toHaveBeenCalledWith(
+      expect.objectContaining({
+        replyTo: "owner@example.com",
+      })
+    );
   });
 });

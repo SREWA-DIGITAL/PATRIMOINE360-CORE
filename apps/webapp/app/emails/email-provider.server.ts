@@ -1,6 +1,8 @@
 import {
   BREVO_SENDER_EMAIL,
   BREVO_SENDER_NAME,
+  EMAIL_REPLY_TO,
+  EMAIL_REPLY_TO_NAME,
   EMAIL_PROVIDER,
   SMTP_FROM,
   SUPPORT_EMAIL,
@@ -23,15 +25,37 @@ export function resolveEmailProvider(): EmailProviderName {
 }
 
 function getBrevoDefaultSender() {
-  if (!BREVO_SENDER_EMAIL) {
-    return SMTP_FROM || '"Shelf" <hello@example.com>';
+  const senderEmail = BREVO_SENDER_EMAIL?.trim() || SUPPORT_EMAIL?.trim();
+
+  if (!senderEmail) {
+    throw new ShelfError({
+      cause: null,
+      message:
+        "BREVO_SENDER_EMAIL or SUPPORT_EMAIL is required when EMAIL_PROVIDER is set to brevo",
+      label: "Email",
+      shouldBeCaptured: false,
+    });
   }
 
   if (BREVO_SENDER_NAME?.trim()) {
-    return `"${BREVO_SENDER_NAME.trim()}" <${BREVO_SENDER_EMAIL}>`;
+    return `"${BREVO_SENDER_NAME.trim()}" <${senderEmail}>`;
   }
 
-  return BREVO_SENDER_EMAIL;
+  return senderEmail;
+}
+
+function getDefaultReplyTo() {
+  const replyToEmail = EMAIL_REPLY_TO?.trim() || SUPPORT_EMAIL?.trim();
+
+  if (!replyToEmail) {
+    return undefined;
+  }
+
+  if (EMAIL_REPLY_TO_NAME?.trim()) {
+    return `"${EMAIL_REPLY_TO_NAME.trim()}" <${replyToEmail}>`;
+  }
+
+  return replyToEmail;
 }
 
 export async function deliverEmail(payload: EmailPayloadType) {
@@ -43,7 +67,7 @@ export async function deliverEmail(payload: EmailPayloadType) {
       (provider === "brevo"
         ? getBrevoDefaultSender()
         : SMTP_FROM || '"Shelf" <hello@example.com>'),
-    replyTo: payload.replyTo || SUPPORT_EMAIL,
+    replyTo: payload.replyTo || getDefaultReplyTo(),
   };
 
   switch (provider) {

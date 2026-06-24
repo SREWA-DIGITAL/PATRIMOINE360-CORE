@@ -42,4 +42,18 @@ describe("triggerEmail", () => {
       expect.objectContaining({ to: "user@example.com" })
     );
   });
+
+  it("wraps provider delivery errors with an email-specific error", async () => {
+    vi.mocked(deliverEmail).mockRejectedValueOnce(new Error("network down"));
+
+    await expect(
+      triggerEmail({
+        ...basePayload,
+        to: "user@example.com",
+      })
+    ).rejects.toMatchObject({
+      label: "Email",
+      message: "Unable to send email",
+    });
+  });
 });

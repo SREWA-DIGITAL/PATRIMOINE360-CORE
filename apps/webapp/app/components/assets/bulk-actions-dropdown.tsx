@@ -197,8 +197,7 @@ function ConditionalDropdown() {
             disabled={
               disabled
                 ? {
-                    reason:
-                      "You must select at least 1 asset to perform an action",
+                    reason: "Vous devez sélectionner au moins 1 bien.",
                   }
                 : false
             }
@@ -241,7 +240,7 @@ function ConditionalDropdown() {
                 width="full"
               >
                 <span className="flex items-center gap-2">
-                  <Icon icon="download" /> Download QR Codes
+                  <Icon icon="download" /> Télécharger les QR codes
                 </span>
               </Button>
             </DropdownMenuItem>
@@ -255,7 +254,7 @@ function ConditionalDropdown() {
               <DropdownMenuItem className="py-1 lg:p-0">
                 <BulkUpdateDialogTrigger
                   type="start-audit"
-                  label="Create audit"
+                  label="Créer un audit"
                   onClick={closeMenu}
                   disabled={isLoading}
                 />
@@ -272,7 +271,7 @@ function ConditionalDropdown() {
               <DropdownMenuItem className="border-b py-1 lg:p-0">
                 <BulkUpdateDialogTrigger
                   type="add-to-audit"
-                  label="Add to existing audit"
+                  label="Ajouter à un audit existant"
                   onClick={closeMenu}
                   disabled={isLoading}
                 />
@@ -289,7 +288,7 @@ function ConditionalDropdown() {
               <DropdownMenuItem className="py-1 lg:p-0">
                 <BulkUpdateDialogTrigger
                   type="release-custody"
-                  label="Release custody"
+                  label="Libérer l'affectation"
                   onClick={closeMenu}
                   disabled={
                     !allAssetsAreInCustody ||
@@ -297,10 +296,10 @@ function ConditionalDropdown() {
                     disableReleaseCustody
                       ? {
                           reason: someAssetPartOfUnavailableKit
-                            ? "Some of the selected assets have custody assigned via a kit. If you want to change their custody, please update the kit instead."
+                            ? "Certains biens sélectionnés sont affectés via un lot. Modifiez d'abord le lot concerné."
                             : disableReleaseCustody
-                            ? "Self service can only release their own custody."
-                            : "Some of the selected assets are not in custody.",
+                            ? "Un utilisateur self service ne peut libérer que ses propres affectations."
+                            : "Certains biens sélectionnés n'ont pas d'affectation active.",
                         }
                       : isLoading
                   }
@@ -309,14 +308,14 @@ function ConditionalDropdown() {
               <DropdownMenuItem className="border-b py-1 lg:p-0">
                 <BulkUpdateDialogTrigger
                   type="assign-custody"
-                  label={isSelfService ? "Take custody" : "Assign custody"}
+                  label={isSelfService ? "Se faire affecter" : "Affecter"}
                   onClick={closeMenu}
                   disabled={
                     !allAssetsAreAvailable || someAssetPartOfUnavailableKit
                       ? {
                           reason: someAssetPartOfUnavailableKit
-                            ? "Some of the selected assets have custody assigned via a kit. If you want to change their custody, please update the kit instead."
-                            : "Some of the selected assets are not available.",
+                            ? "Certains biens sélectionnés sont affectés via un lot. Modifiez d'abord le lot concerné."
+                            : "Certains biens sélectionnés ne sont pas disponibles.",
                         }
                       : isLoading
                   }
@@ -336,7 +335,7 @@ function ConditionalDropdown() {
                   type="tag-add"
                   onClick={closeMenu}
                   disabled={isLoading}
-                  label="Assign tags"
+                  label="Assigner des tags"
                 />
               </DropdownMenuItem>
               <DropdownMenuItem className="py-1 lg:p-0">
@@ -344,7 +343,7 @@ function ConditionalDropdown() {
                   type="tag-remove"
                   onClick={closeMenu}
                   disabled={isLoading}
-                  label="Remove tags"
+                  label="Retirer les tags"
                 />
               </DropdownMenuItem>
               <DropdownMenuItem className="border-t py-1 lg:p-0">
@@ -363,14 +362,14 @@ function ConditionalDropdown() {
               </DropdownMenuItem>
               <DropdownMenuItem className="border-t py-1 lg:p-0">
                 <BulkUpdateDialogTrigger
-                  label="Add to kit"
+                  label="Ajouter au lot"
                   type="add-to-kit"
                   onClick={closeMenu}
                   disabled={
                     someAssetCheckedOut
                       ? {
                           reason:
-                            "Some of the selected kits are checked out. Please finish your booking first, before adding them in kit.",
+                            "Certains lots sélectionnés sont actuellement sortis. Terminez d'abord la réservation en cours avant de les modifier.",
                         }
                       : isLoading
                   }
@@ -378,7 +377,7 @@ function ConditionalDropdown() {
               </DropdownMenuItem>
               <DropdownMenuItem className=" py-1 lg:p-0">
                 <BulkUpdateDialogTrigger
-                  label="Remove from kit"
+                  label="Retirer du lot"
                   type="remove-from-kit"
                   onClick={closeMenu}
                   disabled={isLoading}
@@ -386,7 +385,7 @@ function ConditionalDropdown() {
               </DropdownMenuItem>
               <DropdownMenuItem className="border-t py-1 lg:p-0">
                 <BulkUpdateDialogTrigger
-                  label="Mark as available"
+                  label="Marquer comme disponible"
                   type="available"
                   onClick={closeMenu}
                   disabled={isLoading}
@@ -394,7 +393,7 @@ function ConditionalDropdown() {
               </DropdownMenuItem>
               <DropdownMenuItem className="border-b py-1 lg:p-0">
                 <BulkUpdateDialogTrigger
-                  label="Mark as unavailable"
+                  label="Marquer comme indisponible"
                   type="unavailable"
                   onClick={closeMenu}
                   disabled={isLoading}
@@ -404,13 +403,13 @@ function ConditionalDropdown() {
               <DropdownMenuItem className="py-1 lg:p-0">
                 <BulkUpdateDialogTrigger
                   type="trash"
-                  label="Delete"
+                  label="Supprimer"
                   onClick={closeMenu}
                   disabled={
                     someAssetCheckedOut
                       ? {
                           reason:
-                            "Some of the selected kits are checked out. Please finish your booking first, before deleting them.",
+                            "Certains lots sélectionnés sont actuellement sortis. Terminez d'abord la réservation en cours avant de les supprimer.",
                         }
                       : isLoading
                   }

@@ -180,6 +180,13 @@ export function useSidebarNavItems() {
     },
     {
       type: "child",
+      title: "Responsables",
+      Icon: UsersRoundIcon,
+      hidden: isBaseOrSelfService,
+      to: "/custody",
+    },
+    {
+      type: "child",
       title: "Rapports",
       Icon: FileBarChartIcon,
       hidden: isBaseOrSelfService,

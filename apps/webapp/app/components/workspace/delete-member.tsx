@@ -73,10 +73,10 @@ const DeleteMemberContent = ({ id }: { id: TeamMember["id"] }) => {
   return (
     <AlertDialogContent className="relative">
       <AlertDialogHeader className="mb-8">
-        <AlertDialogTitle>Delete team member</AlertDialogTitle>
+        <AlertDialogTitle>Supprimer le responsable</AlertDialogTitle>
         <AlertDialogDescription>
-          After deleting a team member you will no longer be able to give them
-          custody over an asset.
+          Après suppression de ce responsable, vous ne pourrez plus lui
+          attribuer de bien.
         </AlertDialogDescription>
         <AlertDialogCancel
           asChild
@@ -100,7 +100,7 @@ const DeleteMemberContent = ({ id }: { id: TeamMember["id"] }) => {
             name="intent"
             value="delete"
           >
-            Delete team member
+            Supprimer le responsable
           </Button>
         </Form>
       </AlertDialogFooter>
@@ -115,11 +115,11 @@ const UnableToDeleteMemberContent = ({
 }) => (
   <AlertDialogContent className="relative">
     <AlertDialogHeader className="mb-8">
-      <AlertDialogTitle>Unable to delete team member</AlertDialogTitle>
+      <AlertDialogTitle>Suppression impossible</AlertDialogTitle>
       <AlertDialogDescription>
-        The team member you are trying to delete has custody over{" "}
-        {custodiesCount} assets. Please release custody or check-in those assets
-        before deleting the user.
+        Le responsable que vous tentez de supprimer possède encore{" "}
+        {custodiesCount} affectations actives. Libérez ces affectations ou
+        retournez les biens concernés avant de supprimer cet utilisateur.
       </AlertDialogDescription>
       <AlertDialogCancel
         asChild

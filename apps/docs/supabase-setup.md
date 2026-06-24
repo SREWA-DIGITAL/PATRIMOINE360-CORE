@@ -2,6 +2,10 @@
 
 This guide will walk you through setting up Supabase for your Shelf.nu application. In the current Core target, Supabase provides PostgreSQL and file storage, while active authentication runs through Better Auth behind the Hono API.
 
+> This is the official Core setup at the moment.
+> A future Docker Community stack with PostgreSQL + MinIO is planned later,
+> but it is not yet the standard supported setup for Core.
+
 ## Prerequisites ✅
 
 - A [Supabase account](https://supabase.com/) (free tier available)
@@ -80,30 +84,12 @@ BETTER_AUTH_BASE_PATH="/api/auth"
 
 If you use SSO with Better Auth generic OAuth providers, also define `BETTER_AUTH_SSO_PROVIDERS`.
 
-### Legacy Supabase auth prerequisites still worth keeping
+### Supabase Auth dashboard setup is no longer required for Core
 
-1. **Go to Authentication** → **URL Configuration**
-2. **Site URL**: Set to `https://localhost:3000` (for development with SSL) or `http://localhost:3000` (without SSL)
-3. **Redirect URLs**: Add these URLs:
-   ```
-   https://localhost:3000/reset-password
-   http://localhost:3000/reset-password
-   https://your-staging-domain.com/reset-password
-   https://your-live-domain.com/reset-password
-   ```
-
-> 💡 **Note**: Include both HTTP and HTTPS localhost URLs to support different SSL configurations
-
-### Configure OTP Length
-
-⚠️ **IMPORTANT**: Shelf.nu expects 6-digit OTP codes. Supabase's default has changed to 8 digits, which will cause authentication to fail.
-
-1. **Go to Authentication** → **Sign In / Providers** → **Email**
-2. **Scroll down to "OTP Settings"**
-3. **Set "OTP Length" to 6 digits**
-4. **Click "Save"**
-
-> 💡 **Why this is important**: If the OTP length is not set to 6, users won't be able to sign up or log in, as the application only accepts 6-digit codes.
+The active Core auth path no longer depends on Supabase Auth runtime settings
+such as Auth URL configuration, OTP length, or Supabase SMTP templates.
+Keep using Supabase for PostgreSQL and Storage, but do not treat its Auth
+dashboard as part of the normal Core authentication setup anymore.
 
 ### Auth emails after the Brevo migration
 
@@ -123,15 +109,18 @@ As a result:
 
 1. **You do not need Supabase email templates to be the primary delivery path**
 2. **You do not need Supabase SMTP to be the primary sender once Brevo is enabled in the app**
-3. **Keep Supabase auth settings only if you still operate a temporary fallback environment during migration cleanup**
+3. **You do not need Supabase Auth dashboard email settings for the normal Core path**
 
-If you are operating a legacy deployment or a temporary fallback environment,
-you may still configure Supabase email templates and SMTP. In the target Core
-setup, however, transactional auth emails are sent by the application backend.
+If you operate legacy migration scripts, keep the database access they require.
+For day-to-day Core authentication and transactional auth emails, the active
+path is Better Auth plus Brevo on the application backend.
 
 ---
 
 ## Step 5: Create Storage Buckets 🪣
+
+Until the MinIO provider exists in Core, these Supabase buckets remain part of
+the expected runtime setup.
 
 Shelf needs several storage buckets for file uploads. For each bucket below:
 
@@ -201,17 +190,20 @@ FINGERPRINT="a-custom-host-fingerprint"
 ENABLE_PREMIUM_FEATURES="false"
 
 # Email configuration for application emails
-SMTP_HOST="smtp.yourhost.com"
-SMTP_PORT=465
-SMTP_USER="you@example.com"
-SMTP_PWD="yourSMTPpassword"
-SMTP_FROM="You from Shelf.nu <you@example.com>"
-EMAIL_PROVIDER="smtp"
+EMAIL_PROVIDER="brevo"
+BREVO_API_KEY="xkeysib-your-brevo-api-key"
+BREVO_SENDER_EMAIL="support@your-domain.com"
+BREVO_SENDER_NAME="Patrimoine360"
+EMAIL_REPLY_TO="support@your-domain.com"
+EMAIL_REPLY_TO_NAME="Support Patrimoine360"
+BREVO_TIMEOUT_SECONDS="30"
 
-# Optional Brevo API delivery for application emails
-# Set EMAIL_PROVIDER="brevo" to route backend emails through Brevo
-# BREVO_API_KEY="xkeysib-your-brevo-api-key"
-# BREVO_TIMEOUT_SECONDS="30"
+# Optional SMTP rollback only
+# SMTP_HOST="smtp.yourhost.com"
+# SMTP_PORT=465
+# SMTP_USER="you@example.com"
+# SMTP_PWD="yourSMTPpassword"
+# SMTP_FROM="Patrimoine360 <support@your-domain.com>"
 
 # Map integration (optional)
 MAPTILER_TOKEN="your-maptiler-token"
@@ -247,25 +239,18 @@ Copy these values to your `.env` file.
 
 ## Step 8: Setup Email (Required) 📧
 
-Shelf requires email configuration for user authentication. You can use:
-
-- **Gmail**: Use app passwords
-- **SendGrid**: Free tier available
-- **Mailgun**: Free tier available
-- **Any SMTP provider**
-
-Update the SMTP settings in your `.env` file with your email provider's details.
+Core requires email configuration for user authentication, and the target setup
+now standardizes outbound delivery on Brevo.
 
 ### Recommended Brevo setup
 
-If you want to standardize outbound email on Brevo:
-
-1. Set `EMAIL_PROVIDER="brevo"` and `BREVO_API_KEY` in the application `.env`
-   so backend-triggered emails, including the main auth flows, use Brevo.
-2. Keep `SMTP_*` variables available if you want a fallback transport for local
-   development or temporary rollback.
-3. Treat Supabase SMTP and Supabase Auth templates as legacy fallback settings,
-   not as the primary email delivery path for Core.
+1. Set `EMAIL_PROVIDER="brevo"` in the root `.env`.
+2. Configure `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`,
+   `BREVO_SENDER_NAME`, `EMAIL_REPLY_TO` and `EMAIL_REPLY_TO_NAME`.
+3. Keep `SMTP_*` variables only if you deliberately want an emergency rollback
+   transport.
+4. Treat Supabase SMTP and Supabase Auth templates as historical legacy
+   settings, not as an active dependency of Core.
 
 ---
 
@@ -320,10 +305,10 @@ Your Supabase setup is complete! You should now have:
 - ✅ Database connection strings in `.env`
 - ✅ API keys in `.env`
 - ✅ Connection mode set to "Transaction"
-- ✅ OTP length set to 6 digits
 - ✅ Storage buckets created with policies
 - ✅ Backend email configuration completed
 - ✅ Session secrets generated
+- ✅ Remaining Supabase dependency understood as PostgreSQL + Storage only
 
 ## Next Steps 🚀
 
@@ -337,7 +322,10 @@ pnpm webapp:dev
 **With SSL:** Your Shelf.nu app will be available at `https://localhost:3000` 🔒  
 **Without SSL:** Your Shelf.nu app will be available at `http://localhost:3000` 🎉
 
-Your app should connect to Supabase successfully!
+Your app should connect to Supabase successfully.
+
+Important: this confirms the current Core runtime target, not a future
+`app + postgres + minio` Docker Community setup.
 
 ---
 

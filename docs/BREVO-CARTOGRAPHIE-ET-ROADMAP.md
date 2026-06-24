@@ -26,8 +26,8 @@ provider `brevo`
 
 La bascule progressive repose sur `EMAIL_PROVIDER` :
 
-- `EMAIL_PROVIDER="smtp"` : rollback immédiat vers le provider historique
-- `EMAIL_PROVIDER="brevo"` : envoi backend via Brevo
+- `EMAIL_PROVIDER="brevo"` : chemin Core par defaut pour l'envoi backend
+- `EMAIL_PROVIDER="smtp"` : rollback explicite vers le provider historique
 
 Ce mécanisme couvre à la fois le mode de coexistence temporaire et le plan de
 retour arrière.
@@ -123,59 +123,38 @@ Supabase reste responsable de :
 Points de code principaux :
 
 - `apps/webapp/app/modules/auth/service.server.ts`
-- `apps/webapp/app/modules/auth/auth-provider.server.ts`
 - `apps/webapp/app/modules/auth/auth-error-classifier.server.ts`
-- `apps/webapp/app/modules/auth/auth-state.server.ts`
-- `apps/webapp/app/modules/auth/supabase-auth-provider.server.ts`
 - `apps/webapp/app/modules/api/mobile-auth.server.ts`
 - `apps/webapp/app/routes/_auth+/forgot-password.tsx`
 - `apps/webapp/app/routes/_auth+/otp.tsx`
 - `apps/webapp/app/routes/_layout+/account-details.general.tsx`
 - `apps/webapp/app/modules/user/service.server.ts`
 
-Le métier dépend maintenant d'un point d'entrée générique
-`auth-provider.server.ts`, branché sur l'implémentation
-`supabase-auth-provider.server.ts`, ce qui recentre les appels backend
-Supabase Auth avant un futur remplacement du provider d'identité.
-
-Les lectures SQL restantes du schéma `auth` sont maintenant isolées dans
-`auth-state.server.ts`, séparées du provider d'identité lui-même.
-
 La classification des erreurs SDK auth est maintenant isolée derrière
 `auth-error-classifier.server.ts`, branché sur
 `supabase-auth-error-classifier.server.ts`.
 
-La génération d'OTP ne lit plus directement la forme brute des réponses
-Supabase dans le service métier : les codes OTP sont maintenant exposés via
-des helpers génériques au niveau du provider auth.
-
 Stratégie de retrait :
 
-- conserver ce socle tant que les sessions et la vérification OTP restent
-  Supabase
-- documenter séparément un futur chantier de remplacement d'identity provider
+- conserver uniquement les scripts et runbooks de migration legacy encore
+  utiles à l'historique Better Auth
+- supprimer le runtime Supabase Auth résiduel dès qu'il n'est plus importé
 
 ### 2. Sessions et tokens
 
 Criticité : haute
 
-Supabase reste utilisé pour :
+Supabase n'est plus utilisé sur le chemin runtime principal pour :
 
 - `refreshSession`
 - `verifyAuthSession`
 - `validateSession`
-- la gestion des refresh tokens
-
-Le code contient encore des accès directs au schéma `auth`, désormais isolés
-dans `auth-state.server.ts`, pour certains contrôles de cohérence :
-
-- lecture de `auth.users`
-- lecture de `auth.refresh_tokens`
 
 Stratégie de retrait :
 
-- traiter ce sujet après stabilisation Brevo
-- isoler d'abord les accès SQL directs au schéma auth
+- garder seulement les lectures SQL legacy dans les scripts de migration
+- ne plus conserver de helper runtime lisant `auth.users` ou
+  `auth.refresh_tokens`
 
 ### 3. Gestion du cycle de vie des comptes
 
@@ -219,20 +198,21 @@ Premier pas d'isolation déjà engagé côté stockage :
   cette façade pour leurs opérations storage métier les plus directes
 - `storage.server.ts` consomme désormais la façade storage, le resolver
   d'URL générique et le classificateur d'erreurs générique, ce qui cantonne
-  les appels directs à Supabase aux seules implémentations
-  `supabase-auth-provider.server.ts` et
-  `supabase-storage-provider.server.ts`
+  les appels directs à Supabase runtime aux seules implémentations storage
+  comme `supabase-storage-provider.server.ts`
 
 ## Séquence de déploiement recommandée
 
 ### Core
 
-1. Valider les flux auth et applicatifs avec `EMAIL_PROVIDER="smtp"`.
-2. Activer `EMAIL_PROVIDER="brevo"` dans l'environnement Core.
-3. Vérifier les parcours suivants :
+1. Activer `EMAIL_PROVIDER="brevo"` dans l'environnement Core avec
+   `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `EMAIL_REPLY_TO` et leurs valeurs
+   associees.
+2. Verifier les parcours suivants :
    login OTP, signup OTP, signup mot de passe, renvoi OTP, reset password,
    invitation, onboarding, changement d'email.
-4. Surveiller les tags Brevo et les retries du worker.
+3. Surveiller les tags Brevo et les retries du worker.
+4. Ne garder `EMAIL_PROVIDER="smtp"` que comme rollback volontaire et explicite.
 
 ### Enterprise
 
@@ -428,16 +408,15 @@ Criticite : moyenne a haute
 
 Dependances encore actives :
 
-- `apps/webapp/app/modules/auth/auth-state.server.ts`
 - scripts de migration Better Auth lisant `auth.users` :
   `apps/webapp/scripts/better-auth-migration/*`
 
 Conclusion :
 
-- ces acces ne pilotent plus le chemin auth principal, mais restent utiles
-  pour la verification legacy et les operations de migration controlee
-- ils doivent etre conserves jusqu'a validation complete du runbook de
-  migration, puis reduits ou supprimes dans un lot backend distinct
+- ces acces ne pilotent plus le chemin auth principal et ne vivent plus dans
+  le runtime webapp
+- ils restent utiles uniquement pour les operations de migration controlee et
+  pourront etre retires apres validation complete du runbook
 
 #### 3. Outils et diagnostics d'administration
 

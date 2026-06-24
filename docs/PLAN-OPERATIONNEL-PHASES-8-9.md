@@ -88,7 +88,7 @@ Avancement 2026-06-23 :
 
 ### Phase 8B - Finalisation Brevo
 
-Statut : À faire
+Statut : Terminée
 
 Périmètre :
 
@@ -114,9 +114,24 @@ Critères d'acceptation :
 - les erreurs SMTP historiques ne peuvent plus se produire en mode Brevo ;
 - les chemins d'erreur sont couverts.
 
+Avancement 2026-06-23 :
+
+- bascule de la configuration de référence Core sur `EMAIL_PROVIDER="brevo"`
+  dans [.env.example](/C:/dev/patrimoine-360/patrimoine360-core/.env.example)
+  et dans
+  [apps/docs/supabase-setup.md](/C:/dev/patrimoine-360/patrimoine360-core/apps/docs/supabase-setup.md) ;
+- ajout des variables explicites `EMAIL_REPLY_TO` et
+  `EMAIL_REPLY_TO_NAME` pour découpler le `reply-to` du fallback SMTP ;
+- suppression du fallback Brevo vers `SMTP_FROM`, avec sender Brevo désormais
+  résolu via `BREVO_SENDER_EMAIL` puis `SUPPORT_EMAIL` ;
+- ajout de validations ciblées sur :
+  `email-provider.server`, `brevo-email-provider.server`,
+  `email.worker.server` et `mail.server` pour couvrir le sender par défaut,
+  le `reply-to`, l'erreur provider et la mise en queue sur échec.
+
 ### Phase 8C - Retrait Supabase Auth
 
-Statut : À faire
+Statut : Terminée
 
 Périmètre :
 
@@ -140,9 +155,26 @@ Critères d'acceptation :
 - Supabase n'est plus utilisé comme fournisseur d'identité ;
 - le Core sait démarrer sans dépendance fonctionnelle à Supabase Auth.
 
+Avancement 2026-06-23 :
+
+- suppression des reliquats runtime
+  `auth-provider.server`, `supabase-auth-provider.server` et
+  `auth-state.server`, devenus orphelins après la bascule Better Auth ;
+- suppression du test associé `auth-state.server.test.ts`, qui ne couvrait plus
+  qu'un accès SQL legacy au schéma `auth` ;
+- conservation des seuls accès `auth.users` / `auth.refresh_tokens` dans les
+  scripts de migration Better Auth, hors chemin principal webapp ;
+- mise à jour de
+  [apps/docs/supabase-setup.md](/C:/dev/patrimoine-360/patrimoine360-core/apps/docs/supabase-setup.md),
+  [docs/BREVO-CARTOGRAPHIE-ET-ROADMAP.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/BREVO-CARTOGRAPHIE-ET-ROADMAP.md),
+  [docs/BETTER-AUTH-SUPABASE-MIGRATION.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/BETTER-AUTH-SUPABASE-MIGRATION.md)
+  et
+  [docs/PLAN-ALIGNEMENT-PRD.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/PLAN-ALIGNEMENT-PRD.md)
+  pour distinguer clairement le runtime Core du reliquat migration.
+
 ### Phase 8D - Vocabulaire métier Patrimoine360
 
-Statut : À faire
+Statut : En cours
 
 Périmètre :
 
@@ -167,9 +199,23 @@ Critères d'acceptation :
   Core principaux ;
 - le vocabulaire Core est cohérent entre navigation, listes et détails.
 
+Avancement 2026-06-24 :
+
+- recadrage du parcours d'onboarding avec vocabulaire Patrimoine360 sur les
+  titres, labels, messages de validation, email de bienvenue et appel à
+  l'action final ;
+- recadrage des écrans d'organisation sur les sections `Général`,
+  `Permissions`, `Paramètres SSO`, invitation d'utilisateur et suppression d'un
+  responsable ;
+- alignement des écrans de réservation et d'actions de masse pour privilégier
+  `bien`, `lot`, `affectation`, `responsable` et `organisation` à la place des
+  formulations Shelf historiques ;
+- reste à finir le balayage des libellés visibles secondaires hors surfaces
+  critiques déjà traitées avant clôture complète de la phase.
+
 ### Phase 8E - Hiérarchie métier Patrimoine360
 
-Statut : À faire
+Statut : Terminée
 
 Périmètre :
 
@@ -193,9 +239,34 @@ Critères d'acceptation :
 - la hiérarchie métier Core est claire, stable et documentée ;
 - les écrans principaux supportent la hiérarchie choisie.
 
+Avancement 2026-06-24 :
+
+- formalisation de la décision métier dans
+  [HIERARCHIE-METIER-PATRIMOINE360.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/HIERARCHIE-METIER-PATRIMOINE360.md) ;
+- décision retenue pour le Core :
+  `Organization` reste la racine de segmentation, `Location` porte
+  l'arborescence métier visible ;
+- cadrage CNPS :
+  une organisation Core peut représenter `CNPS Côte d'Ivoire`, avec
+  `Siège social`, `Direction`, `Site`, `Bâtiment`, `Étage`, `Salle`
+  dans l'arbre des locations ;
+- cadrage NSIA :
+  une organisation Core représente une entité pays, la consolidation
+  `Groupe -> Pays` restant hors Core et réservée à l'Enterprise ;
+- vérification du socle technique existant :
+  relation récursive `Location.parentId`, services d'ancêtres et de
+  descendants, breadcrumbs et profondeur maximale `12`, suffisante pour la
+  cible PRD ;
+- ajout du module
+  [hierarchy-profiles.ts](/C:/dev/patrimoine-360/patrimoine360-core/apps/webapp/app/modules/location/hierarchy-profiles.ts)
+  pour figer les profils hiérarchiques Core réutilisables côté application ;
+- conclusion :
+  aucune migration Prisma n'est requise à ce stade pour supporter la
+  hiérarchie métier Core.
+
 ### Phase 8F - Permissions et rôles Patrimoine360
 
-Statut : À faire
+Statut : Terminée
 
 Périmètre :
 
@@ -219,9 +290,34 @@ Critères d'acceptation :
 - les permissions Core sont explicites et cohérentes avec le PRD ;
 - aucun rôle Core n'accède à un flux interdit par erreur.
 
+Avancement 2026-06-24 :
+
+- formalisation de la matrice Core dans
+  [RBAC-PATRIMOINE360-CORE.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/RBAC-PATRIMOINE360-CORE.md) ;
+- vérification du RBAC réel du Core :
+  `Roles.ADMIN` côté plateforme, puis `OrganizationRoles.OWNER`, `ADMIN`,
+  `BASE`, `SELF_SERVICE` côté organisation ;
+- décision retenue :
+  `SUPER_ADMIN` est couvert par `Roles.ADMIN`, `ADMIN` est couvert par
+  `OWNER` / `ADMIN`, tandis que `PILOTE_GRM`, `EVALUATEUR_CIPM` et le vrai
+  `RESPONSABLE_SITE` à périmètre géographique restent hors Core finalisé ;
+- cadrage honnête des projections partielles :
+  `SELF_SERVICE` peut servir d'approximation opérationnelle de
+  `RESPONSABLE_SITE`, `BASE` d'approximation partielle de `LECTEUR`, sans les
+  renommer officiellement tant que la matrice PRD n'est pas complètement
+  satisfaite ;
+- ajout du helper
+  [patrimoine360-core-rbac.ts](/C:/dev/patrimoine-360/patrimoine360-core/apps/webapp/app/utils/patrimoine360-core-rbac.ts)
+  et de son test
+  [patrimoine360-core-rbac.test.ts](/C:/dev/patrimoine-360/patrimoine360-core/apps/webapp/app/utils/patrimoine360-core-rbac.test.ts)
+  pour figer la projection Core -> PRD dans le code ;
+- conclusion :
+  le Core dispose d'un RBAC fonctionnel, mais les rôles PRD avancés
+  dépendants de l'accès géographique restent réservés à l'Enterprise.
+
 ### Phase 8G - Fermeture des écarts de flux Core
 
-Statut : À faire
+Statut : En cours
 
 Périmètre :
 
@@ -246,9 +342,27 @@ Critères d'acceptation :
 - les parcours Core décrits par le PRD sont couverts sans module Enterprise ;
 - les écarts restants sont explicitement assumés et documentés.
 
+Avancement 2026-06-24 :
+
+- ajout d'un vrai point d'entrée Core `Responsables et affectations` sur
+  `/custody`, pour fermer l'écart entre le PRD et la navigation réelle ;
+- exposition côté Core des responsables actifs, affectations récentes,
+  couverture simple des sites / locaux concernés et lien direct vers le rapport
+  `Affectations en cours` ;
+- recadrage des libellés visibles sur le dashboard des responsables, les
+  rappels à venir et le rapport `custody-snapshot` pour rester cohérent avec le
+  vocabulaire Patrimoine360 ;
+- formalisation des écarts restants dans
+  [ECARTS-FLUX-CORE-PATRIMOINE360.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/ECARTS-FLUX-CORE-PATRIMOINE360.md) :
+  rappels encore limités aux biens, absence d'historique métier enrichi des
+  affectations et réservation du dashboard analytique avancé à l'Enterprise ;
+- clôture partielle du lot :
+  la vue opérationnelle Core existe désormais, mais les extensions PRD plus
+  riches restent encore documentées comme écarts assumés.
+
 ### Phase 8H - Storage et infrastructure Core
 
-Statut : À faire
+Statut : Terminée
 
 Périmètre :
 
@@ -271,6 +385,27 @@ Critères d'acceptation :
 
 - la stack Core de dev est compréhensible et reproductible ;
 - la dépendance storage restante est assumée et documentée.
+
+Avancement 2026-06-24 :
+
+- décision formalisée dans
+  [STORAGE-INFRA-CORE.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/STORAGE-INFRA-CORE.md) :
+  le Core supporté aujourd'hui reste `Better Auth + Brevo + PostgreSQL Supabase + Supabase Storage` ;
+- confirmation explicite qu'il n'existe pas encore de provider MinIO actif dans
+  le runtime Core ni de stack Community `app + postgres + minio` prête à
+  l'emploi ;
+- alignement de [.env.example](/C:/dev/patrimoine-360/patrimoine360-core/.env.example)
+  pour cadrer honnêtement les variables encore nécessaires tant que Storage
+  reste sur Supabase ;
+- mise à jour de
+  [apps/docs/supabase-setup.md](/C:/dev/patrimoine-360/patrimoine360-core/apps/docs/supabase-setup.md),
+  [apps/docs/docker.md](/C:/dev/patrimoine-360/patrimoine360-core/apps/docs/docker.md)
+  et
+  [apps/docs/local-development.md](/C:/dev/patrimoine-360/patrimoine360-core/apps/docs/local-development.md)
+  pour refléter la pile Core réellement supportée et préparer la phase 9D ;
+- frontière clarifiée :
+  la documentation 8H prépare Docker Community, mais la création du dossier
+  racine `docker/` et du `docker-compose.yml` reste bien dans la phase 9D.
 
 ## Phase 9 - DevOps, qualité et livraison séparée
 
@@ -401,7 +536,7 @@ Livrables attendus :
 - ordre d'implémentation Enterprise ;
 - périmètre et dépendances par module ;
 - point de passage entre Core et Enterprise.
-
+u
 Critères d'acceptation :
 
 - le dépôt Enterprise peut consommer un plan clair sans ambiguïté sur la

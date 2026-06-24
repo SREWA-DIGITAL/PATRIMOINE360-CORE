@@ -293,7 +293,7 @@ Scripts retenus comme base :
 
 Variables d'environnement à aligner :
 
-- Conserver temporairement `DATABASE_URL`, `DIRECT_URL`, `SESSION_SECRET`, `SUPABASE_URL`, `SUPABASE_ANON_PUBLIC`, `SUPABASE_SERVICE_ROLE` tant que Supabase Auth / Storage n'est pas migré.
+- Conserver temporairement `DATABASE_URL`, `DIRECT_URL`, `SESSION_SECRET`, `SUPABASE_URL`, `SUPABASE_ANON_PUBLIC`, `SUPABASE_SERVICE_ROLE` tant que PostgreSQL / Storage Supabase restent utilisés.
 - Ajouter plus tard les variables PRD restantes : `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `MINIO_ENDPOINT`, `MINIO_PORT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET`, `MINIO_USE_SSL`, `ENTERPRISE_LICENSE_KEY`. `LICENSE_TYPE` est traité en phase 7.
 - Renommer progressivement les valeurs visibles `APP_NAME`, emails de support et exemples SMTP vers Patrimoine360.
 - Ne jamais ajouter de secrets réels dans `.env.example`.
@@ -407,13 +407,13 @@ Sources vérifiées :
 
 État actuel de l'authentification :
 
-- Le fournisseur d'authentification est Supabase Auth, via `@supabase/supabase-js`.
-- Les variables obligatoires actuelles incluent `SUPABASE_URL`, `SUPABASE_ANON_PUBLIC`, `SUPABASE_SERVICE_ROLE` et `SESSION_SECRET`.
+- Le fournisseur d'authentification actif est Better Auth, exposé derrière l'API Hono.
+- Les variables auth obligatoires actuelles incluent `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `BETTER_AUTH_BASE_PATH` et `SESSION_SECRET`.
 - Le serveur Hono expose aux loaders/actions un contrat applicatif très utilisé : `context.isAuthenticated`, `context.getSession()`, `context.setSession()` et `context.destroySession()`.
 - La session applicative est stockée dans le cookie `__authSession` et contient `accessToken`, `refreshToken`, `userId`, `email`, `expiresIn`, `expiresAt`.
-- Le middleware `refreshSession()` rafraîchit les tokens Supabase, puis `protect()` bloque les routes privées.
-- La validation de session repose encore sur la table Supabase `auth.refresh_tokens`.
-- Les flux existants couvrent : email/mot de passe, inscription, confirmation OTP, connexion OTP, réinitialisation du mot de passe, SSO Supabase, callback OAuth, acceptation d'invitation, mise à jour de mot de passe et suppression de compte auth.
+- Le middleware `refreshSession()` rafraîchit désormais la session Better Auth, puis `protect()` bloque les routes privées.
+- La validation de session ne repose plus sur la table Supabase `auth.refresh_tokens` dans le runtime webapp.
+- Les flux existants couvrent : email/mot de passe, inscription, vérification email, connexion OTP, réinitialisation du mot de passe, SSO Better Auth, callback OAuth, acceptation d'invitation, mise à jour de mot de passe et suppression de compte auth.
 - Les rôles existants sont séparés entre rôles globaux `Roles` et rôles d'organisation `OrganizationRoles` (`OWNER`, `ADMIN`, `SELF_SERVICE`, `BASE`).
 - Le PRD cible des rôles métier différents : `SUPER_ADMIN`, `ADMIN`, `PILOTE_GRM`, `EVALUATEUR_CIPM`, `RESPONSABLE_SITE`, `LECTEUR`.
 
@@ -450,7 +450,7 @@ Plan de migration recommandé :
 7. Basculer `/login` et `/join` vers Better Auth, puis traiter OTP et reset password.
 8. Déplacer SSO vers le périmètre Enterprise si la décision licence le confirme.
 9. Remplacer `validateSession()` et `refreshAccessToken()` par des appels Better Auth.
-10. Retirer Supabase Auth uniquement après tests de connexion, déconnexion, invitation, session expirée, rôle et route protégée.
+10. Retirer le runtime Supabase Auth uniquement après tests de connexion, déconnexion, invitation, session expirée, rôle et route protégée. Ce retrait est maintenant effectué ; les scripts de migration legacy restent isolés hors chemin principal.
 
 Décision sur les rôles :
 

@@ -101,22 +101,26 @@ function createOnboardingSchema({
   const shouldCollectBusinessIntel = collectBusinessIntel && !createdWithInvite;
   return z
     .object({
-      username: z
-        .string()
-        .min(4, { message: "Must be at least 4 characters long" }),
-      firstName: z.string().min(1, { message: "First name is required" }),
-      lastName: z.string().min(1, { message: "Last name is required" }),
+      username: z.string().min(4, {
+        message: "L'identifiant doit contenir au moins 4 caracteres.",
+      }),
+      firstName: z.string().min(1, { message: "Le prenom est requis." }),
+      lastName: z.string().min(1, { message: "Le nom est requis." }),
       password: userSignedUpWithPassword
         ? z.string().optional()
-        : z.string().min(8, "Password is too short. Minimum 8 characters."),
+        : z
+            .string()
+            .min(8, "Le mot de passe est trop court. Minimum 8 caracteres."),
       confirmPassword: userSignedUpWithPassword
         ? z.string().optional()
-        : z.string().min(8, "Password is too short. Minimum 8 characters."),
+        : z
+            .string()
+            .min(8, "Le mot de passe est trop court. Minimum 8 caracteres."),
       referralSource: shouldCollectBusinessIntel
-        ? z.string().min(5, "Field is required.")
+        ? z.string().min(5, "Ce champ est requis.")
         : z.string().optional().nullable(),
       jobTitle: shouldCollectBusinessIntel
-        ? requiredTrimmedField("Role is required")
+        ? requiredTrimmedField("Le role est requis.")
         : optionalTrimmedField,
       teamSize: optionalTrimmedField,
       companyName: optionalTrimmedField,
@@ -141,7 +145,7 @@ function createOnboardingSchema({
         if (password !== confirmPassword) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Password and confirm password must match",
+            message: "Les mots de passe doivent correspondre.",
             path: ["confirmPassword"],
           });
         }
@@ -156,7 +160,7 @@ function createOnboardingSchema({
           ) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: "Team size is required",
+              message: "La taille de l'equipe est requise.",
               path: ["teamSize"],
             });
           }
@@ -167,7 +171,7 @@ function createOnboardingSchema({
           ) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
-              message: "Company or organization is required",
+              message: "L'organisation est requise.",
               path: ["companyName"],
             });
           }
@@ -278,9 +282,9 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
       createdWithInvite,
     });
 
-    const title = "Set up your account";
+    const title = "Configurez votre compte";
     const subHeading =
-      "You are almost ready to use Shelf. We just need some basic information to get you started.";
+      "Votre accès Patrimoine360 est presque prêt. Nous avons seulement besoin de quelques informations pour finaliser votre démarrage.";
 
     return payload({
       title,
@@ -454,10 +458,11 @@ export async function action({ context, request }: ActionFunctionArgs) {
     if (config.sendOnboardingEmail) {
       /** Send onboarding email */
       sendEmail({
-        from: SMTP_FROM || `"Carlos from shelf.nu" <carlos@emails.shelf.nu>`,
-        replyTo: "carlos@shelf.nu",
+        from:
+          SMTP_FROM || `"Équipe Patrimoine360" <support@patrimoine360.local>`,
+        replyTo: "support@patrimoine360.local",
         to: user.email,
-        subject: "🏷️ Welcome to Shelf - can I ask you a question?",
+        subject: "Bienvenue sur Patrimoine360",
         text: onboardingEmailText({ firstName: user.firstName as string }),
         tags: ["onboarding", "welcome", "transactional"],
       });
@@ -551,7 +556,7 @@ export default function Onboarding() {
 
         <div className="md:flex md:gap-6">
           <Input
-            label="First name"
+            label="Prenom"
             autoComplete="given-name"
             required
             data-test-id="firstName"
@@ -562,7 +567,7 @@ export default function Onboarding() {
             className="mb-5 md:mb-0 md:flex-1"
           />
           <Input
-            label="Last name"
+            label="Nom"
             autoComplete="family-name"
             required
             data-test-id="lastName"
@@ -575,8 +580,8 @@ export default function Onboarding() {
         </div>
         <div>
           <Input
-            label="Username"
-            addOn="shelf.nu/"
+            label="Identifiant"
+            addOn="patrimoine360/"
             autoComplete="username"
             required
             type="text"
@@ -595,7 +600,7 @@ export default function Onboarding() {
           <>
             <PasswordInput
               required
-              label="Password"
+              label="Mot de passe"
               placeholder="********"
               data-test-id="password"
               name={zo.fields.password()}
@@ -607,7 +612,7 @@ export default function Onboarding() {
 
             <PasswordInput
               required
-              label="Confirm password"
+              label="Confirmer le mot de passe"
               data-test-id="confirmPassword"
               placeholder="********"
               name={zo.fields.confirmPassword()}
@@ -622,22 +627,22 @@ export default function Onboarding() {
           <>
             <Input
               required
-              label="How did you hear about us?"
-              placeholder="Twitter, Reddit, ChatGPT, Google, etc..."
+              label="Comment avez-vous connu Patrimoine360 ?"
+              placeholder="LinkedIn, recommandation, Google, etc."
               name={zo.fields.referralSource()}
               defaultValue={referralSourceDefault}
               error={zo.errors.referralSource()?.message}
             />
 
             <SelectWithOther
-              label="What's your role?"
+              label="Quel est votre role ?"
               name={zo.fields.jobTitle()}
               options={ROLE_OPTIONS}
               required
               error={zo.errors.jobTitle()?.message}
               defaultValue={jobTitleDefault}
-              otherInputLabel="Specify your role"
-              otherInputPlaceholder="Tell us about your role"
+              otherInputLabel="Precisez votre role"
+              otherInputPlaceholder="Decrivez votre role"
               onValueChange={(value) => {
                 setIsPersonalUse(value === "Personal use");
               }}
@@ -645,21 +650,21 @@ export default function Onboarding() {
 
             <When truthy={!isPersonalUse && requireCompanyName}>
               <SelectWithOther
-                label="How many people will use this?"
+                label="Combien de personnes utiliseront Patrimoine360 ?"
                 name={zo.fields.teamSize()}
                 options={TEAM_SIZE_OPTIONS}
                 required
                 error={zo.errors.teamSize()?.message}
                 defaultValue={teamSizeDefault}
-                otherInputLabel="Specify team size"
-                otherInputPlaceholder="Enter your team size"
+                otherInputLabel="Precisez la taille de l'equipe"
+                otherInputPlaceholder="Indiquez la taille de l'equipe"
               />
             </When>
 
             <When truthy={!isPersonalUse && requireCompanyName}>
               <Input
-                label="Company/Organization"
-                placeholder="Shelf Inc."
+                label="Organisation"
+                placeholder="CNPS Côte d'Ivoire"
                 name={zo.fields.companyName()}
                 error={zo.errors.companyName()?.message}
                 defaultValue={companyNameDefault}
@@ -685,9 +690,9 @@ export default function Onboarding() {
                 className="flex w-full items-center justify-between rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-left font-medium text-gray-700 hover:bg-gray-100"
               >
                 <span>
-                  Help us customize Shelf
+                  Aidez-nous à adapter Patrimoine360
                   <span className="ml-1 text-sm font-normal text-gray-500">
-                    (optional)
+                    (optionnel)
                   </span>
                 </span>
                 <ChevronDownIcon
@@ -701,32 +706,32 @@ export default function Onboarding() {
             <CollapsibleContent>
               <div className="mt-4 grid gap-5 md:grid-cols-2">
                 <SelectWithOther
-                  label="What will you primarily track?"
+                  label="Que souhaitez-vous suivre en priorité ?"
                   name={zo.fields.primaryUseCase()}
                   options={PRIMARY_USE_CASE_OPTIONS}
                   defaultValue={businessIntel?.primaryUseCase ?? null}
-                  otherInputLabel="Tell us what you'll track"
-                  otherInputPlaceholder="Describe your use case"
-                  placeholder="Select an option"
+                  otherInputLabel="Précisez ce que vous suivrez"
+                  otherInputPlaceholder="Décrivez votre besoin"
+                  placeholder="Sélectionnez une option"
                 />
                 <SelectWithOther
-                  label="How do you currently track assets?"
+                  label="Comment gérez-vous actuellement vos biens ?"
                   name={zo.fields.currentSolution()}
                   options={CURRENT_SOLUTION_OPTIONS}
                   defaultValue={businessIntel?.currentSolution ?? null}
-                  otherInputLabel="Share your current solution"
-                  otherInputPlaceholder="Let us know what you use today"
-                  placeholder="Select an option"
+                  otherInputLabel="Précisez votre solution actuelle"
+                  otherInputPlaceholder="Indiquez ce que vous utilisez aujourd'hui"
+                  placeholder="Sélectionnez une option"
                 />
                 <div className="md:col-span-2">
                   <SelectWithOther
-                    label="When do you need this working?"
+                    label="Quand avez-vous besoin que cela soit opérationnel ?"
                     name={zo.fields.timeline()}
                     options={TIMELINE_OPTIONS}
                     defaultValue={businessIntel?.timeline ?? null}
-                    otherInputLabel="Specify your timeline"
-                    otherInputPlaceholder="Tell us about your timeline"
-                    placeholder="Select an option"
+                    otherInputLabel="Précisez votre échéance"
+                    otherInputPlaceholder="Indiquez votre échéance"
+                    placeholder="Sélectionnez une option"
                   />
                 </div>
               </div>
@@ -741,7 +746,7 @@ export default function Onboarding() {
             width="full"
             disabled={disabled}
           >
-            Submit
+            Continuer
           </Button>
         </div>
       </Form>
