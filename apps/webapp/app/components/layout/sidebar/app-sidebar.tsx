@@ -36,7 +36,7 @@ export default function AppSidebar(props: AppSidebarProps) {
 
       <SidebarFooter>
         <SidebarNav className="p-0" items={bottomMenuItems} />
-        {state === "collapsed" ? null : (
+        {state === "collapsed" || !config.brand.sourceAttribution ? null : (
           <p className="px-3 py-2 text-xs leading-5 text-gray-500">
             {config.brand.sourceAttribution}
           </p>

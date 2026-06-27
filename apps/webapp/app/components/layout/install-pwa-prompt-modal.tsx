@@ -32,15 +32,16 @@ export function InstallPwaPromptModal() {
             <div className="relative z-10  rounded-xl bg-white p-4 shadow-lg">
               <div className="mb-8 text-center">
                 <h4 className="mb-1 text-[18px] font-semibold">
-                  Install shelf for mobile
+                  Installer Patrimoine360 sur mobile
                 </h4>
                 <p className="text-gray-600">
-                  Always available access to shelf, with all features you have
-                  on desktop.{" "}
+                  Accédez à Patrimoine360 à tout moment, avec les mêmes
+                  fonctionnalités que sur ordinateur.{" "}
                   {promptInstall && (
                     <>
-                      Use the <strong>install button below</strong> to add shelf
-                      to your device.
+                      Utilisez le{" "}
+                      <strong>bouton d'installation ci-dessous</strong> pour
+                      l'ajouter à votre appareil.
                     </>
                   )}
                 </p>
@@ -48,12 +49,13 @@ export function InstallPwaPromptModal() {
                   <>
                     <ol className="mb-8 mt-2 pt-2">
                       <li>
-                        1. Click the <strong>share icon</strong>
+                        1. Cliquez sur l'<strong>icône de partage</strong>
                       </li>
                       <li>
-                        2. Click <strong>"Add to Home Screen"</strong>
+                        2. Cliquez sur{" "}
+                        <strong>"Ajouter à l'écran d'accueil"</strong>
                       </li>
-                      <li>3. Enjoy Shelf on your mobile device</li>
+                      <li>3. Profitez de Patrimoine360 sur votre mobile</li>
                     </ol>
 
                     <video
@@ -72,14 +74,14 @@ export function InstallPwaPromptModal() {
                   </>
                 )}
                 <p>
-                  For more information, read the full{" "}
+                  Pour en savoir plus, consultez le{" "}
                   <Button
                     to="https://www.shelf.nu/knowledge-base/shelf-mobile-app"
                     variant="link"
                     target="_blank"
                     className="mt-4"
                   >
-                    guide
+                    guide complet
                   </Button>
                 </p>
               </div>
@@ -99,7 +101,7 @@ export function InstallPwaPromptModal() {
                     );
                   }}
                 >
-                  Install
+                  Installer
                 </Button>
               )}
               <fetcher.Form
@@ -113,7 +115,7 @@ export function InstallPwaPromptModal() {
                   value="hidden"
                 />
                 <Button type="submit" width="full" variant="secondary">
-                  Skip for 2 weeks
+                  Masquer pendant 2 semaines
                 </Button>
               </fetcher.Form>
             </div>

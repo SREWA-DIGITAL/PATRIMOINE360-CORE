@@ -9,10 +9,7 @@ import {
   SEND_ONBOARDING_EMAIL,
   SHOW_HOW_DID_YOU_FIND_US,
 } from "~/utils/env";
-import {
-  isEnterpriseLicenseType,
-  normalizeLicenseType,
-} from "~/utils/license";
+import { isEnterpriseLicenseType, normalizeLicenseType } from "~/utils/license";
 import type { Config } from "./types";
 
 const licenseType = normalizeLicenseType(LICENSE_TYPE);
@@ -23,7 +20,7 @@ export const config: Config = {
     name: "Patrimoine360",
     shortName: "P360",
     description: "Gestion des sites, biens, affectations et rappels.",
-    sourceAttribution: "Adapté de Shelf.nu, sous licence AGPL-3.0.",
+    sourceAttribution: "",
   },
   license: {
     type: licenseType,

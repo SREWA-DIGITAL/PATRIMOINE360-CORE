@@ -307,8 +307,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
 }
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
-  const title = "Signing in via SSO";
-  const subHeading = "Please wait while we connect your account";
+  const title = "Connexion via SSO";
+  const subHeading = "Veuillez patienter pendant la connexion de votre compte";
 
   if (context.isAuthenticated) {
     return redirect("/assets");
@@ -327,7 +327,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
       payload({
         error: {
           message:
-            "Unable to complete SSO sign-in with Better Auth. Please try again from the login page.",
+            "Impossible de finaliser la connexion SSO avec Better Auth. Veuillez réessayer depuis la page de connexion.",
         },
         title,
         subHeading,
@@ -385,7 +385,7 @@ export default function LoginCallback() {
             </div>
           )}
           <Button to="/" className="mt-4">
-            Back to login
+            Retour à la connexion
           </Button>
         </div>
       ) : (

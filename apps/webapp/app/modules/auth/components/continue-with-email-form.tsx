@@ -18,7 +18,7 @@ export const SendOtpSchema = z.object({
     .string()
     .transform((email) => email.toLowerCase())
     .refine(validEmail, () => ({
-      message: "Please enter a valid email",
+      message: "Veuillez saisir une adresse e-mail valide",
     })),
   mode: z.enum(["login"]).optional(),
 });
@@ -29,9 +29,9 @@ export function ContinueWithEmailForm({ mode }: { mode: "login" }) {
   const zo = useZorm("NewQuestionWizardScreen", SendOtpSchema);
 
   const isLoading = state === "submitting" || state === "loading";
-  const buttontext = "Continue with OTP";
+  const buttontext = "Continuer avec un code OTP";
   const buttonLabel = isLoading
-    ? "Sending you a one time password..."
+    ? "Envoi d'un code à usage unique..."
     : buttontext;
 
   return (
@@ -58,7 +58,7 @@ export function ContinueWithEmailForm({ mode }: { mode: "login" }) {
         variant="secondary"
         className="mt-3"
         data-test-id="continueWithOtpButton"
-        title="One Time Password (OTP) is the most secure way to login. We will send you a code to your email."
+        title="Le code à usage unique (OTP) est le moyen le plus sûr de vous connecter. Nous vous enverrons un code par e-mail."
       >
         {buttonLabel}
       </Button>

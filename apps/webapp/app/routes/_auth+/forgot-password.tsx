@@ -35,24 +35,26 @@ const ForgotPasswordSchema = z.object({
     .string()
     .transform((email) => email.toLowerCase())
     .refine(validEmail, () => ({
-      message: "Please enter a valid email",
+      message: "Veuillez saisir une adresse e-mail valide",
     })),
 });
 
 const OtpSchema = z
   .object({
-    otp: z.string().min(6, "OTP is required."),
+    otp: z.string().min(6, "Le code OTP est requis."),
     email: z.string().transform((email) => email.toLowerCase()),
-    password: z.string().min(8, "Password is too short. Minimum 8 characters."),
+    password: z
+      .string()
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères."),
     confirmPassword: z
       .string()
-      .min(8, "Password is too short. Minimum 8 characters."),
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères."),
   })
   .superRefine(({ password, confirmPassword, otp, email }, ctx) => {
     if (password !== confirmPassword) {
       return ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Password and confirm password must match",
+        message: "Les deux mots de passe doivent être identiques",
         path: ["confirmPassword"],
       });
     }
@@ -63,11 +65,11 @@ const OtpSchema = z
 export function loader({ context, request }: LoaderFunctionArgs) {
   const searchParams = getCurrentSearchParams(request);
 
-  const title = "Forgot password?";
+  const title = "Mot de passe oublié ?";
   const subHeading =
     searchParams.has("email") && searchParams.get("email") !== ""
-      ? "Step 2 of 2: Enter OTP and your new password"
-      : "Step 1 of 2: Enter your email";
+      ? "Étape 2 sur 2 : saisissez le code et votre nouveau mot de passe"
+      : "Étape 1 sur 2 : saisissez votre adresse e-mail";
 
   if (context.isAuthenticated) {
     return redirect("/assets");
@@ -83,7 +85,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
       z.object({ intent: z.enum(["request-otp", "confirm-otp"]) }),
       {
         message:
-          "Invalid request. Please try again. If the issue persists, contact support.",
+          "Requête invalide. Veuillez réessayer. Si le problème persiste, contactez le support.",
         shouldBeCaptured: false,
       }
     );
@@ -111,7 +113,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
           throw new ShelfError({
             cause: null,
             message:
-              "The user with this email is not confirmed yet, so you cannot reset it's password. Please confirm your user before continuing",
+              "Aucun compte confirmé n'est associé à cette adresse e-mail. Veuillez d'abord confirmer votre compte avant de continuer.",
             additionalData: { email },
             shouldBeCaptured: false,
             label: "Auth",
@@ -122,7 +124,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
           throw new ShelfError({
             cause: null,
             message:
-              "This user is an SSO user and cannot reset password using email.",
+              "Ce compte utilise le SSO et ne peut pas réinitialiser son mot de passe par e-mail.",
             additionalData: { email },
             shouldBeCaptured: false,
             label: "Auth",
@@ -171,14 +173,14 @@ export default function ForgotPassword() {
         {actionData?.error || !email || email === "" ? (
           <div>
             <p className="mb-4 text-center">
-              Enter your email address and we'll send you a one-time code to
-              reset your password.
+              Saisissez votre adresse e-mail et nous vous enverrons un code à
+              usage unique pour réinitialiser votre mot de passe.
             </p>
             <Form ref={zo.ref} method="post" className="space-y-2" replace>
               <input type="hidden" name="intent" value="request-otp" />
               <div>
                 <Input
-                  label="Email address"
+                  label="Adresse e-mail"
                   data-test-id="email"
                   name={zo.fields.email()}
                   type="email"
@@ -196,24 +198,26 @@ export default function ForgotPassword() {
                 type="submit"
                 disabled={disabled}
               >
-                {!disabled ? "Reset password" : "Sending code..."}
+                {!disabled
+                  ? "Réinitialiser le mot de passe"
+                  : "Envoi du code..."}
               </Button>
             </Form>
             <p className="mt-2 text-center text-gray-500">
-              Tip: Check your spam folder if you don't see the email within a
-              few minutes.
+              Conseil : vérifiez vos courriers indésirables si vous ne voyez pas
+              l'e-mail dans les prochaines minutes.
             </p>
           </div>
         ) : (
           <>
             <p className="mb-2">
-              We've sent a 6-digit code to{" "}
+              Nous avons envoyé un code à 6 chiffres à{" "}
               <span className="font-semibold">{email}</span>.
             </p>
             <ol className="mb-4 list-inside list-decimal">
-              <li>Enter the code from your email</li>
-              <li>Enter your new password</li>
-              <li>Confirm your new password</li>
+              <li>Saisissez le code reçu par e-mail</li>
+              <li>Saisissez votre nouveau mot de passe</li>
+              <li>Confirmez votre nouveau mot de passe</li>
             </ol>
             <PasswordResetForm email={email} />
           </>
@@ -221,11 +225,11 @@ export default function ForgotPassword() {
         <div className="pt-4 text-center">
           {email ? (
             <Button variant="link" to={"/forgot-password"}>
-              Request new code
+              Demander un nouveau code
             </Button>
           ) : (
             <Button variant="link" to={"/login"}>
-              Back to login
+              Retour à la connexion
             </Button>
           )}
         </div>
@@ -239,13 +243,13 @@ function PasswordResetForm({ email }: { email: string }) {
   const disabled = useDisabled();
   const actionData = useActionData<typeof action>();
   return !email || email === "" || actionData?.error ? (
-    <div>Something went wrong. Please refresh the page and try again.</div>
+    <div>Une erreur est survenue. Actualisez la page puis réessayez.</div>
   ) : (
     <Form method="post" ref={zoReset.ref} className="space-y-2">
       <ShelfOTP error={zoReset.errors.otp()?.message} />
 
       <PasswordInput
-        label="New password"
+        label="Nouveau mot de passe"
         data-test-id="password"
         name={zoReset.fields.password()}
         type="password"
@@ -256,7 +260,7 @@ function PasswordResetForm({ email }: { email: string }) {
         required
       />
       <PasswordInput
-        label="Confirm new password"
+        label="Confirmer le nouveau mot de passe"
         data-test-id="confirmPassword"
         name={zoReset.fields.confirmPassword()}
         type="password"
@@ -276,7 +280,7 @@ function PasswordResetForm({ email }: { email: string }) {
         className="w-full "
         disabled={disabled}
       >
-        Confirm password reset
+        Confirmer la réinitialisation
       </Button>
     </Form>
   );

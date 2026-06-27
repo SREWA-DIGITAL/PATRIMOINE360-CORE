@@ -45,7 +45,7 @@ export function loader({ context }: LoaderFunctionArgs) {
         cause: null,
         title: "Signup is disabled",
         message:
-          "For more information, please contact your workspace administrator.",
+          "La création de compte est désactivée. Pour plus d'informations, contactez l'administrateur de votre espace de travail.",
         label: "User onboarding",
         status: 403,
         shouldBeCaptured: false,
@@ -68,21 +68,21 @@ const JoinFormSchema = z
       .string()
       .transform((email) => email.toLowerCase())
       .refine(validEmail, () => ({
-        message: "Please enter a valid email",
+        message: "Veuillez saisir une adresse e-mail valide",
       })),
     password: z
       .string()
-      .min(8, "Your password is too short. Min 8 characters are required."),
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères."),
     confirmPassword: z
       .string()
-      .min(8, "Your password is too short. Min 8 characters are required."),
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères."),
     redirectTo: z.string().optional(),
   })
   .superRefine(({ password, confirmPassword }, ctx) => {
     if (password !== confirmPassword) {
       return ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Password and confirm password must match",
+        message: "Les deux mots de passe doivent être identiques",
         path: ["confirmPassword"],
       });
     }
@@ -107,7 +107,8 @@ export async function action({ request }: ActionFunctionArgs) {
         if (existingUser) {
           throw new ShelfError({
             cause: null,
-            message: "User with this Email already exits, login instead",
+            message:
+              "Un utilisateur avec cette adresse e-mail existe déjà. Connectez-vous à la place.",
             additionalData: {
               email,
             },
@@ -167,7 +168,7 @@ export default function Join() {
             <Input
               ref={emailInputRef}
               data-test-id="email"
-              label="Email address"
+              label="Adresse e-mail"
               placeholder="zaans@huisje.com"
               required
               name={zo.fields.email()}
@@ -180,7 +181,7 @@ export default function Join() {
           </div>
 
           <PasswordInput
-            label="Password"
+            label="Mot de passe"
             placeholder="**********"
             required
             data-test-id="password"
@@ -191,7 +192,7 @@ export default function Join() {
             error={zo.errors.password()?.message}
           />
           <PasswordInput
-            label="Confirm Password"
+            label="Confirmer le mot de passe"
             placeholder="**********"
             required
             data-test-id="confirmPassword"
@@ -214,12 +215,12 @@ export default function Join() {
             disabled={disabled}
             width="full"
           >
-            Get Started
+            Commencer
           </Button>
         </Form>
         <div className="flex items-center justify-center pt-5">
           <div className="text-center text-sm text-gray-500">
-            {"Already have an account? "}
+            {"Vous avez déjà un compte ? "}
             <Button
               variant="link"
               to={{
@@ -227,7 +228,7 @@ export default function Join() {
                 search: searchParams.toString(),
               }}
             >
-              Log in
+              Se connecter
             </Button>
           </div>
         </div>
