@@ -50,6 +50,15 @@ docker run -d \
 
 `DATABASE_URL` and `DIRECT_URL` are mandatory when using Supabase Cloud. Learn more in the [Supabase Setup Guide](./supabase-setup.md).
 
+There is not yet a root `docker/docker-compose.yml` Community stack in this
+repository. That future target belongs to a later delivery phase.
+
+For Patrimoine360 Core staging deployments where server resources are limited,
+prefer the GHCR image flow documented in
+[`docs/DEPLOIEMENT-STAGING-DOCKPLOY.md`](/C:/dev/patrimoine-360/patrimoine360-core/docs/DEPLOIEMENT-STAGING-DOCKPLOY.md):
+build the image in GitHub Actions from `apps/webapp/Dockerfile.image`, push it
+to GHCR, then let Dockploy pull and run the finished image instead of building
+on the target server.
 ## Development
 
 > [!CAUTION]
