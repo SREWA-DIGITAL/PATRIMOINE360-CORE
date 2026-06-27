@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - staging
 
 permissions:
   actions: write
@@ -18,7 +19,7 @@ env:
 jobs:
   build:
     name: 🐳 Build
-    if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
+    if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/staging' }}
     runs-on: ubuntu-latest
     steps:
       - name: 🛑 Cancel Previous Runs
@@ -55,6 +56,8 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+            type=raw,value=dev,enable=${{ github.ref == format('refs/heads/{0}', 'dev') }}
+            type=raw,value=staging,enable=${{ github.ref == format('refs/heads/{0}', 'staging') }}
             type=ref,enable=${{ github.ref_type != 'tag' }},suffix=-{{sha}},event=branch
             type=ref,event=tag
 
