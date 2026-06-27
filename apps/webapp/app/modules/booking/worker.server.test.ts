@@ -1,8 +1,10 @@
 import { BookingStatus } from "@prisma/client";
 import { db } from "~/database/db.server";
+import { sendEmail } from "~/emails/mail.server";
 import { Logger } from "~/utils/logger";
 import { scheduler } from "~/utils/scheduler.server";
 import { BOOKING_SCHEDULER_EVENTS_ENUM } from "./constants";
+import { getBookingNotificationRecipients } from "./notification-recipients.server";
 import { createStatusTransitionNote } from "./service.server";
 import type { SchedulerData } from "./types";
 import { registerBookingWorkers } from "./worker.server";
@@ -13,6 +15,7 @@ import { registerBookingWorkers } from "./worker.server";
 vitest.mock("~/database/db.server", () => ({
   db: {
     booking: {
+      findFirstOrThrow: vitest.fn(),
       findUnique: vitest.fn().mockResolvedValue(null),
       update: vitest.fn().mockResolvedValue({}),
     },
@@ -60,6 +63,11 @@ vitest.mock("./email-helpers", () => ({
   checkoutReminderEmailContent: vitest.fn().mockReturnValue(""),
   overdueBookingEmailContent: vitest.fn().mockReturnValue(""),
   sendCheckinReminder: vitest.fn().mockResolvedValue(undefined),
+}));
+
+// why: resolving booking notification recipients is outside the worker scope
+vitest.mock("./notification-recipients.server", () => ({
+  getBookingNotificationRecipients: vitest.fn().mockResolvedValue([]),
 }));
 
 // why: preventing actual markdoc wrapper execution during tests
@@ -248,5 +256,97 @@ describe("autoArchiveHandler", () => {
     await workerHandler(mockJob);
 
     expect(Logger.error).toHaveBeenCalled();
+  });
+});
+
+describe("booking reminder email tags", () => {
+  let workerHandler: (job: { data: SchedulerData }) => Promise<void>;
+
+  beforeAll(async () => {
+    workerHandler = await getWorkerHandler();
+  });
+
+  beforeEach(() => {
+    vitest.clearAllMocks();
+  });
+
+  const baseBooking = {
+    id: "booking-1",
+    name: "Camera booking",
+    status: BookingStatus.ONGOING,
+    organizationId: "org-1",
+    custodianUserId: "user-1",
+    custodianUser: {
+      firstName: "Alex",
+      lastName: "Martin",
+      displayName: "Alex Martin",
+    },
+    custodianTeamMember: null,
+    from: new Date("2025-01-10T10:00:00.000Z"),
+    to: new Date("2025-01-11T10:00:00.000Z"),
+    _count: {
+      assets: 2,
+    },
+    organization: {
+      customEmailFooter: null,
+    },
+  };
+
+  it("adds Brevo tags to checkout reminder emails", async () => {
+    //@ts-expect-error missing vitest type
+    db.booking.findFirstOrThrow.mockResolvedValue({
+      ...baseBooking,
+      status: BookingStatus.RESERVED,
+    });
+    vitest.mocked(getBookingNotificationRecipients).mockResolvedValue([
+      {
+        email: "custodian@example.com",
+        reason: "custodian",
+      },
+    ] as never);
+
+    await workerHandler({
+      data: {
+        id: "booking-1",
+        hints: { timeZone: "UTC", locale: "en-US" },
+        eventType: BOOKING_SCHEDULER_EVENTS_ENUM.checkoutReminder,
+      },
+    });
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "custodian@example.com",
+        tags: ["booking", "checkout-reminder", "notification", "custodian"],
+      })
+    );
+  });
+
+  it("adds Brevo tags to overdue booking emails", async () => {
+    //@ts-expect-error missing vitest type
+    db.booking.update.mockResolvedValue({
+      ...baseBooking,
+      status: BookingStatus.OVERDUE,
+    });
+    vitest.mocked(getBookingNotificationRecipients).mockResolvedValue([
+      {
+        email: "owner@example.com",
+        reason: "organization-owner",
+      },
+    ] as never);
+
+    await workerHandler({
+      data: {
+        id: "booking-1",
+        hints: { timeZone: "UTC", locale: "en-US" },
+        eventType: BOOKING_SCHEDULER_EVENTS_ENUM.overdueHandler,
+      },
+    });
+
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "owner@example.com",
+        tags: ["booking", "overdue", "notification", "organization-owner"],
+      })
+    );
   });
 });

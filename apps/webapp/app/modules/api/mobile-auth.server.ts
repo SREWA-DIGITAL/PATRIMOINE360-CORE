@@ -1,6 +1,6 @@
 import { OrganizationRoles } from "@prisma/client";
 import { db } from "~/database/db.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
+import { getAuthResponseByAccessToken } from "~/modules/auth/service.server";
 import { ShelfError } from "~/utils/error";
 import {
   type PermissionAction,
@@ -10,11 +10,12 @@ import { validatePermission } from "~/utils/permissions/permission.validator.ser
 import { canUseAudits, canUseBarcodes } from "~/utils/subscription.server";
 
 /**
- * Validates a Supabase JWT from the Authorization header and returns the
+ * Validates an auth bearer token from the Authorization header and returns the
  * authenticated user's database record.
  *
  * Used exclusively by mobile API routes. The webapp's cookie-based session
- * middleware doesn't apply to mobile clients, so we validate the JWT directly.
+ * middleware doesn't apply to mobile clients, so we validate the bearer token
+ * directly through the auth service facade.
  */
 export async function requireMobileAuth(request: Request) {
   const authHeader = request.headers.get("Authorization");
@@ -30,11 +31,10 @@ export async function requireMobileAuth(request: Request) {
 
   const token = authHeader.slice(7);
 
-  // Validate the JWT with Supabase Admin
   const {
     data: { user: authUser },
     error,
-  } = await getSupabaseAdmin().auth.getUser(token);
+  } = await getAuthResponseByAccessToken(token);
 
   if (error || !authUser) {
     throw new ShelfError({

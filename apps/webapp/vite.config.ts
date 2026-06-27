@@ -59,12 +59,13 @@ export default defineConfig({
         "./app/root.tsx",
         "./app/routes/**/*.tsx",
         "./app/routes/**/*.ts",
+        "!./app/routes/**/*.test.ts",
+        "!./app/routes/**/*.test.tsx",
         "!./app/routes/**/*.test.server.ts",
+        "!./app/routes/**/*.spec.ts",
+        "!./app/routes/**/*.spec.tsx",
       ],
     },
-  },
-  optimizeDeps: {
-    include: ["./app/routes/**/*.tsx", "./app/routes/**/*.ts"],
   },
   build: {
     target: "ES2022",

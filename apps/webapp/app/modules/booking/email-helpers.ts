@@ -164,6 +164,7 @@ export async function sendCheckinReminder(
       subject,
       text,
       html,
+      tags: ["booking", "checkin-reminder", "notification", recipient.reason],
     });
   }
 }
@@ -348,6 +349,7 @@ export async function sendBookingUpdatedEmail({
         subject,
         text,
         html,
+        tags: ["booking", "updated", "notification", recipient.reason],
       });
     }
 
@@ -378,6 +380,7 @@ export async function sendBookingUpdatedEmail({
             subject,
             text,
             html,
+            tags: ["booking", "updated", "notification", "custodian"],
           });
         }
       }

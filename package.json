@@ -12,7 +12,8 @@
     "project:validate": "node scripts/project/plan-tools.mjs validate",
     "project:publish": "node scripts/project/plan-tools.mjs publish",
     "prepare": "git config --unset core.hooksPath || echo ok && npx lefthook install || echo ok",
-    "webapp:dev": "turbo run dev --filter=@shelf/webapp",
+    "webapp:dev": "pnpm --filter @shelf/webapp dev",
+    "webapp:dev:prepare": "pnpm --filter @shelf/database build && pnpm --filter @shelf/webapp dev",
     "webapp:dev:staging": "pnpm --filter @shelf/webapp run staging:dev",
     "webapp:dev:production": "pnpm --filter @shelf/webapp run production:dev",
     "webapp:build": "turbo run build --filter=@shelf/webapp",
@@ -73,7 +74,7 @@
     }
   },
   "engines": {
-    "node": ">=22.20.0"
+    "node": ">=22.13.0"
   },
   "packageManager": "pnpm@9.15.9"
 }

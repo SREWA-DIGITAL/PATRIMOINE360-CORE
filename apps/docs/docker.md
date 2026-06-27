@@ -3,15 +3,22 @@
 > [!NOTE]
 > The Docker configuration for shelf.nu is an effort powered by people within the community, done by [@anatolinicolae](https://github.com/anatolinicolae). Shelf Asset Management Inc. does not yet provide official support for Docker, but we will accept fixes and documentation at this time. Use at your own risk.
 
+> [!IMPORTANT]
+> The current Docker path builds and runs the application container only.
+> It does not yet provide a full Community stack with bundled PostgreSQL and
+> MinIO. For Patrimoine360 Core today, Docker still expects an external
+> Supabase project for PostgreSQL and file storage.
+
 ## Prerequisites
 
 > [!IMPORTANT]
-> If you want to run shelf via docker, there are still some prerequisites you need to meet. Because our docker setup doesn't currently support self-hosting supabase, you need to complete the steps below. This means you have to take care of setting up your Supabase environment, running migrations against your database, and making sure Supabase is configured based on our requirements.
+> If you want to run shelf via docker, there are still some prerequisites you need to meet. The current Docker setup does not yet self-host PostgreSQL or file storage for you. You still need to configure an external Supabase project, run migrations against that database, and keep Supabase Storage available for runtime uploads.
 
 1. [Local Development Guide](./local-development.md) - Setup your development environment
-2. [Supabase Setup Guide](./supabase-setup.md) - Configure your database and authentication
+2. [Supabase Setup Guide](./supabase-setup.md) - Configure your database and current Core storage/auth prerequisites
 
-This will make sure you have a DATABASE that you are ready to connect to.
+This will make sure you have a database and storage backend that the current
+Core runtime can connect to.
 
 ## Instructions
 
@@ -20,7 +27,7 @@ This will make sure you have a DATABASE that you are ready to connect to.
 
 ```bash
 docker run -d \
-  --name "shelf" \
+  --name "patrimoine360-core" \
   -e "DATABASE_URL=postgres://USER:PASSWORD@HOST:6543/DB_NAME?pgbouncer=true" \
   -e "DIRECT_URL=postgres://USER:PASSWORD@HOST:5432/DB_NAME" \
   -e 'SUPABASE_ANON_PUBLIC=your-anon-public-key' \
@@ -28,16 +35,21 @@ docker run -d \
   -e 'SUPABASE_URL=https://your-instance-name.supabase.co' \
   -e 'SESSION_SECRET=super-duper-s3cret' \
   -e 'SERVER_URL=http://localhost:3000' \
+  -e 'BETTER_AUTH_SECRET=replace-with-a-long-random-secret' \
+  -e 'BETTER_AUTH_URL=http://localhost:3000' \
+  -e 'BETTER_AUTH_BASE_PATH=/api/auth' \
+  -e 'EMAIL_PROVIDER=brevo' \
+  -e 'BREVO_API_KEY=xkeysib-your-brevo-api-key' \
+  -e 'BREVO_SENDER_EMAIL=support@your-domain.com' \
+  -e 'BREVO_SENDER_NAME=Patrimoine360' \
+  -e 'EMAIL_REPLY_TO=support@your-domain.com' \
+  -e 'EMAIL_REPLY_TO_NAME=Support Patrimoine360' \
+  -e 'BREVO_TIMEOUT_SECONDS=30' \
   -e 'MAPTILER_TOKEN=your-maptiler-token' \
-  -e 'SMTP_HOST=mail.example.com' \
-  -e 'SMTP_PORT=465' \
-  -e 'SMTP_USER=some-email@example.com' \
-  -e 'SMTP_FROM="Your Name from shelf.nu" <your-email@shelf.nu>' \
-  -e 'SMTP_PWD=super-safe-passw0rd' \
   -e 'INVITE_TOKEN_SECRET=another-super-duper-s3cret' \
   -p 3000:8080 \
   --restart unless-stopped \
-  ghcr.io/shelf-nu/shelf.nu:latest
+  ghcr.io/srewa-digital/patrimoine360-core:staging
 ```
 
 > [!NOTE]
@@ -46,6 +58,7 @@ docker run -d \
 > - `USER`, `PASSWORD`, `HOST`, `DB_NAME` - Your Supabase database details
 > - `your-anon-public-key`, `your-service-role-key` - From Supabase API settings
 > - `your-instance-name` - Your Supabase project reference
+> - Better Auth and Brevo values are required for the active Core auth/email path
 > - Other tokens and secrets as needed
 
 `DATABASE_URL` and `DIRECT_URL` are mandatory when using Supabase Cloud. Learn more in the [Supabase Setup Guide](./supabase-setup.md).
@@ -59,6 +72,7 @@ prefer the GHCR image flow documented in
 build the image in GitHub Actions from `apps/webapp/Dockerfile.image`, push it
 to GHCR, then let Dockploy pull and run the finished image instead of building
 on the target server.
+
 ## Development
 
 > [!CAUTION]
@@ -74,7 +88,7 @@ In order to build a local Docker image just as the one we provide for self-hosti
 ```bash
 docker buildx build \
    --platform linux/amd64,linux/arm64 \
-   --tag shelf-local \
+   --tag patrimoine360-core-local \
    --file apps/webapp/Dockerfile.image .
 ```
 
@@ -82,11 +96,11 @@ Then running the locally-built image should be as simple as:
 
 ```bash
 docker run -d \
-   --name "shelf" \
+   --name "patrimoine360-core" \
    -e DATABASE_URL="your-database-url" \
    -e DIRECT_URL="your-direct-url" \
    -e SUPABASE_URL="your-supabase-url" \
-   shelf-local
+   patrimoine360-core-local
 ```
 
 ### ARM processors
@@ -96,13 +110,13 @@ You can also run shelf on ARM64 processors.
 1. Linux / Pine A64
 
    ```bash
-   docker run -it --rm --entrypoint /usr/bin/uname ghcr.io/shelf-nu/shelf.nu:latest -a
+   docker run -it --rm --entrypoint /usr/bin/uname ghcr.io/srewa-digital/patrimoine360-core:staging -a
    # Expected output: Linux ... aarch64 GNU/Linux
    ```
 
 2. MacOS / M1 Max
 
    ```bash
-   docker run -it --rm --platform linux/arm64 --entrypoint /usr/bin/uname ghcr.io/shelf-nu/shelf.nu:latest -a
+   docker run -it --rm --platform linux/arm64 --entrypoint /usr/bin/uname ghcr.io/srewa-digital/patrimoine360-core:staging -a
    # Expected output: Linux ... aarch64 GNU/Linux
    ```

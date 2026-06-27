@@ -8,7 +8,6 @@ import Input from "~/components/forms/input";
 import { Button } from "~/components/shared/button";
 import { db } from "~/database/db.server";
 import { useDisabled } from "~/hooks/use-disabled";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
 import { PUBLIC_BUCKET } from "~/utils/constants";
 import { cropImage } from "~/utils/crop-image";
@@ -17,6 +16,8 @@ import { makeShelfError } from "~/utils/error";
 import { payload, error, parseData } from "~/utils/http.server";
 import { id } from "~/utils/id/id.server";
 import { requireAdmin } from "~/utils/roles.server";
+import { uploadStorageObject } from "~/utils/storage-provider.server";
+import { getPublicFileURL } from "~/utils/storage.server";
 
 export const MigrationFormSchema = z.object({
   count: z.coerce.number().min(1).max(150, "Maximum 150 locations at a time"),
@@ -344,8 +345,6 @@ export async function action({ context, request }: ActionFunctionArgs) {
       });
     }
 
-    const supabase = getSupabaseAdmin();
-
     const movedLocationIds: string[] = [];
     const fixedLocationIds: string[] = [];
     const skippedLocationIds: string[] = [];
@@ -418,12 +417,15 @@ export async function action({ context, request }: ActionFunctionArgs) {
           } bytes${wasFixed ? " (fixed)" : ""}`
         );
 
-        const { data, error } = await supabase.storage
-          .from(PUBLIC_BUCKET)
-          .upload(imagePath, processedBlob, {
+        const { data, error } = await uploadStorageObject(
+          imagePath,
+          processedBlob,
+          PUBLIC_BUCKET,
+          {
             upsert: true,
             contentType: processedContentType,
-          });
+          }
+        );
 
         if (error) {
           console.error(
@@ -436,9 +438,10 @@ export async function action({ context, request }: ActionFunctionArgs) {
         }
 
         /** Getting the public url */
-        const {
-          data: { publicUrl },
-        } = supabase.storage.from(PUBLIC_BUCKET).getPublicUrl(data.path);
+        const publicUrl = getPublicFileURL({
+          filename: data.path,
+          bucketName: PUBLIC_BUCKET,
+        });
 
         /** Generating thumbnail */
         const thumbnailFile = await cropImage(
@@ -455,12 +458,15 @@ export async function action({ context, request }: ActionFunctionArgs) {
         );
 
         const { data: thumbnailData, error: thumbnailError } =
-          await supabase.storage
-            .from(PUBLIC_BUCKET)
-            .upload(thumbnailPath, thumbnailFile, {
+          await uploadStorageObject(
+            thumbnailPath,
+            thumbnailFile,
+            PUBLIC_BUCKET,
+            {
               upsert: true,
               contentType: processedContentType,
-            });
+            }
+          );
 
         if (thumbnailError) {
           console.error(
@@ -475,11 +481,10 @@ export async function action({ context, request }: ActionFunctionArgs) {
         }
 
         /** Getting the thumbnail public url */
-        const {
-          data: { publicUrl: thumbnailPublicUrl },
-        } = supabase.storage
-          .from(PUBLIC_BUCKET)
-          .getPublicUrl(thumbnailData.path);
+        const thumbnailPublicUrl = getPublicFileURL({
+          filename: thumbnailData.path,
+          bucketName: PUBLIC_BUCKET,
+        });
 
         await db.location.update({
           where: { id: location.id },

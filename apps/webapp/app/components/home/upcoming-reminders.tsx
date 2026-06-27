@@ -18,7 +18,7 @@ export default function UpcomingReminders() {
     <div className="flex h-full flex-col rounded border border-gray-200 bg-white">
       <div className="flex items-center justify-between border-b px-4 py-3 md:px-6">
         <span className="text-[14px] font-semibold text-gray-900">
-          Upcoming reminders
+          Rappels à venir
         </span>
         <div className="flex items-center gap-2">
           <Button
@@ -26,7 +26,7 @@ export default function UpcomingReminders() {
             variant="block-link-gray"
             className="!mt-0 text-xs"
           >
-            View all
+            Voir tout
           </Button>
         </div>
       </div>
@@ -67,10 +67,10 @@ export default function UpcomingReminders() {
       ) : (
         <div className="flex flex-1 items-center justify-center p-4">
           <DashboardEmptyState
-            text="No upcoming reminders"
-            subText="Asset reminders you set will appear here."
+            text="Aucun rappel à venir"
+            subText="Les rappels configurés sur les biens apparaîtront ici."
             ctaTo="/assets"
-            ctaText="Go to assets"
+            ctaText="Voir les biens"
           />
         </div>
       )}

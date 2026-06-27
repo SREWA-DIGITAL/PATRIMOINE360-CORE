@@ -139,6 +139,7 @@ export async function resolveUserAction(
           orgName: org.name,
           customEmailFooter: org.customEmailFooter,
         }),
+        tags: ["team", "access-revoked", "organization"],
       });
 
       sendNotification({
@@ -433,6 +434,7 @@ export async function resolveUserAction(
           recipientEmail: targetUser.email,
           customEmailFooter: org.customEmailFooter,
         }),
+        tags: ["team", "role-changed", "organization"],
       });
 
       sendNotification({

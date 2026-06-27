@@ -115,6 +115,7 @@ describe("sendTrialEndsSoonEmail", () => {
       expect.objectContaining({
         to: "alice@example.com",
         subject: "Your Shelf Team trial ends in 3 days — auto-charge reminder",
+        tags: ["billing", "trial", "team", "ending-soon"],
       })
     );
   });
@@ -132,6 +133,7 @@ describe("sendTrialEndsSoonEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         subject: "Your Shelf Plus trial is ending soon",
+        tags: ["billing", "trial", "team", "ending-soon"],
       })
     );
   });

@@ -2,15 +2,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { triggerEmail } from "./email.worker.server";
 
-// why: avoid actual SMTP calls during tests
-vi.mock("~/emails/transporter.server", () => ({
-  transporter: { sendMail: vi.fn().mockResolvedValue({}) },
-}));
-
-// why: env vars are not available in test environment
-vi.mock("../utils/env", () => ({
-  SMTP_FROM: "test@shelf.nu",
-  SUPPORT_EMAIL: "support@shelf.nu",
+// why: avoid actual provider calls during tests
+vi.mock("~/emails/email-provider.server", () => ({
+  deliverEmail: vi.fn().mockResolvedValue(undefined),
 }));
 
 // why: scheduler is not needed for triggerEmail unit tests
@@ -19,7 +13,7 @@ vi.mock("~/utils/scheduler.server", () => ({
   scheduler: { work: vi.fn() },
 }));
 
-const { transporter } = await import("~/emails/transporter.server");
+const { deliverEmail } = await import("~/emails/email-provider.server");
 
 const basePayload = {
   subject: "Test Subject",
@@ -34,7 +28,7 @@ describe("triggerEmail", () => {
       to: "deleted+abc123@deleted.shelf.nu",
     });
 
-    expect(transporter.sendMail).not.toHaveBeenCalled();
+    expect(deliverEmail).not.toHaveBeenCalled();
   });
 
   it("sends email to normal addresses", async () => {
@@ -43,9 +37,23 @@ describe("triggerEmail", () => {
       to: "user@example.com",
     });
 
-    expect(transporter.sendMail).toHaveBeenCalledOnce();
-    expect(transporter.sendMail).toHaveBeenCalledWith(
+    expect(deliverEmail).toHaveBeenCalledOnce();
+    expect(deliverEmail).toHaveBeenCalledWith(
       expect.objectContaining({ to: "user@example.com" })
     );
+  });
+
+  it("wraps provider delivery errors with an email-specific error", async () => {
+    vi.mocked(deliverEmail).mockRejectedValueOnce(new Error("network down"));
+
+    await expect(
+      triggerEmail({
+        ...basePayload,
+        to: "user@example.com",
+      })
+    ).rejects.toMatchObject({
+      label: "Email",
+      message: "Unable to send email",
+    });
   });
 });

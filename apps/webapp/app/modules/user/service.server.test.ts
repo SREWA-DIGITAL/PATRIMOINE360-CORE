@@ -1,14 +1,7 @@
-import { Roles, AssetIndexMode, OrganizationRoles } from "@prisma/client";
-
-import { matchRequestUrl, http, HttpResponse } from "msw";
-import { server } from "@mocks";
-import {
-  SUPABASE_URL,
-  SUPABASE_AUTH_TOKEN_API,
-  SUPABASE_AUTH_ADMIN_USER_API,
-  authSession,
-  authAccount,
-} from "@mocks/handlers";
+// @vitest-environment node
+import { AssetIndexMode, OrganizationRoles, Roles } from "@prisma/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { authSession } from "@mocks/handlers";
 import {
   ORGANIZATION_ID,
   USER_EMAIL,
@@ -16,7 +9,6 @@ import {
   USER_PASSWORD,
 } from "@mocks/user";
 import { db } from "~/database/db.server";
-
 import { USER_WITH_SSO_DETAILS_SELECT } from "./fields";
 import {
   createUserAccountForTesting,
@@ -25,237 +17,119 @@ import {
 } from "./service.server";
 import { defaultFields } from "../asset-index-settings/helpers";
 
-// @vitest-environment node
-// 👋 see https://vitest.dev/guide/environment.html#environments-for-specific-files
+const mocks = vi.hoisted(() => ({
+  deleteAuthAccount: vi.fn().mockResolvedValue(undefined),
+  ensureBetterAuthCredentialIdentity: vi.fn(),
+  ensureAssetIndexModeForRole: vi.fn().mockResolvedValue(undefined),
+  signInWithEmail: vi.fn(),
+}));
 
-// why: testing user account creation logic without executing actual database operations
-vitest.mock("~/database/db.server", () => ({
+vi.mock("~/utils/id/id.server", () => ({
+  id: vi.fn(() => USER_ID),
+}));
+
+vi.mock("~/database/db.server", () => ({
   db: {
-    $transaction: vitest.fn().mockImplementation((callback) => callback(db)),
-    $queryRaw: vitest.fn().mockResolvedValue([]),
+    $transaction: vi.fn().mockImplementation((callback) => callback(db)),
+    $queryRaw: vi.fn().mockResolvedValue([]),
     user: {
-      create: vitest.fn().mockResolvedValue({}),
-      findFirst: vitest.fn().mockResolvedValue(null),
+      create: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined),
+      findFirst: vi.fn(),
     },
     organization: {
-      findFirst: vitest.fn().mockResolvedValue({
-        id: ORGANIZATION_ID,
-      }),
+      findFirst: vi.fn().mockResolvedValue({ id: ORGANIZATION_ID }),
     },
     userOrganization: {
-      upsert: vitest.fn().mockResolvedValue({}),
+      upsert: vi.fn().mockResolvedValue({}),
     },
   },
 }));
 
-// why: ensureAssetIndexModeForRole has its own db dependencies unrelated to user creation
-vitest.mock("~/modules/asset-index-settings/service.server", () => ({
-  ensureAssetIndexModeForRole: vitest.fn().mockResolvedValue(undefined),
+vi.mock("~/modules/auth/service.server", () => ({
+  deleteAuthAccount: mocks.deleteAuthAccount,
+  setAuthUserEmail: vi.fn(),
+  signInWithEmail: mocks.signInWithEmail,
+  softDeleteAuthUser: vi.fn(),
+  updateAccountPassword: vi.fn(),
+}));
+
+vi.mock("~/modules/auth/better-auth-identity.server", () => ({
+  ensureBetterAuthCredentialIdentity: mocks.ensureBetterAuthCredentialIdentity,
+}));
+
+vi.mock("~/modules/asset-index-settings/service.server", () => ({
+  ensureAssetIndexModeForRole: mocks.ensureAssetIndexModeForRole,
 }));
 
 const username = `test-user-${USER_ID}`;
 
-describe(createUserAccountForTesting.name, () => {
-  it("should return null if no auth account created", async () => {
-    expect.assertions(3);
-    const fetchAuthAdminUserAPI = new Map();
-    server.events.on("request:start", ({ request, requestId }) => {
-      const matchesMethod = request.method === "POST";
-      const matchesUrl = matchRequestUrl(
-        new URL(request.url),
-        SUPABASE_AUTH_ADMIN_USER_API,
-        SUPABASE_URL
-      ).matches;
-      if (matchesMethod && matchesUrl)
-        fetchAuthAdminUserAPI.set(requestId, request.clone());
-    });
-    // https://mswjs.io/docs/api/setup-server/use#one-time-override
-    server.use(
-      http.post(
-        `${SUPABASE_URL}${SUPABASE_AUTH_ADMIN_USER_API}`,
-        () =>
-          HttpResponse.json(
-            { message: "create-account-error", status: 400 },
-            { status: 400 }
-          ),
-        { once: true }
-      )
-    );
-    const result = await createUserAccountForTesting(
-      USER_EMAIL,
-      USER_PASSWORD,
-      username
-    );
-    server.events.removeAllListeners();
-    expect(result).toBeNull();
-    expect(fetchAuthAdminUserAPI.size).toEqual(1);
-    const [request] = fetchAuthAdminUserAPI.values();
-    expect(await request.json()).toEqual({
-      email: USER_EMAIL,
-      password: USER_PASSWORD,
-      email_confirm: true,
-    });
-  });
-  it("should return null and delete auth account if unable to sign in", async () => {
-    expect.assertions(5);
-    const fetchAuthTokenAPI = new Map();
-    const fetchAuthAdminUserAPI = new Map();
-    server.events.on("request:start", ({ request, requestId }) => {
-      const matchesMethod = request.method === "POST";
-      const matchesUrl = matchRequestUrl(
-        new URL(request.url),
-        SUPABASE_AUTH_TOKEN_API,
-        SUPABASE_URL
-      ).matches;
-      if (matchesMethod && matchesUrl)
-        fetchAuthTokenAPI.set(requestId, request.clone());
-    });
-    server.events.on("request:start", ({ request, requestId }) => {
-      const matchesMethod = request.method === "DELETE";
-      const matchesUrl = matchRequestUrl(
-        new URL(request.url),
-        `${SUPABASE_AUTH_ADMIN_USER_API}/:userId`,
-        SUPABASE_URL
-      ).matches;
-      if (matchesMethod && matchesUrl)
-        fetchAuthAdminUserAPI.set(requestId, request.clone());
-    });
-    server.use(
-      http.post(
-        `${SUPABASE_URL}${SUPABASE_AUTH_TOKEN_API}`,
-        () =>
-          HttpResponse.json(
-            { message: "sign-in-error", status: 400 },
-            { status: 400 }
-          ),
-        { once: true }
-      )
-    );
-    const result = await createUserAccountForTesting(
-      USER_EMAIL,
-      USER_PASSWORD,
-      username
-    );
-    server.events.removeAllListeners();
-    expect(result).toBeNull();
-    expect(fetchAuthTokenAPI.size).toEqual(1);
-    const [signInRequest] = fetchAuthTokenAPI.values();
-    expect(await signInRequest.json()).toEqual({
-      email: USER_EMAIL,
-      password: USER_PASSWORD,
-      gotrue_meta_security: {},
-    });
-    expect(fetchAuthAdminUserAPI.size).toEqual(1);
-    // expect call delete auth account with the expected user id
-    const [authAdminUserReq] = fetchAuthAdminUserAPI.values();
-    expect(new URL(authAdminUserReq.url).pathname).toEqual(
-      `${SUPABASE_AUTH_ADMIN_USER_API}/${USER_ID}`
-    );
-  });
-  it("should return null and delete auth account if unable to create user in database", async () => {
-    expect.assertions(4);
-    const fetchAuthTokenAPI = new Map();
-    const fetchAuthAdminUserAPI = new Map();
-    server.events.on("request:start", ({ request, requestId }) => {
-      const matchesMethod = request.method === "POST";
-      const matchesUrl = matchRequestUrl(
-        new URL(request.url),
-        SUPABASE_AUTH_TOKEN_API,
-        SUPABASE_URL
-      ).matches;
-      if (matchesMethod && matchesUrl)
-        fetchAuthTokenAPI.set(requestId, request.clone());
-    });
-    server.events.on("request:start", ({ request, requestId }) => {
-      const matchesMethod = request.method === "DELETE";
-      const matchesUrl = matchRequestUrl(
-        new URL(request.url),
-        `${SUPABASE_AUTH_ADMIN_USER_API}/:userId`,
-        SUPABASE_URL
-      ).matches;
-      if (matchesMethod && matchesUrl)
-        fetchAuthAdminUserAPI.set(requestId, request.clone());
-    });
-    //@ts-expect-error missing vitest type
-    db.user.create.mockResolvedValue(null);
-    const result = await createUserAccountForTesting(
-      USER_EMAIL,
-      USER_PASSWORD,
-      username
-    );
-    server.events.removeAllListeners();
-    expect(result).toBeNull();
-    expect(fetchAuthTokenAPI.size).toEqual(1);
-    expect(fetchAuthAdminUserAPI.size).toEqual(1);
-    // expect call delete auth account with the expected user id
-    const [authAdminUserReq] = fetchAuthAdminUserAPI.values();
-    expect(new URL(authAdminUserReq.url).pathname).toEqual(
-      `${SUPABASE_AUTH_ADMIN_USER_API}/${USER_ID}`
-    );
-  });
-  it("should create an account", async () => {
-    expect.assertions(4);
-    const fetchAuthAdminUserAPI = new Map();
-    const fetchAuthTokenAPI = new Map();
-    server.events.on("request:start", ({ request, requestId }) => {
-      const matchesMethod = request.method === "POST";
-      const matchesUrl = matchRequestUrl(
-        new URL(request.url),
-        SUPABASE_AUTH_ADMIN_USER_API,
-        SUPABASE_URL
-      ).matches;
-      if (matchesMethod && matchesUrl)
-        fetchAuthAdminUserAPI.set(requestId, request.clone());
-    });
-    server.events.on("request:start", ({ request, requestId }) => {
-      const matchesMethod = request.method === "POST";
-      const matchesUrl = matchRequestUrl(
-        new URL(request.url),
-        SUPABASE_AUTH_TOKEN_API,
-        SUPABASE_URL
-      ).matches;
-      if (matchesMethod && matchesUrl)
-        fetchAuthTokenAPI.set(requestId, request.clone());
-    });
+const newUserMock = {
+  id: USER_ID,
+  email: USER_EMAIL,
+  organizations: [{ id: ORGANIZATION_ID }],
+  sso: false,
+} as any;
 
-    //@ts-expect-error missing vitest type
-    db.user.create.mockResolvedValue({
+describe(createUserAccountForTesting.name, () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(db.user.create).mockResolvedValue({
       id: USER_ID,
       email: USER_EMAIL,
-      username: username,
-      organizations: [
-        {
-          id: "org-id",
-        },
-      ],
-    });
-    // mock db transaction passing the db instance
-    //@ts-expect-error missing vitest type
-    db.$transaction.mockImplementationOnce((callback) => callback(db));
+      username,
+      organizations: [{ id: "org-id" }],
+    } as any);
+    mocks.ensureBetterAuthCredentialIdentity.mockResolvedValue({ id: USER_ID });
+    mocks.signInWithEmail.mockResolvedValue({ ...authSession });
+  });
+
+  it("returns null and cleans up the user if Better Auth identity creation fails", async () => {
+    mocks.ensureBetterAuthCredentialIdentity.mockResolvedValueOnce(null);
+
     const result = await createUserAccountForTesting(
       USER_EMAIL,
       USER_PASSWORD,
       username
     );
 
-    // we don't want to test the implementation of the function
-    result!.expiresAt = -1;
-    server.events.removeAllListeners();
+    expect(result).toBeNull();
+    expect(db.user.delete).toHaveBeenCalledWith({ where: { id: USER_ID } });
+  });
+
+  it("returns null and deletes the auth account if sign-in fails", async () => {
+    mocks.signInWithEmail.mockResolvedValueOnce(null);
+
+    const result = await createUserAccountForTesting(
+      USER_EMAIL,
+      USER_PASSWORD,
+      username
+    );
+
+    expect(result).toBeNull();
+    expect(mocks.deleteAuthAccount).toHaveBeenCalledWith(USER_ID);
+  });
+
+  it("creates the user, Better Auth identity and session", async () => {
+    const result = await createUserAccountForTesting(
+      USER_EMAIL,
+      USER_PASSWORD,
+      username
+    );
 
     expect(db.user.create).toBeCalledWith({
       data: {
         email: USER_EMAIL,
         id: USER_ID,
-        username: username,
+        username,
         firstName: undefined,
         lastName: undefined,
         createdWithInvite: undefined,
-        // After the last changes because of SSO we dont need this anymore
         organizations: {
           create: [
             {
               name: "Personal",
-              hasSequentialIdsMigrated: true, // New personal organizations don't need migration
+              hasSequentialIdsMigrated: true,
               categories: {
                 create: defaultUserCategories.map((c) => ({
                   ...c,
@@ -295,47 +169,29 @@ describe(createUserAccountForTesting.name, () => {
         ...USER_WITH_SSO_DETAILS_SELECT,
       },
     });
+    expect(mocks.ensureBetterAuthCredentialIdentity).toHaveBeenCalledWith({
+      email: USER_EMAIL,
+      emailVerified: true,
+      name: "hello",
+      password: USER_PASSWORD,
+      userId: USER_ID,
+    });
     expect(result).toEqual(authSession);
-    expect(fetchAuthAdminUserAPI.size).toEqual(1);
-    expect(fetchAuthTokenAPI.size).toEqual(1);
   });
 });
 
-const newUserMock = {
-  id: USER_ID,
-  email: USER_EMAIL,
-  organizations: [{ id: ORGANIZATION_ID }],
-};
-
-/**
- * Tests for the invite acceptance flow in `createUserOrAttachOrg`.
- *
- * Covers the fallback logic that handles the "limbo" state: a user who signed
- * up but never confirmed their email has a Supabase auth account but no Prisma
- * User record. When they later accept a team invite, `createEmailAuthAccount`
- * fails (email exists), so we fall back to `confirmExistingAuthAccount` to
- * confirm the existing auth account and create the Prisma User.
- */
 describe(createUserOrAttachOrg.name, () => {
   beforeEach(() => {
-    vitest.clearAllMocks();
-    // Default: no existing Prisma user, no existing auth user
-    // @ts-expect-error missing vitest type
-    db.user.findFirst.mockResolvedValue(null);
-    // @ts-expect-error missing vitest type
-    db.$queryRaw.mockResolvedValue([]);
-    // @ts-expect-error missing vitest type
-    db.user.create.mockResolvedValue(newUserMock);
-    // @ts-expect-error missing vitest type
-    db.$transaction.mockImplementation((callback: any) => callback(db));
+    vi.clearAllMocks();
+    vi.mocked(db.user.findFirst).mockResolvedValue(null);
+    vi.mocked(db.user.create).mockResolvedValue(newUserMock);
+    vi.mocked(db.$transaction).mockImplementation((callback: any) =>
+      callback(db)
+    );
+    mocks.ensureBetterAuthCredentialIdentity.mockResolvedValue({ id: USER_ID });
   });
 
-  afterEach(() => {
-    server.events.removeAllListeners();
-  });
-
-  /** Happy path: brand-new user with no prior Supabase account */
-  it("creates a new user when no Prisma user and no Supabase account exists", async () => {
+  it("creates a new user and Better Auth identity for invite acceptance", async () => {
     const result = await createUserOrAttachOrg({
       email: USER_EMAIL,
       organizationId: ORGANIZATION_ID,
@@ -347,91 +203,25 @@ describe(createUserOrAttachOrg.name, () => {
 
     expect(result.id).toBe(USER_ID);
     expect(db.user.create).toHaveBeenCalled();
-  });
-
-  /** The "limbo" bug: unconfirmed Supabase account exists, no Prisma User */
-  it("falls back to confirming existing auth account when createEmailAuthAccount fails", async () => {
-    // Override: createEmailAuthAccount fails (email already in Supabase)
-    server.use(
-      http.post(
-        `${SUPABASE_URL}${SUPABASE_AUTH_ADMIN_USER_API}`,
-        () =>
-          HttpResponse.json(
-            { message: "User already registered", status: 400 },
-            { status: 400 }
-          ),
-        { once: true }
-      ),
-      // confirmExistingAuthAccount calls updateUserById (PUT)
-      http.put(
-        `${SUPABASE_URL}${SUPABASE_AUTH_ADMIN_USER_API}/:id`,
-        () => HttpResponse.json(authAccount, { status: 200 }),
-        { once: true }
-      )
-    );
-
-    // confirmExistingAuthAccount queries auth.users to find existing account
-    // @ts-expect-error missing vitest type
-    db.$queryRaw.mockResolvedValueOnce([{ id: USER_ID }]);
-
-    const result = await createUserOrAttachOrg({
-      email: USER_EMAIL,
-      organizationId: ORGANIZATION_ID,
-      roles: [OrganizationRoles.BASE],
-      password: USER_PASSWORD,
-      firstName: "Test",
-      createdWithInvite: true,
-    });
-
-    expect(result.id).toBe(USER_ID);
-    expect(db.$queryRaw).toHaveBeenCalled();
-    expect(db.user.create).toHaveBeenCalled();
-  });
-
-  /** No auth account can be created or found — user gets a clear error */
-  it("throws when both createEmailAuthAccount and confirmExistingAuthAccount fail", async () => {
-    // createEmailAuthAccount fails
-    server.use(
-      http.post(
-        `${SUPABASE_URL}${SUPABASE_AUTH_ADMIN_USER_API}`,
-        () =>
-          HttpResponse.json(
-            { message: "User already registered", status: 400 },
-            { status: 400 }
-          ),
-        { once: true }
-      )
-    );
-
-    // confirmExistingAuthAccount finds no auth user → returns null
-    // @ts-expect-error missing vitest type
-    db.$queryRaw.mockResolvedValueOnce([]);
-
-    await expect(
-      createUserOrAttachOrg({
+    expect(mocks.ensureBetterAuthCredentialIdentity).toHaveBeenCalledWith(
+      expect.objectContaining({
         email: USER_EMAIL,
-        organizationId: ORGANIZATION_ID,
-        roles: [OrganizationRoles.BASE],
+        emailVerified: true,
         password: USER_PASSWORD,
-        firstName: "Test",
-        createdWithInvite: true,
+        userId: USER_ID,
       })
-    ).rejects.toThrow("We are facing some issue with your account");
+    );
   });
 
-  /** Existing user accepting invite for a new org — no auth changes needed */
-  it("attaches org to existing Prisma user without creating a new auth account", async () => {
-    const existingUser = {
+  it("attaches the organization to an existing non-SSO user and refreshes the invited credential", async () => {
+    vi.mocked(db.user.findFirst).mockResolvedValueOnce({
       id: USER_ID,
       email: USER_EMAIL,
       firstName: "Existing",
       lastName: "User",
       sso: false,
       userOrganizations: [],
-    };
-
-    // @ts-expect-error missing vitest type
-    db.user.findFirst.mockResolvedValueOnce(existingUser);
+    } as any);
 
     const result = await createUserOrAttachOrg({
       email: USER_EMAIL,
@@ -445,5 +235,34 @@ describe(createUserOrAttachOrg.name, () => {
     expect(result.id).toBe(USER_ID);
     expect(db.userOrganization.upsert).toHaveBeenCalled();
     expect(db.user.create).not.toHaveBeenCalled();
+    expect(mocks.ensureBetterAuthCredentialIdentity).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: USER_ID,
+      })
+    );
+  });
+
+  it("attaches the organization to an existing SSO user without creating an email credential", async () => {
+    vi.mocked(db.user.findFirst).mockResolvedValueOnce({
+      id: USER_ID,
+      email: USER_EMAIL,
+      firstName: "Existing",
+      lastName: "User",
+      sso: true,
+      userOrganizations: [],
+    } as any);
+
+    const result = await createUserOrAttachOrg({
+      email: USER_EMAIL,
+      organizationId: ORGANIZATION_ID,
+      roles: [OrganizationRoles.BASE],
+      password: USER_PASSWORD,
+      firstName: "Existing",
+      createdWithInvite: true,
+    });
+
+    expect(result.id).toBe(USER_ID);
+    expect(db.userOrganization.upsert).toHaveBeenCalled();
+    expect(mocks.ensureBetterAuthCredentialIdentity).not.toHaveBeenCalled();
   });
 });

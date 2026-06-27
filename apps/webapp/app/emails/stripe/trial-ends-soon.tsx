@@ -52,6 +52,7 @@ export const sendTrialEndsSoonEmail = async ({
       subject,
       html,
       text,
+      tags: ["billing", "trial", "team", "ending-soon"],
     });
   } catch (cause) {
     Logger.error(
@@ -131,7 +132,7 @@ function TrialEndsSoonEmailTemplate({
   return (
     <Html>
       <Head>
-        <title>Your Shelf {planName} trial is ending soon</title>
+        <title>{`Your Shelf ${planName} trial is ending soon`}</title>
       </Head>
 
       <Container style={{ padding: "32px 16px", maxWidth: "100%" }}>

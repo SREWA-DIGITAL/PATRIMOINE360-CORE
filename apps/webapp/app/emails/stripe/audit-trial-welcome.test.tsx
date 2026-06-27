@@ -87,6 +87,7 @@ describe("sendAuditTrialWelcomeEmail", () => {
       expect.objectContaining({
         to: "alice@example.com",
         subject: "Your 7-day Audits trial is now active!",
+        tags: ["billing", "trial", "audit", "welcome"],
       })
     );
     const call = mockSendEmail.mock.calls[0][0];

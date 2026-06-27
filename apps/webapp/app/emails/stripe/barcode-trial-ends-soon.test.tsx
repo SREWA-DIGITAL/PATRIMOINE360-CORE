@@ -98,6 +98,7 @@ describe("sendBarcodeTrialEndsSoonEmail", () => {
       expect.objectContaining({
         to: "alice@example.com",
         subject: "Your Barcodes trial ends in 3 days — auto-charge reminder",
+        tags: ["billing", "trial", "barcode", "ending-soon"],
       })
     );
   });

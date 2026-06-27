@@ -69,12 +69,12 @@ export function TeamMembersActionsDropdown({
                 isPersonalOrg
                   ? {
                       reason:
-                        "You are not able to invite users to a personal workspace. ",
+                        "Vous ne pouvez pas inviter d'utilisateurs dans un espace personnel.",
                     }
                   : false
               }
             >
-              Invite user
+              Inviter
             </Button>
           </DropdownMenuItem>
 

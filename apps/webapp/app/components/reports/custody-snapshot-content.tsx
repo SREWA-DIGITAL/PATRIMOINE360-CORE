@@ -78,7 +78,7 @@ export function CustodySnapshotContent({
     () => [
       {
         accessorKey: "assetName",
-        header: "Asset",
+        header: "Bien",
         cell: ({ row }) => (
           <AssetCell
             name={row.original.assetName}
@@ -89,12 +89,12 @@ export function CustodySnapshotContent({
       },
       {
         accessorKey: "custodianName",
-        header: "Assigned to",
+        header: "Responsable",
         cell: ({ row }) => row.original.custodianName,
       },
       {
         accessorKey: "daysInCustody",
-        header: "Days Held",
+        header: "Jours d'affectation",
         cell: ({ row }) => {
           const days = row.original.daysInCustody;
           const percentage = Math.min((days / maxDays) * 100, 100);
@@ -109,7 +109,7 @@ export function CustodySnapshotContent({
               </div>
               {/* Days value */}
               <span className="min-w-16 text-sm font-medium tabular-nums text-gray-900">
-                {days} <span className="font-normal text-gray-500">days</span>
+                {days} <span className="font-normal text-gray-500">jours</span>
               </span>
             </div>
           );
@@ -117,24 +117,24 @@ export function CustodySnapshotContent({
       },
       {
         accessorKey: "assignedAt",
-        header: "Assigned",
+        header: "Affecté le",
         cell: ({ row }) => <DateCell date={row.original.assignedAt} />,
       },
       {
         accessorKey: "category",
-        header: "Category",
+        header: "Catégorie",
         cell: ({ row }) =>
           row.original.category || <span className="text-gray-400">—</span>,
       },
       {
         accessorKey: "location",
-        header: "Location",
+        header: "Site / local",
         cell: ({ row }) =>
           row.original.location || <span className="text-gray-400">—</span>,
       },
       {
         accessorKey: "valuation",
-        header: "Value",
+        header: "Valeur",
         cell: ({ row }) => (
           <CurrencyCell value={row.original.valuation} treatZeroAsEmpty />
         ),
@@ -167,10 +167,10 @@ export function CustodySnapshotContent({
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-medium text-gray-700">
-                Assets Currently Assigned
+                Biens actuellement affectés
               </span>
               <span className="text-xs text-gray-500">
-                Across {totalCustodians} team member
+                Répartis sur {totalCustodians} responsable
                 {totalCustodians !== 1 ? "s" : ""}
               </span>
             </div>
@@ -179,7 +179,7 @@ export function CustodySnapshotContent({
           {/* Supporting stats */}
           <div className="flex gap-6 border-t border-gray-100 pt-3 md:border-l md:border-t-0 md:pl-6 md:pt-0">
             <div className="flex flex-col">
-              <span className="text-xs text-gray-500">Total Value</span>
+              <span className="text-xs text-gray-500">Valeur totale</span>
               <span className="text-lg font-medium text-gray-900">
                 {totalCustodyValue > 0
                   ? formatCurrency({
@@ -191,10 +191,10 @@ export function CustodySnapshotContent({
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-xs text-gray-500">Avg. Tenure</span>
+              <span className="text-xs text-gray-500">Ancienneté moyenne</span>
               <span className="text-lg font-medium text-gray-900">
                 {avgDaysInCustody > 0
-                  ? `${Math.round(avgDaysInCustody)} days`
+                  ? `${Math.round(avgDaysInCustody)} jours`
                   : "—"}
               </span>
             </div>
@@ -206,7 +206,7 @@ export function CustodySnapshotContent({
       <div className="overflow-hidden rounded border border-gray-200 bg-white">
         <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3 md:px-6">
           <h3 className="text-sm font-semibold text-gray-900">
-            Current Assignments
+            Affectations en cours
           </h3>
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
             {totalRows}
@@ -219,8 +219,8 @@ export function CustodySnapshotContent({
           emptyContent={
             <ReportEmptyState
               reason="no_data"
-              title="No assets assigned"
-              description="No assets are currently assigned to team members."
+              title="Aucun bien affecté"
+              description="Aucun bien n'est actuellement affecté à un responsable."
             />
           }
         />

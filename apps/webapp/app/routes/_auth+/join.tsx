@@ -15,8 +15,7 @@ import { Button } from "~/components/shared/button";
 import { config } from "~/config/shelf.config";
 import { useSearchParams } from "~/hooks/search-params";
 import { useAutoFocus } from "~/hooks/use-auto-focus";
-import { ContinueWithEmailForm } from "~/modules/auth/components/continue-with-email-form";
-import { signUpWithEmailPass } from "~/modules/auth/service.server";
+import { signUpWithBetterAuthEmailPass } from "~/modules/auth/service.server";
 import { findUserByEmail } from "~/modules/user/service.server";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
 import {
@@ -95,7 +94,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
     switch (getActionMethod(request)) {
       case "POST": {
-        const { email, password } = parseData(
+        const { email, password, redirectTo } = parseData(
           await request.formData(),
           JoinFormSchema,
           { shouldBeCaptured: false }
@@ -119,11 +118,18 @@ export async function action({ request }: ActionFunctionArgs) {
         }
 
         // Sign up with the provided email and password
-        await signUpWithEmailPass(email, password);
+        await signUpWithBetterAuthEmailPass(email, password, redirectTo);
 
-        return redirect(
-          `/otp?email=${encodeURIComponent(email)}&mode=confirm_signup`
-        );
+        const params = new URLSearchParams({
+          email,
+          email_sent: "true",
+        });
+
+        if (redirectTo) {
+          params.set("redirectTo", redirectTo);
+        }
+
+        return redirect(`/login?${params.toString()}`);
       }
     }
 
@@ -211,21 +217,6 @@ export default function Join() {
             Get Started
           </Button>
         </Form>
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">
-                {"Or use a One Time Password"}
-              </span>
-            </div>
-          </div>
-          <div className="mt-6">
-            <ContinueWithEmailForm mode="signup" />
-          </div>
-        </div>
         <div className="flex items-center justify-center pt-5">
           <div className="text-center text-sm text-gray-500">
             {"Already have an account? "}

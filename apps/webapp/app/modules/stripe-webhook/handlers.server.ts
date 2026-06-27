@@ -217,6 +217,7 @@ export async function handleSubscriptionCreated(
         to: email,
         subject: "Your Shelf subscription is now active",
         text: subscriptionGrantedText({ customerName, subscriptionName }),
+        tags: ["billing", "subscription", "activated"],
       });
     }
   }
@@ -489,6 +490,7 @@ export async function handleInvoicePaymentFailed(
         amountDue,
         dueDate,
       }),
+      tags: ["billing", "invoice", "payment-failed"],
     });
   }
 
@@ -701,6 +703,7 @@ export async function handleInvoiceOverdue(
         amountDue,
         dueDate,
       }),
+      tags: ["billing", "invoice", "overdue"],
     });
   }
 

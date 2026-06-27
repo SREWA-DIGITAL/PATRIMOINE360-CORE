@@ -43,6 +43,7 @@ export const sendSubscriptionGrantedEmail = async ({
       subject,
       html,
       text,
+      tags: ["billing", "subscription", "activated"],
     });
   } catch (cause) {
     Logger.error(

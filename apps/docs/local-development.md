@@ -2,13 +2,19 @@
 
 This guide covers everything you need to know for developing Shelf.nu locally after completing the [Supabase Setup](./supabase-setup.md).
 
+Today, the official Core developer setup still assumes:
+
+- Better Auth in the application runtime
+- Brevo for transactional emails
+- Supabase for PostgreSQL and file storage
+
 ## Prerequisites ✅
 
 - ✅ **Node.js** (>=22.20.0)
 - ✅ **pnpm** (9.15.4+) — install via `corepack enable && corepack prepare pnpm@9.15.4 --activate`
 - ✅ **Git**
-- ✅ **Supabase project** configured ([Setup Guide](./supabase-setup.md))
-- ✅ **`.env` file** with Supabase credentials (place in **monorepo root**, copy from `.env.example`)
+- ✅ **Supabase project** configured for PostgreSQL + Storage ([Setup Guide](./supabase-setup.md))
+- ✅ **`.env` file** with Supabase, Better Auth and Brevo credentials (place in **monorepo root**, copy from `.env.example`)
 
 ---
 
@@ -138,7 +144,8 @@ Understanding Shelf's tech stack will help you develop effectively:
 
 ### Database & Backend
 
-- **[Supabase](https://supabase.com/)** - Database and authentication
+- **[Better Auth](https://www.better-auth.com/)** - Active authentication layer
+- **[Supabase](https://supabase.com/)** - PostgreSQL hosting and file storage
 - **[Prisma](https://prisma.io/)** - Database ORM
 - **[PostgreSQL](https://postgresql.org/)** - Database
 
@@ -346,6 +353,16 @@ SERVER_URL="https://localhost:3000"  # With SSL
 # Database (from Supabase)
 DATABASE_URL="your-supabase-connection-string"
 DIRECT_URL="your-supabase-direct-connection"
+
+# Better Auth
+BETTER_AUTH_SECRET="your-better-auth-secret"
+BETTER_AUTH_URL="https://localhost:3000"
+BETTER_AUTH_BASE_PATH="/api/auth"
+
+# Storage (still from Supabase in Core today)
+SUPABASE_URL="your-supabase-url"
+SUPABASE_ANON_PUBLIC="your-supabase-anon-public-key"
+SUPABASE_SERVICE_ROLE="your-supabase-service-role-key"
 
 # Disable premium features for local development
 ENABLE_PREMIUM_FEATURES="false"

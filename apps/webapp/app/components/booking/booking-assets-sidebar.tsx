@@ -121,7 +121,7 @@ export function BookingAssetsSidebar({
       onClick={hasItems ? () => setIsOpen(true) : undefined}
       className={!hasItems ? "hover:text-gray cursor-default no-underline" : ""}
     >
-      {booking.assets.length} assets
+      {booking.assets.length} biens
     </Button>
   );
 
@@ -133,20 +133,21 @@ export function BookingAssetsSidebar({
         <div className="flex h-dvh w-full flex-col">
           <SheetHeader className="border-color-200 border-b px-6 py-3">
             <SheetTitle className="text-left">
-              Assets in "{booking.name}"
+              Biens de "{booking.name}"
             </SheetTitle>
             <SheetDescription className="text-left">
               {booking.assets.length}{" "}
-              {booking.assets.length === 1 ? "asset" : "assets"} in this booking
+              {booking.assets.length === 1 ? "bien" : "biens"} dans cette
+              réservation
             </SheetDescription>
           </SheetHeader>
 
           <div className="flex flex-1 flex-col overflow-hidden">
             {/* Header matching BookingAssetsColumn */}
             <div className="border border-b-0 bg-white px-4 pb-3 pt-4 text-left font-normal text-gray-600 md:mx-0 md:px-6">
-              <h5 className="text-left capitalize">Assets & kits</h5>
+              <h5 className="text-left capitalize">Biens & lots</h5>
               <p>
-                <span>{paginatedItems.length} items</span>
+                <span>{paginatedItems.length} éléments</span>
               </p>
             </div>
 
@@ -155,12 +156,10 @@ export function BookingAssetsSidebar({
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 text-left ">
-                    <th className="px-6 py-3 font-normal text-gray-600">
-                      Name
-                    </th>
+                    <th className="px-6 py-3 font-normal text-gray-600">Nom</th>
                     <th className="px-6 py-3"> </th>
                     <th className="px-6 py-3 font-normal text-gray-600">
-                      Category
+                      Catégorie
                     </th>
                     <th className="px-6 py-3"> </th>
                   </tr>
@@ -197,14 +196,14 @@ export function BookingAssetsSidebar({
                                     className="text-gray-900 hover:text-gray-700"
                                     target="_blank"
                                     onlyNewTabIconOnHover={true}
-                                    aria-label="Go to kit"
+                                    aria-label="Ouvrir le lot"
                                   >
                                     <div className="max-w-[200px] truncate sm:max-w-[250px] md:max-w-[350px] lg:max-w-[450px]">
                                       {kit.name}
                                     </div>
                                   </Button>
                                   <p className="text-sm text-gray-600">
-                                    {item.assets.length} assets
+                                    {item.assets.length} biens
                                   </p>
                                 </div>
                               </div>
@@ -223,7 +222,7 @@ export function BookingAssetsSidebar({
                                   onClick={() => toggleKitExpansion(kit.id)}
                                   variant="link"
                                   className="text-center font-bold text-gray-600 hover:text-gray-900"
-                                  aria-label="Toggle kit expand"
+                                  aria-label="Afficher ou masquer le lot"
                                 >
                                   <ChevronDownIcon
                                     className={tw(
@@ -258,7 +257,7 @@ export function BookingAssetsSidebar({
                                             mainImageExpiration:
                                               asset.mainImageExpiration,
                                           }}
-                                          alt={`Image of ${asset.title}`}
+                                          alt={`Image de ${asset.title}`}
                                           className="size-full rounded-[4px] border border-gray-300 object-cover"
                                           withPreview
                                         />
@@ -328,7 +327,7 @@ export function BookingAssetsSidebar({
                                     mainImageExpiration:
                                       asset.mainImageExpiration,
                                   }}
-                                  alt={`Image of ${asset.title}`}
+                                  alt={`Image de ${asset.title}`}
                                   className="size-full rounded-[4px] border object-cover"
                                   withPreview
                                 />

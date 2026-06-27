@@ -29,8 +29,12 @@ import {
 } from "~/emails/change-user-email-address";
 
 import { sendEmail } from "~/emails/mail.server";
-import { getSupabaseAdmin } from "~/integrations/supabase/client";
-import { refreshAccessToken } from "~/modules/auth/service.server";
+import {
+  refreshAccessToken,
+  requestEmailChangeOtp,
+  revokeOtherSessions,
+  verifyEmailChangeOtp,
+} from "~/modules/auth/service.server";
 import {
   getUserByID,
   getUserWithContact,
@@ -260,12 +264,14 @@ export async function action({ context, request }: ActionFunctionArgs) {
           to: ADMIN_EMAIL || `"Shelf" <updates@emails.shelf.nu>`,
           subject: "Delete account request",
           text: `User with id ${userId} and email ${parsedData.email} has requested to delete their account. \n User: ${SERVER_URL}/admin-dashboard/${userId} \n\n Reason: ${reason}\n\n`,
+          tags: ["account", "deletion-request", "admin-notification"],
         });
 
         sendEmail({
           to: parsedData.email,
           subject: "Delete account request received",
           text: `We have received your request to delete your account. It will be processed within 72 hours.\n\n Kind regards,\nthe Shelf team \n\n`,
+          tags: ["account", "deletion-request", "user-confirmation"],
         });
 
         sendNotification({
@@ -304,41 +310,29 @@ export async function action({ context, request }: ActionFunctionArgs) {
           }
         );
 
-        // Generate email change link/OTP
-        const { data: linkData, error: generateError } =
-          await getSupabaseAdmin().auth.admin.generateLink({
-            type: "email_change_new",
-            email: email,
-            newEmail: newEmail,
-          });
+        const emailChangeRequest = await requestEmailChangeOtp(
+          authSession,
+          newEmail
+        );
+        const otp =
+          emailChangeRequest.provider === "supabase"
+            ? emailChangeRequest.otp
+            : "";
 
-        if (generateError) {
-          const emailExists = generateError.code === "email_exists";
-          throw new ShelfError({
-            cause: generateError,
-            ...(emailExists && { title: "Email is already taken." }),
-            message: emailExists
-              ? "Please choose a different email address which is not already in use."
-              : "Failed to initiate email change",
-            additionalData: { userId, newEmail },
-            label: "Auth",
-            shouldBeCaptured: !emailExists,
+        if (emailChangeRequest.provider === "supabase") {
+          // Legacy Supabase users still need the app-level email until their
+          // auth provider is migrated. Better Auth sends its own OTP email.
+          sendEmail({
+            to: newEmail,
+            subject: `🔐 Shelf verification code: ${otp}`,
+            text: changeEmailAddressTextEmail({
+              otp,
+              user,
+            }),
+            html: await changeEmailAddressHtmlEmail(otp, user),
+            tags: ["account", "email-change", "otp"],
           });
         }
-
-        // Send email with OTP using our email service
-        sendEmail({
-          to: newEmail,
-          subject: `🔐 Shelf verification code: ${linkData.properties.email_otp}`,
-          text: changeEmailAddressTextEmail({
-            otp: linkData.properties.email_otp,
-            user,
-          }),
-          html: await changeEmailAddressHtmlEmail(
-            linkData.properties.email_otp,
-            user
-          ),
-        });
 
         sendNotification({
           title: "Email update initiated",
@@ -364,34 +358,19 @@ export async function action({ context, request }: ActionFunctionArgs) {
           select: { id: true } satisfies Prisma.UserSelect,
         });
 
-        // Attempt to verify the OTP
-        const { error: verifyError } = await getSupabaseAdmin().auth.verifyOtp({
-          email: newEmail,
-          token: otp,
-          type: "email_change",
-        });
+        await verifyEmailChangeOtp(authSession, newEmail, otp);
 
-        if (verifyError) {
-          throw new ShelfError({
-            cause: verifyError,
-            message: "Invalid or expired verification code",
-            additionalData: { userId },
-            label: "Auth",
-          });
+        /** Legacy Supabase users still require the domain update here.
+         * Better Auth users are synchronized by the Better Auth hooks. */
+        if (authSession.provider !== "better-auth") {
+          await updateUserEmail({ userId, currentEmail: email, newEmail });
         }
 
-        /** Update the user's email */
-        await updateUserEmail({ userId, currentEmail: email, newEmail });
-
         /** Refresh the session so it has the up-to-date email */
-        const { refreshToken } = authSession;
-        const newSession = await refreshAccessToken(refreshToken);
+        const newSession = await refreshAccessToken(authSession);
         context.setSession(newSession);
         /** Destroy all other sessions */
-        await getSupabaseAdmin().auth.admin.signOut(
-          newSession.accessToken,
-          "others"
-        );
+        await revokeOtherSessions(newSession);
 
         sendNotification({
           title: "Email updated",

@@ -62,10 +62,11 @@ export function sendReportEmails({
 }) {
   const { item, type, normalizedName } = normalizeQrData(qr);
   const isUnlinked = !qr.assetId && !qr.kitId;
+  const reportType = type ?? "item";
 
   const subject = isUnlinked
     ? "Reported unlinked qr found"
-    : `Reported ${type} found`;
+    : `Reported ${reportType} found`;
 
   try {
     /** Send email to owner */
@@ -73,8 +74,9 @@ export function sendReportEmails({
       to: ownerEmail,
       subject,
       text: item
-        ? `Your ${type} ${normalizedName} has been reported found. The reason is: \n\n| ${message} \n\n For contact use this email: ${reporterEmail}\n\nEmail sent via shelf.nu\n\n`
+        ? `Your ${reportType} ${normalizedName} has been reported found. The reason is: \n\n| ${message} \n\n For contact use this email: ${reporterEmail}\n\nEmail sent via shelf.nu\n\n`
         : `The QR code own (${qr.id}) has been reported found. The reason is: \n\n| ${message} \n\n For contact use this email: ${reporterEmail}\n\nEmail sent via shelf.nu\n\n`,
+      tags: ["report-found", "owner-notification", reportType.toLowerCase()],
     });
 
     /** Send email to reporter */
@@ -82,8 +84,9 @@ export function sendReportEmails({
       to: reporterEmail,
       subject,
       text: item
-        ? `Thank you for contacting the owner of the ${type} you found. They have been notified of your message and will contact you if they are interested.\n\nEmail sent via shelf.nu\n\n`
+        ? `Thank you for contacting the owner of the ${reportType} you found. They have been notified of your message and will contact you if they are interested.\n\nEmail sent via shelf.nu\n\n`
         : `Thank you for contacting the owner of the QR code you found. They have been notified of your message and will contact you if they are interested.\n\nEmail sent via shelf.nu\n\n`,
+      tags: ["report-found", "reporter-confirmation", reportType.toLowerCase()],
     });
 
     return;

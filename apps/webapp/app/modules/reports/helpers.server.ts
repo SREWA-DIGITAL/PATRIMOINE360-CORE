@@ -956,7 +956,7 @@ export async function overdueItemsReport(
       preset: "today",
       from: now,
       to: now,
-      label: "Current",
+      label: "Actuel",
     };
 
     return {
@@ -1689,9 +1689,9 @@ export async function custodySnapshotReport(
     return {
       report: {
         id: "custody-snapshot",
-        title: "Custody Snapshot",
+        title: "Affectations en cours",
         description:
-          "Live view of all assets currently in custody and their assigned team members.",
+          "Vue en temps réel des biens actuellement affectés et de leurs responsables.",
       },
       filters: {
         timeframe,
@@ -1840,7 +1840,7 @@ async function computeCustodyKpis(
   return [
     {
       id: "total_in_custody",
-      label: "Assets in Custody",
+      label: "Biens affectés",
       value: totalInCustody.toLocaleString(),
       rawValue: totalInCustody,
       format: "number",
@@ -1849,7 +1849,7 @@ async function computeCustodyKpis(
     },
     {
       id: "total_custodians",
-      label: "Team Members",
+      label: "Responsables",
       value: uniqueCustodians.toLocaleString(),
       rawValue: uniqueCustodians,
       format: "number",
@@ -1858,7 +1858,7 @@ async function computeCustodyKpis(
     },
     {
       id: "total_custody_value",
-      label: "Total Value",
+      label: "Valeur totale",
       value: totalValue > 0 ? `$${totalValue.toLocaleString()}` : "—",
       rawValue: totalValue,
       format: "currency",
@@ -1867,7 +1867,7 @@ async function computeCustodyKpis(
     },
     {
       id: "avg_days_in_custody",
-      label: "Avg. Days Held",
+      label: "Ancienneté moyenne",
       value: avgDaysInCustody > 0 ? `${avgDaysInCustody} days` : "—",
       rawValue: avgDaysInCustody,
       format: "number",

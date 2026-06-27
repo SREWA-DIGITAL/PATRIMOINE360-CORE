@@ -40,6 +40,7 @@ export const sendBarcodeTrialWelcomeEmail = async ({
       subject,
       html,
       text,
+      tags: ["billing", "trial", "barcode", "welcome"],
     });
   } catch (cause) {
     Logger.error(

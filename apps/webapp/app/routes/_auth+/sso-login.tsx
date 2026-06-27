@@ -8,6 +8,7 @@ import {
   redirect,
   Form,
   useActionData,
+  useLoaderData,
   useNavigation,
 } from "react-router";
 import { useZorm } from "react-zorm";
@@ -39,10 +40,12 @@ const SSOLoginFormSchema = z.object({
   redirectTo: z.string().optional(),
 });
 
-export function loader({ context }: LoaderFunctionArgs) {
+export function loader({ context, request }: LoaderFunctionArgs) {
   const title = "Connexion SSO";
   const subHeading =
     "Saisissez le domaine de votre organisation pour continuer.";
+  const redirectTo =
+    new URL(request.url).searchParams.get("redirectTo") ?? undefined;
 
   try {
     if (context.isAuthenticated) {
@@ -51,7 +54,7 @@ export function loader({ context }: LoaderFunctionArgs) {
 
     assertSSOEnabled();
 
-    return payload({ title, subHeading });
+    return payload({ redirectTo, title, subHeading });
   } catch (cause) {
     const reason = makeShelfError(cause);
     throw data(error(reason), { status: reason.status });
@@ -66,12 +69,12 @@ export async function action({ request }: ActionFunctionArgs) {
 
     switch (method) {
       case "POST": {
-        const { domain } = parseData(
+        const { domain, redirectTo } = parseData(
           await request.formData(),
           SSOLoginFormSchema,
           { shouldBeCaptured: false }
         );
-        const url = await signInWithSSO(domain);
+        const url = await signInWithSSO(domain, redirectTo);
 
         return redirect(url);
       }
@@ -89,6 +92,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => [
 ];
 
 export default function SSOLogin() {
+  const { redirectTo } = useLoaderData<typeof loader>();
   const zo = useZorm("NewQuestionWizardScreen", SSOLoginFormSchema);
   const navigation = useNavigation();
   const disabled = isFormProcessing(navigation.state);
@@ -114,6 +118,11 @@ export default function SSOLogin() {
               disabled={disabled}
               inputClassName="w-full"
               error={zo.errors.domain()?.message}
+            />
+            <input
+              type="hidden"
+              name={zo.fields.redirectTo()}
+              value={redirectTo}
             />
             <Button
               className="text-center"
