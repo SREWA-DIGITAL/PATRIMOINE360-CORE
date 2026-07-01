@@ -6,8 +6,7 @@ import {
 import { redirect } from "react-router";
 import { z } from "zod";
 import { db } from "~/database/db.server";
-import { sendEmail } from "~/emails/mail.server";
-import { roleChangeTemplateString } from "~/emails/role-change-template";
+import { sendTemplatedEmail } from "~/emails/template-registry.server";
 import { organizationRolesMap } from "~/routes/_layout+/settings.team";
 import { sendNotification } from "~/utils/emitter/send-notification.server";
 import { ShelfError } from "~/utils/error";
@@ -24,7 +23,6 @@ import {
   revokeAccessToOrganization,
   transferEntitiesToNewOwner,
 } from "./service.server";
-import { revokeAccessEmailText, roleChangeEmailText } from "../invite/helpers";
 import { createInvite } from "../invite/service.server";
 
 /**
@@ -132,14 +130,14 @@ export async function resolveUserAction(
           });
         });
 
-      sendEmail({
+      void sendTemplatedEmail({
         to: user.email,
-        subject: `Access to ${org.name} has been revoked`,
-        text: revokeAccessEmailText({
+        template: "team.access-revoked",
+        data: {
           orgName: org.name,
           customEmailFooter: org.customEmailFooter,
-        }),
-        tags: ["team", "access-revoked", "organization"],
+          recipientEmail: user.email,
+        },
       });
 
       sendNotification({
@@ -418,23 +416,16 @@ export async function resolveUserAction(
       const roleName = organizationRolesMap[newRole] || newRole;
       const previousRoleName = organizationRolesMap[currentRole] || currentRole;
 
-      sendEmail({
+      void sendTemplatedEmail({
         to: targetUser.email,
-        subject: `Your role in ${org.name} has been changed`,
-        text: roleChangeEmailText({
-          orgName: org.name,
-          previousRole: previousRoleName,
-          newRole: roleName,
-          customEmailFooter: org.customEmailFooter,
-        }),
-        html: await roleChangeTemplateString({
+        template: "team.role-changed",
+        data: {
           orgName: org.name,
           previousRole: previousRoleName,
           newRole: roleName,
           recipientEmail: targetUser.email,
           customEmailFooter: org.customEmailFooter,
-        }),
-        tags: ["team", "role-changed", "organization"],
+        },
       });
 
       sendNotification({

@@ -28,7 +28,7 @@ export default function NewestAssets() {
     <div className="flex h-full flex-col rounded border border-gray-200 bg-white">
       <div className="flex items-center justify-between border-b px-4 py-3 md:px-6">
         <span className="text-[14px] font-semibold text-gray-900">
-          Newest assets
+          Derniers biens
         </span>
         <div className="flex items-center gap-2">
           <Button
@@ -36,7 +36,7 @@ export default function NewestAssets() {
             variant="block-link-gray"
             className="!mt-0 text-xs"
           >
-            View all
+            Tout voir
           </Button>
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function NewestAssets() {
                     category: asset?.category
                       ? {
                           id: asset.category.id,
-                          name: asset.category?.name || "Uncategorized",
+                          name: asset.category?.name || "Sans categorie",
                           color: asset.category?.color || "#575757",
                         }
                       : null,
@@ -77,10 +77,10 @@ export default function NewestAssets() {
       ) : (
         <div className="flex flex-1 items-center justify-center p-4">
           <DashboardEmptyState
-            text="No assets yet"
-            subText="Create your first asset to start building your inventory."
+            text="Aucun bien pour le moment"
+            subText="Creez votre premier bien pour commencer a constituer votre inventaire."
             ctaTo="/assets/new"
-            ctaText="Create an asset"
+            ctaText="Creer un bien"
           />
         </div>
       )}

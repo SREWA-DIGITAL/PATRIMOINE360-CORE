@@ -133,7 +133,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
       header: {
         title: "Responsables et affectations",
         subHeading:
-          "Vue Core des biens actuellement affectés, des responsables actifs et des écarts encore assumés côté PRD.",
+          "Vue Core des biens actuellement affectés et des responsables actifs.",
       },
       summary: {
         activeAssignmentsCount,
@@ -324,25 +324,6 @@ export default function CustodyPage() {
             )}
           </Card>
         </div>
-
-        <Card className="my-0 border-warning-200 bg-warning-50/40">
-          <h3 className="text-sm font-semibold text-gray-900">
-            Écarts Core encore assumés
-          </h3>
-          <div className="mt-2 space-y-2 text-sm text-gray-700">
-            <p>
-              Les rappels du Core restent aujourd'hui rattachés aux biens. Les
-              rappels portés directement par un site ou un local restent un
-              écart documenté par rapport au PRD.
-            </p>
-            <p>
-              L'historique complet d'affectation avec date de fin, notes et
-              piste d'audit détaillée n'est pas encore modélisé comme flux
-              métier autonome. Le Core expose ici la vue opérationnelle
-              immédiate, et l'écart restant est documenté dans la phase 8G.
-            </p>
-          </div>
-        </Card>
       </ListContentWrapper>
     </>
   );

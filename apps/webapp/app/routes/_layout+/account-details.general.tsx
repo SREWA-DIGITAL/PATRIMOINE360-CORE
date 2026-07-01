@@ -23,12 +23,7 @@ import {
   UserContactDetailsForm,
   UserContactDetailsFormSchema,
 } from "~/components/user/user-contact-form";
-import {
-  changeEmailAddressHtmlEmail,
-  changeEmailAddressTextEmail,
-} from "~/emails/change-user-email-address";
-
-import { sendEmail } from "~/emails/mail.server";
+import { sendTemplatedEmail } from "~/emails/template-registry.server";
 import {
   refreshAccessToken,
   requestEmailChangeOtp,
@@ -260,18 +255,21 @@ export async function action({ context, request }: ActionFunctionArgs) {
           reason = parsedData?.reason;
         }
 
-        sendEmail({
-          to: ADMIN_EMAIL || `"Shelf" <updates@emails.shelf.nu>`,
-          subject: "Delete account request",
-          text: `User with id ${userId} and email ${parsedData.email} has requested to delete their account. \n User: ${SERVER_URL}/admin-dashboard/${userId} \n\n Reason: ${reason}\n\n`,
-          tags: ["account", "deletion-request", "admin-notification"],
+        void sendTemplatedEmail({
+          to: ADMIN_EMAIL || "support@patrimoine360.local",
+          template: "account.delete-request-admin",
+          data: {
+            adminUrl: `${SERVER_URL}/admin-dashboard/${userId}`,
+            reason,
+            requesterEmail: parsedData.email,
+            userId,
+          },
         });
 
-        sendEmail({
+        void sendTemplatedEmail({
           to: parsedData.email,
-          subject: "Delete account request received",
-          text: `We have received your request to delete your account. It will be processed within 72 hours.\n\n Kind regards,\nthe Shelf team \n\n`,
-          tags: ["account", "deletion-request", "user-confirmation"],
+          template: "account.delete-request-user",
+          data: {},
         });
 
         sendNotification({
@@ -322,15 +320,13 @@ export async function action({ context, request }: ActionFunctionArgs) {
         if (emailChangeRequest.provider === "supabase") {
           // Legacy Supabase users still need the app-level email until their
           // auth provider is migrated. Better Auth sends its own OTP email.
-          sendEmail({
+          void sendTemplatedEmail({
             to: newEmail,
-            subject: `🔐 Shelf verification code: ${otp}`,
-            text: changeEmailAddressTextEmail({
+            template: "auth.change-email-otp",
+            data: {
               otp,
               user,
-            }),
-            html: await changeEmailAddressHtmlEmail(otp, user),
-            tags: ["account", "email-change", "otp"],
+            },
           });
         }
 

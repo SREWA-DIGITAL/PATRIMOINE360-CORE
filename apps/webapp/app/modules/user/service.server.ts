@@ -20,7 +20,7 @@ import type { ExtendedPrismaClient } from "~/database/db.server";
 import { db } from "~/database/db.server";
 
 import { SOFT_DELETED_EMAIL_DOMAIN } from "~/emails/email.worker.server";
-import { sendEmail } from "~/emails/mail.server";
+import { sendTemplatedEmail } from "~/emails/template-registry.server";
 import { ensureBetterAuthCredentialIdentity } from "~/modules/auth/better-auth-identity.server";
 import {
   deleteAuthAccount,
@@ -1220,11 +1220,10 @@ export async function softDeleteUser(id: User["id"]) {
     const { error } = await softDeleteAuthUser(user.id);
 
     /** Send an email to the user that their request has been completed */
-    void sendEmail({
+    void sendTemplatedEmail({
       to: user.email,
-      subject: "Your account has been deleted",
-      text: `Your shelf account has been deleted. \n\n Kind regards, \n Shelf Team\n\n`,
-      tags: ["user", "account-deleted", "transactional"],
+      template: "account.deleted",
+      data: {},
     });
 
     if (error) {
