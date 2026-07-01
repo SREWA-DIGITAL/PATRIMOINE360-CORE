@@ -28,8 +28,7 @@ import {
 } from "~/components/shared/collapsible";
 import When from "~/components/when/when";
 import { config } from "~/config/shelf.config";
-import { sendEmail } from "~/emails/mail.server";
-import { onboardingEmailText } from "~/emails/onboarding-email";
+import { sendTemplatedEmail } from "~/emails/template-registry.server";
 import {
   getAuthUserById,
   signInWithEmail,
@@ -457,14 +456,15 @@ export async function action({ context, request }: ActionFunctionArgs) {
 
     if (config.sendOnboardingEmail) {
       /** Send onboarding email */
-      sendEmail({
+      void sendTemplatedEmail({
         from:
           SMTP_FROM || `"Équipe Patrimoine360" <support@patrimoine360.local>`,
         replyTo: "support@patrimoine360.local",
         to: user.email,
-        subject: "Bienvenue sur Patrimoine360",
-        text: onboardingEmailText({ firstName: user.firstName as string }),
-        tags: ["onboarding", "welcome", "transactional"],
+        template: "onboarding.welcome",
+        data: {
+          firstName: user.firstName as string,
+        },
       });
     }
 
