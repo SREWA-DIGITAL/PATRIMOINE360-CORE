@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "Shelf",
-    "slug": "shelf-companion",
+    "name": "Patrimoine360",
+    "slug": "patrimoine360-companion",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "shelf",
+    "scheme": "patrimoine360",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.shelf.companion",
+      "bundleIdentifier": "co.srewadigital.patrimoine360.companion",
       "infoPlist": {
-        "NSCameraUsageDescription": "Shelf needs camera access to scan QR codes and barcodes on your assets."
+        "NSCameraUsageDescription": "Patrimoine360 a besoin d'accéder à l'appareil photo pour scanner les QR codes et les codes-barres de vos biens."
       }
     },
     "android": {
@@ -20,8 +20,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FF7809"
       },
-      "package": "com.shelf.companion",
-      "permissions": ["android.permission.CAMERA"]
+      "package": "co.srewadigital.patrimoine360.companion",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -43,7 +46,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Shelf needs camera access to scan QR codes and barcodes on your assets.",
+          "cameraPermission": "Patrimoine360 a besoin d'accéder à l'appareil photo pour scanner les QR codes et les codes-barres de vos biens.",
           "microphonePermission": false
         }
       ],
@@ -60,9 +63,9 @@
         "origin": false
       },
       "eas": {
-        "projectId": "b6d6a6cb-c242-4474-815f-b55d5e691c58"
+        "projectId": "ad1ec072-3050-496e-be6c-685370227355"
       }
     },
-    "owner": "shelfassetmanagement"
+    "owner": "tgenougan"
   }
 }

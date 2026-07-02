@@ -282,7 +282,7 @@ function ScannerContent() {
         } | null;
 
         if (qrId) {
-          // ── Shelf QR path ──
+          // Patrimoine360 QR path
 
           // Early batch dedup by QR ID (saves a network call)
           if (
@@ -327,7 +327,8 @@ function ScannerContent() {
             setScanResult({
               type: "not_found",
               title: "Code Not Recognized",
-              message: "This code is not recognized as a Shelf asset code.",
+              message:
+                "This code is not recognized as a Patrimoine360 asset code.",
             });
             finalizeScan();
             return;
@@ -806,8 +807,8 @@ function ScannerContent() {
         <Ionicons name="camera-outline" size={64} color={colors.mutedLight} />
         <Text style={styles.messageTitle}>Camera Access Needed</Text>
         <Text style={styles.messageBody}>
-          Shelf needs camera access to scan QR codes and barcodes on your
-          assets.
+          Patrimoine360 needs camera access to scan QR codes and barcodes on
+          your assets.
         </Text>
         {permission.canAskAgain ? (
           <TouchableOpacity

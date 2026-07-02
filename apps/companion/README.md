@@ -27,14 +27,14 @@ A native iOS/Android companion app for [Shelf.nu](https://shelf.nu) built with *
 ### How Authentication Works
 
 ```
-Mobile App ──(email/password)──> Supabase Auth ──> JWT token
-Mobile App ──(Bearer JWT)──────> Shelf API (/api/mobile/*) ──> Prisma DB
+Mobile App --(email/password)--> Better Auth API (/api/auth/*) --> bearer token
+Mobile App --(Bearer token)----> Shelf API (/api/mobile/*) ----> Prisma DB
 ```
 
-- The app authenticates directly with **Supabase Auth** (same project as the webapp)
+- The app authenticates through **Better Auth** exposed by the webapp at `/api/auth/*`
 - API calls go to **27 new endpoints** inside the existing Shelf webapp (`/api/mobile/*`)
-- These endpoints use **JWT Bearer auth** (not cookies), validated server-side via `supabase.auth.getUser(token)`
-- No new database, no new auth system — reuses everything that exists
+- These endpoints use **Bearer auth** (not cookies), validated server-side via the shared auth facade
+- No mobile-specific database or backend is required
 
 ### What Changed in the Webapp
 
@@ -140,22 +140,19 @@ pnpm install
 
 # 2. Set up webapp environment (monorepo root)
 cp .env.example .env
-# Fill in: DATABASE_URL, DIRECT_URL, SUPABASE_URL, SUPABASE_ANON_PUBLIC,
-#          SUPABASE_SERVICE_ROLE, SESSION_SECRET
+# Fill in: DATABASE_URL, DIRECT_URL, BETTER_AUTH_SECRET,
+#          BETTER_AUTH_URL, BETTER_AUTH_BASE_PATH, SESSION_SECRET
 
 # 3. Set up companion app environment
 # Get your Mac's LAN IP:
 ipconfig getifaddr en0   # e.g. 192.168.1.100
 
 cat > apps/companion/.env.local << 'EOF'
-EXPO_PUBLIC_SUPABASE_URL="http://<YOUR_LAN_IP>:54321"
-EXPO_PUBLIC_SUPABASE_ANON_PUBLIC="<your-supabase-anon-key>"
 EXPO_PUBLIC_API_URL="http://<YOUR_LAN_IP>:3000"
 EOF
 # Replace <YOUR_LAN_IP> with your actual LAN IP from step above
-# Get the anon key from: supabase status (Publishable key)
 #
-# IMPORTANT: All 3 URLs must use your LAN IP, NOT 127.0.0.1 or localhost.
+# IMPORTANT: The API URL must use your LAN IP, NOT 127.0.0.1 or localhost.
 # Your phone cannot reach localhost — it's a different device.
 # For iOS Simulator only: localhost works fine.
 
@@ -212,7 +209,7 @@ If testing on a real iPhone (not simulator):
 ### Important Notes
 
 - **Both terminals must stay open** — Terminal 1 runs the webapp, Terminal 2 runs Metro bundler
-- The mobile app connects to **Supabase directly for authentication** (login/password reset) and to the **webapp API for all data operations** — that's why both URLs are needed
+- The mobile app connects to the **webapp API** for authentication and all data operations
 - If you see "Port 3000 is in use": `kill $(lsof -ti :3000)`
 - If CocoaPods gives UTF-8 errors: `export LANG=en_US.UTF-8` before the expo command
 - First iOS build takes ~5-10 min (compiling native code). Subsequent launches are fast
@@ -223,7 +220,7 @@ If testing on a real iPhone (not simulator):
 
 | Symptom                              | Fix                                                                        |
 | ------------------------------------ | -------------------------------------------------------------------------- |
-| "Network request failed" on login    | Check `EXPO_PUBLIC_SUPABASE_URL` uses LAN IP, not 127.0.0.1                |
+| "Network request failed" on login    | Check `EXPO_PUBLIC_API_URL` uses LAN IP; check webapp is running in HTTP   |
 | "Network request failed" on data     | Check `EXPO_PUBLIC_API_URL` uses LAN IP; check webapp is running in HTTP   |
 | MIME type error on phone             | Metro died — restart Terminal 2                                            |
 | `AbortError: Aborted` / fetch errors | Wrong IP in `.env.local` — check with `ipconfig getifaddr en0`             |
@@ -254,8 +251,8 @@ apps/companion/
 ├── components/             # Shared UI components
 ├── lib/                    # Core libraries
 │   ├── api.ts              # API client (fetch, cache, types)
-│   ├── auth-context.tsx    # Auth provider (Supabase)
-│   ├── supabase.ts         # Supabase client + SecureStore
+│   ├── auth-context.tsx    # Auth provider (Better Auth)
+│   ├── auth-storage.ts     # Secure token storage
 │   ├── org-context.tsx     # Organization provider
 │   ├── qr-utils.ts         # QR code ID extraction
 │   └── theme-context.tsx   # Dark mode provider
@@ -270,7 +267,7 @@ apps/companion/
 
 ## API Endpoints (27 routes)
 
-All at `/api/mobile/*` — JWT Bearer auth required.
+All at `/api/mobile/*` — Better Auth bearer token required.
 
 | Endpoint                               | Method | Description                             |
 | -------------------------------------- | ------ | --------------------------------------- |
@@ -312,7 +309,7 @@ All at `/api/mobile/*` — JWT Bearer auth required.
 | Framework  | Expo SDK 54 + React Native 0.81   |
 | Routing    | Expo Router 6 (file-based)        |
 | Language   | TypeScript 5.9                    |
-| Auth       | Supabase Auth + SecureStore       |
+| Auth       | Better Auth bearer token + SecureStore |
 | State      | React Context (auth, org, theme)  |
 | API Client | Custom fetch wrapper with caching |
 | Scanner    | expo-camera (QR + barcode types)  |

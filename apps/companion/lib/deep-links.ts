@@ -7,15 +7,14 @@ import { pushIntoTab } from "./navigation";
 /**
  * Supported deep link patterns:
  *
- *   shelf://assets/{id}         → Asset detail
- *   shelf://bookings/{id}       → Booking detail
- *   shelf://qr/{qrId}           → QR code resolve → asset detail
- *   shelf://scanner             → Open scanner
- *   shelf://reset-password      → Handled by Supabase auth (no-op in app)
+ *   patrimoine360://assets/{id}         -> Asset detail
+ *   patrimoine360://bookings/{id}       -> Booking detail
+ *   patrimoine360://qr/{qrId}           -> QR code resolve -> asset detail
+ *   patrimoine360://scanner             -> Open scanner
  *
  * Also handles HTTPS universal links:
- *   https://app.shelf.nu/qr/{id}
- *   https://app.shelf.nu/assets/{id}
+ *   https://patrimoine-stg.srewadigital.co/qr/{id}
+ *   https://patrimoine-stg.srewadigital.co/assets/{id}
  */
 
 type ParsedLink =
@@ -70,7 +69,7 @@ async function resolveQrAndNavigate(
   } catch {
     // Fall through to scanner
   }
-  // If QR doesn't resolve to an asset, open the scanner
+  // If QR doesn't resolve to an asset, open the scanner.
   router.push("/(tabs)/scanner");
 }
 
@@ -96,31 +95,30 @@ export function useDeepLinkHandler() {
           pushIntoTab("/(tabs)/bookings", `/(tabs)/bookings/${link.id}`);
           break;
         case "qr":
-          // Resolve the QR code to an asset and navigate directly
+          // Resolve the QR code to an asset and navigate directly.
           resolveQrAndNavigate(link.id, router);
           break;
         case "scanner":
           router.push("/(tabs)/scanner");
           break;
         case "unknown":
-          // Ignore unrecognized links (e.g., reset-password handled by Supabase)
+          // Ignore unrecognized links.
           break;
       }
     }
 
-    // Handle the URL that launched the app (cold start)
+    // Handle the URL that launched the app (cold start).
     Linking.getInitialURL().then((url) => {
       if (url) {
         const link = parseDeepLink(url);
-        // Don't navigate for reset-password — Supabase handles it
         if (link.type !== "unknown") {
-          // Small delay to let navigation mount
+          // Small delay to let navigation mount.
           setTimeout(() => navigateToLink(link), 500);
         }
       }
     });
 
-    // Handle URLs received while the app is already open (warm start)
+    // Handle URLs received while the app is already open (warm start).
     const subscription = Linking.addEventListener("url", handleUrl);
 
     return () => subscription.remove();

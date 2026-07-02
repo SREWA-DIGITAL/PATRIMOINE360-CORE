@@ -21,7 +21,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 // ── Startup diagnostic (visible in Metro terminal) ──────────────────
 if (__DEV__) {
   console.log(
-    `\n[Shelf] JS executing on ${Platform.OS} | SDK ${Constants.expoConfig?.sdkVersion} | RN ${Platform.constants?.reactNativeVersion?.major}.${Platform.constants?.reactNativeVersion?.minor}.${Platform.constants?.reactNativeVersion?.patch}\n`
+    `\n[Patrimoine360] JS executing on ${Platform.OS} | SDK ${Constants.expoConfig?.sdkVersion} | RN ${Platform.constants?.reactNativeVersion?.major}.${Platform.constants?.reactNativeVersion?.minor}.${Platform.constants?.reactNativeVersion?.patch}\n`
   );
 }
 
@@ -46,7 +46,7 @@ function RootLayoutNav() {
     });
   }, []);
 
-  // Handle incoming deep links (shelf:// and universal links)
+  // Handle incoming deep links (patrimoine360:// and universal links)
   useDeepLinkHandler();
 
   // Register 3D Touch / long-press quick actions (home screen shortcuts)
