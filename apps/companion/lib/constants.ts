@@ -1,5 +1,5 @@
 /**
- * Shared design tokens — matched to the Shelf webapp's Tailwind config.
+ * Shared design tokens matched to the Patrimoine360 webapp theme.
  * Typography from Inter font scale.
  *
  * COLORS: Moved to theme-colors.ts — use `useTheme()` from theme-context.tsx

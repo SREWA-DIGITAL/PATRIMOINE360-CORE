@@ -15,7 +15,7 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { api, type Location as LocationType } from "@/lib/api";
+import { api, API_BASE_URL, type Location as LocationType } from "@/lib/api";
 import { useOrg } from "@/lib/org-context";
 import { userHasPermission } from "@/lib/permissions";
 import {
@@ -413,7 +413,7 @@ export default function AssetDetailScreen() {
                   <QRCode
                     value={`${
                       process.env.EXPO_PUBLIC_QR_BASE_URL ||
-                      "https://app.shelf.nu"
+                      API_BASE_URL
                     }/qr/${asset.qrCodes[0].id}`}
                     size={160}
                     backgroundColor={colors.white}

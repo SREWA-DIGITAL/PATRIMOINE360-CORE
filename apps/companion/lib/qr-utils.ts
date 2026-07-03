@@ -1,5 +1,5 @@
 /**
- * Extracts a Shelf QR ID from a scanned barcode value.
+ * Extracts a Patrimoine360 QR ID from a scanned barcode value.
  * Supports three formats:
  * 1. Full URL: https://example.com/qr/<id>
  * 2. URL shortener: https://example.com/<id> (10-25 char lowercase alphanumeric)

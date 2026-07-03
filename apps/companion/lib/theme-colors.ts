@@ -1,5 +1,5 @@
 /**
- * Light + Dark color palettes for the Shelf companion app.
+ * Light + Dark color palettes for the Patrimoine360 companion app.
  *
  * Both objects share the same keys so they can be swapped at runtime
  * via the ThemeProvider. Status-badge and shadow maps are also duplicated
@@ -9,7 +9,7 @@
 // ────────────────────────────── Light palette ──────────────────────────────
 
 export const lightColors = {
-  // Brand — Shelf orange
+  // Brand orange
   primary: "#EF6820",
   primaryLight: "#F38744",
   primaryBg: "#FEF6EE",

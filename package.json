@@ -70,7 +70,8 @@
       "p-map": "4.0.0"
     },
     "patchedDependencies": {
-      "expo-image@55.0.6": "patches/expo-image@55.0.6.patch"
+      "expo-image@55.0.6": "patches/expo-image@55.0.6.patch",
+      "react-native-svg@15.15.3": "patches/react-native-svg@15.15.3.patch"
     }
   },
   "engines": {
