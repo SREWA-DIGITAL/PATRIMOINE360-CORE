@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Patrimoine360</title>
+  <desc id="desc">Symbole Patrimoine360 Core</desc>
+  <rect width="64" height="64" rx="14" fill="#0F766E"/>
+  <path d="M18 41V23h28v18" fill="none" stroke="#F0FDFA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24 41V29h16v12" fill="none" stroke="#F0FDFA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M18 23 32 14l14 9" fill="none" stroke="#F0FDFA" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M50 47a18 18 0 0 1-30 0" fill="none" stroke="#99F6E4" stroke-width="4" stroke-linecap="round"/>
+</svg>

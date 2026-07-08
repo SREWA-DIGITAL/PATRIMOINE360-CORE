@@ -237,7 +237,7 @@ export default function IndexLoginForm() {
             ref={emailInputRef}
             data-test-id="email"
             label="Adresse e-mail"
-            placeholder="zaans@huisje.com"
+            placeholder="utilisateur@organisation.ci"
             required
             name={zo.fields.email()}
             type="email"

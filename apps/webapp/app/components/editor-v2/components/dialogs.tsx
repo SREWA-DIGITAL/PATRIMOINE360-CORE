@@ -49,7 +49,7 @@ export function LinkDialog({
                 onHrefChange(event.target.value)
               }
               className="mt-1 w-full rounded border border-gray-300 px-2 py-1 text-[16px] focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200"
-              placeholder="https://example.com"
+              placeholder="https://exemple.ci"
             />
           </label>
         </div>

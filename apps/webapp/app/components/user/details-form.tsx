@@ -121,7 +121,7 @@ export function UserDetailsForm({
             autoComplete="email"
             icon="mail"
             hideLabel={true}
-            placeholder="zaans@huisje.com"
+            placeholder="utilisateur@organisation.ci"
             type="text"
             value={user?.email}
             className="w-full"

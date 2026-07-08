@@ -172,7 +172,7 @@ export const ChangeEmailForm = ({ currentEmail }: { currentEmail: string }) => {
                   name={emailZo.fields.email()}
                   type="email"
                   autoComplete="email"
-                  placeholder="zaans@huisje.com"
+                  placeholder="utilisateur@organisation.ci"
                   disabled={disabled}
                   className="w-full"
                   label="New email address"
@@ -183,7 +183,7 @@ export const ChangeEmailForm = ({ currentEmail }: { currentEmail: string }) => {
                   name={emailZo.fields.confirmEmail()}
                   type="email"
                   autoComplete="email"
-                  placeholder="zaans@huisje.com"
+                  placeholder="utilisateur@organisation.ci"
                   disabled={disabled}
                   className="w-full"
                   label="Confirm new email"

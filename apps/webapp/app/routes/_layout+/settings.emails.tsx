@@ -216,7 +216,7 @@ export default function EmailSettingsPage() {
               maxLength={EMAIL_FOOTER_MAX_LENGTH}
               rows={10}
               className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-25 disabled:opacity-50"
-              placeholder="e.g., ACME Corp - support@acme.com - (555) 123-4567"
+              placeholder="Ex. : Organisation - support@organisation.ci - +225 01 02 03 04 05"
               onChange={(e) => {
                 setCharCount(e.target.value.length);
                 setFooterPreview(e.target.value);

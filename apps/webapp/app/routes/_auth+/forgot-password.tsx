@@ -186,7 +186,7 @@ export default function ForgotPassword() {
                   type="email"
                   autoComplete="email"
                   inputClassName="w-full"
-                  placeholder="zaans@huisje.com"
+                  placeholder="utilisateur@organisation.ci"
                   disabled={disabled}
                   error={emailError}
                 />
