@@ -44,7 +44,7 @@ export function ContinueWithEmailForm({ mode }: { mode: "login" }) {
         name="email"
         id="email"
         inputClassName="w-full"
-        placeholder="zaans@huisje.com"
+        placeholder="utilisateur@organisation.ci"
         disabled={isLoading}
         error={zo.errors.email()?.message || ""}
       />

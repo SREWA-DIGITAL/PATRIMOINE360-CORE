@@ -71,7 +71,7 @@ export function UpdateForm({
         name="url"
         type="url"
         defaultValue={url || ""}
-        placeholder="https://example.com (leave empty for updates without links)"
+        placeholder="https://exemple.ci (leave empty for updates without links)"
       />
 
       <div>
@@ -80,7 +80,7 @@ export function UpdateForm({
           name="imageUrl"
           type="url"
           defaultValue={imageUrl || ""}
-          placeholder="https://example.com/image.jpg (external image URL)"
+          placeholder="https://exemple.ci/image.jpg (external image URL)"
         />
         <p className="mt-1 text-xs text-gray-500">
           Add a featured image to make your update more visual

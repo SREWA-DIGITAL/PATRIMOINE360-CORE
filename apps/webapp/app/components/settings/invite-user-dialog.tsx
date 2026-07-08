@@ -233,7 +233,7 @@ export default function InviteUserDialog({
                   }
                   icon="mail"
                   label={"Adresse email"}
-                  placeholder="zaans@huisje.com"
+                  placeholder="utilisateur@organisation.ci"
                   required
                 />
               </div>

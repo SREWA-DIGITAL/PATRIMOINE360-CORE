@@ -1,16 +1,22 @@
 {
-  "name": "shelf",
-  "lang": "en-US",
-  "short_name": "shelf",
-  "description": "Open Source Asset and Equipment tracking software that lets you create QR asset labels, manage and overview your assets across locations.",
+  "name": "Patrimoine360",
+  "lang": "fr",
+  "short_name": "P360",
+  "description": "Gestion des sites, biens, affectations et rappels.",
   "start_url": "/",
   "display": "standalone",
   "scope": "/",
-  "theme_color": "#FFFFFF",
-  "background_color": "#FFFFFF",
+  "theme_color": "#08233B",
+  "background_color": "#FEFEFE",
   "icons": [
     {
-      "src": "/static/images/shelf-logo-x512.png",
+      "src": "/static/images/brand/patrimoine360-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/brand/patrimoine360-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
