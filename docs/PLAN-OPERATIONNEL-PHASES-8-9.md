@@ -174,7 +174,7 @@ Avancement 2026-06-23 :
 
 ### Phase 8D - Vocabulaire métier Patrimoine360
 
-Statut : En cours
+Statut : Terminée
 
 Périmètre :
 
@@ -210,8 +210,12 @@ Avancement 2026-06-24 :
 - alignement des écrans de réservation et d'actions de masse pour privilégier
   `bien`, `lot`, `affectation`, `responsable` et `organisation` à la place des
   formulations Shelf historiques ;
-- reste à finir le balayage des libellés visibles secondaires hors surfaces
-  critiques déjà traitées avant clôture complète de la phase.
+- fermeture du reliquat principal sur l'accueil, les écrans équipe /
+  responsables, les états vides, les badges d'affectation et les libellés de
+  rapports visibles ;
+- le vocabulaire utilisateur visible est désormais cohérent sur les parcours
+  Core principaux, les noms techniques internes `asset`, `location` et
+  `custody` restant volontairement inchangés hors interface.
 
 ### Phase 8E - Hiérarchie métier Patrimoine360
 
@@ -317,7 +321,7 @@ Avancement 2026-06-24 :
 
 ### Phase 8G - Fermeture des écarts de flux Core
 
-Statut : En cours
+Statut : Terminée
 
 Périmètre :
 
@@ -356,9 +360,13 @@ Avancement 2026-06-24 :
   [ECARTS-FLUX-CORE-PATRIMOINE360.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/ECARTS-FLUX-CORE-PATRIMOINE360.md) :
   rappels encore limités aux biens, absence d'historique métier enrichi des
   affectations et réservation du dashboard analytique avancé à l'Enterprise ;
-- clôture partielle du lot :
-  la vue opérationnelle Core existe désormais, mais les extensions PRD plus
-  riches restent encore documentées comme écarts assumés.
+- simplification finale des surfaces visibles :
+  la page `/custody`, le rapport `Affectations en cours` et les états vides
+  associés portent désormais une présentation opérationnelle, sans copy
+  interne de cadrage projet ;
+- clôture du lot :
+  la vue opérationnelle Core existe, les parcours principaux sont couverts et
+  les extensions PRD plus riches restent documentées dans les écarts assumés.
 
 ### Phase 8H - Storage et infrastructure Core
 

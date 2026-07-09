@@ -8,7 +8,7 @@ import type { Organization, Prisma, TierId, User } from "@prisma/client";
 import type Stripe from "stripe";
 
 import { db } from "~/database/db.server";
-import { sendEmail } from "~/emails/mail.server";
+import { sendTemplatedEmail } from "~/emails/template-registry.server";
 import { DEFAULT_MAX_IMAGE_UPLOAD_SIZE } from "~/utils/constants";
 import { ADMIN_EMAIL } from "~/utils/env";
 import type { ErrorLabel } from "~/utils/error";
@@ -22,7 +22,6 @@ import {
   transferSubscriptionToCustomer,
 } from "~/utils/stripe.server";
 import { resolveUserDisplayName } from "~/utils/user";
-import { newOwnerEmailText, previousOwnerEmailText } from "./email";
 import { defaultFields } from "../asset-index-settings/helpers";
 import { defaultUserCategories } from "../category/default-categories";
 import { updateUserTierId } from "../tier/service.server";
@@ -454,7 +453,7 @@ export async function getOrganizationAdminsEmails({
  *
  * This differs from `getOrganizationAdminsEmails()` (which returns only
  * email strings) because the notification recipient resolver needs the
- * `userId` to perform editor exclusion — if the admin performing an action
+ * `userId` to perform editor exclusion вЂ” if the admin performing an action
  * is also in the recipient list, they should be filtered out so they don't
  * email themselves. Returning bare email strings would not support that
  * matching.
@@ -950,64 +949,41 @@ export async function transferOwnership({
     }
 
     /** Send email to new owner */
-    sendEmail({
-      subject: `🎉 You're now the Owner of ${currentOrganization.name} - Shelf`,
+    void sendTemplatedEmail({
       to: newOwnerUserOrg.user.email,
-      text: newOwnerEmailText({
+      template: "organization.ownership-transfer.new-owner",
+      data: {
         newOwnerName: resolveUserDisplayName(newOwnerUserOrg.user),
         workspaceName: currentOrganization.name,
         subscriptionTransferred,
-      }),
-      tags: ["organization", "ownership-transfer", "new-owner"],
+      },
     });
 
     /** Send email to previous owner */
-    sendEmail({
-      subject: `🔁 You've Transferred Ownership of ${currentOrganization.name}`,
+    void sendTemplatedEmail({
       to: currentOwnerUserOrg.user.email,
-      text: previousOwnerEmailText({
+      template: "organization.ownership-transfer.previous-owner",
+      data: {
         previousOwnerName: resolveUserDisplayName(currentOwnerUserOrg.user),
         newOwnerName: resolveUserDisplayName(newOwnerUserOrg.user),
         workspaceName: currentOrganization.name,
         subscriptionTransferred,
-      }),
-      tags: ["organization", "ownership-transfer", "previous-owner"],
+      },
     });
 
     /** Send admin notification */
     if (ADMIN_EMAIL) {
-      const subscriptionStatus = subscriptionTransferError
-        ? `Failed - ${subscriptionTransferError.message}`
-        : subscriptionTransferred
-        ? "Yes"
-        : "No (not requested)";
-
-      sendEmail({
-        subject: subscriptionTransferError
-          ? `⚠️ Workspace transferred with errors: ${currentOrganization.name}`
-          : `Workspace transferred: ${currentOrganization.name}`,
+      void sendTemplatedEmail({
         to: ADMIN_EMAIL,
-        text: `A workspace ownership transfer has occurred.
-
-Workspace: ${currentOrganization.name}
-Workspace ID: ${currentOrganization.id}
-
-Previous Owner: ${resolveUserDisplayName(currentOwnerUserOrg.user)} (${
-          currentOwnerUserOrg.user.email
-        })
-New Owner: ${resolveUserDisplayName(newOwnerUserOrg.user)} (${
-          newOwnerUserOrg.user.email
-        })
-
-Subscription transferred: ${subscriptionStatus}
-${
-  subscriptionTransferError
-    ? `\nError details: ${
-        subscriptionTransferError.stack || subscriptionTransferError.message
-      }`
-    : ""
-}`,
-        tags: ["organization", "ownership-transfer", "admin-notification"],
+        template: "organization.ownership-transfer.admin",
+        data: {
+          newOwner: newOwnerUserOrg.user,
+          previousOwner: currentOwnerUserOrg.user,
+          subscriptionTransferError: subscriptionTransferError?.message ?? null,
+          subscriptionTransferred,
+          workspaceId: currentOrganization.id,
+          workspaceName: currentOrganization.name,
+        },
       });
     }
 

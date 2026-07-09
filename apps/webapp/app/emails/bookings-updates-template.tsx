@@ -76,7 +76,7 @@ export function BookingUpdatesEmailTemplate({
   return (
     <Html>
       <Head>
-        <title>Bookings update from Shelf.nu</title>
+        <title>Mise a jour de reservation Patrimoine360</title>
       </Head>
 
       <Container
@@ -103,21 +103,21 @@ export function BookingUpdatesEmailTemplate({
           </Heading>
           <Heading as="h2" style={{ ...styles.h2 }}>
             {booking.name} | {assetCount}{" "}
-            {assetCount === 1 ? "asset" : "assets"}
+            {assetCount === 1 ? "bien" : "biens"}
           </Heading>
           <p style={{ ...styles.p }}>
             <span style={{ color: "#101828", fontWeight: "600" }}>
-              Custodian:
+              Responsable :
             </span>{" "}
             {resolveUserDisplayName(booking.custodianUser) ||
               booking.custodianTeamMember?.name}
           </p>
           <p style={{ ...styles.p }}>
-            <span style={{ color: "#101828", fontWeight: "600" }}>From:</span>{" "}
+            <span style={{ color: "#101828", fontWeight: "600" }}>Debut :</span>{" "}
             {fromDate}
           </p>
           <p style={{ ...styles.p }}>
-            <span style={{ color: "#101828", fontWeight: "600" }}>To:</span>{" "}
+            <span style={{ color: "#101828", fontWeight: "600" }}>Fin :</span>{" "}
             {toDate}
           </p>
         </div>
@@ -141,7 +141,7 @@ export function BookingUpdatesEmailTemplate({
                 marginBottom: "12px",
               }}
             >
-              Booked items:
+              Elements reserves :
             </p>
             {assets
               .slice(0, BOOKING_EMAIL_ASSETS_DISPLAY_LIMIT)
@@ -186,12 +186,12 @@ export function BookingUpdatesEmailTemplate({
                   marginTop: "8px",
                 }}
               >
-                and {assets.length - BOOKING_EMAIL_ASSETS_DISPLAY_LIMIT} more —{" "}
+                et {assets.length - BOOKING_EMAIL_ASSETS_DISPLAY_LIMIT} autres -{" "}
                 <a
                   href={`${SERVER_URL}/bookings/${booking.id}?orgId=${booking.organizationId}`}
                   style={{ color: "#EF6820" }}
                 >
-                  View full booking
+                  Voir la reservation complete
                 </a>
               </p>
             )}
@@ -216,7 +216,7 @@ export function BookingUpdatesEmailTemplate({
                 fontWeight: "600",
               }}
             >
-              Cancellation reason
+              Motif d'annulation
             </p>
             <p style={{ ...styles.p, margin: "0" }}>{cancellationReason}</p>
           </div>
@@ -241,7 +241,7 @@ export function BookingUpdatesEmailTemplate({
                 marginBottom: "8px",
               }}
             >
-              What changed:
+              Modifications :
             </p>
             <ul style={{ margin: "0", paddingLeft: "20px" }}>
               {changes.map((change, i, arr) => {
@@ -274,7 +274,7 @@ export function BookingUpdatesEmailTemplate({
               marginBottom: "32px",
             }}
           >
-            View booking in app
+            Ouvrir la reservation
           </Button>
         )}
 

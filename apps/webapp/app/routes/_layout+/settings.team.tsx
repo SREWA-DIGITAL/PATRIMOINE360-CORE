@@ -19,7 +19,9 @@ export type UserFriendlyRoles =
   | "Owner"
   | "Base"
   | "Self service";
-export const meta = () => [{ title: appendToMetaTitle("Team settings") }];
+export const meta = () => [
+  { title: appendToMetaTitle("Équipe et responsables") },
+];
 
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
   const authSession = context.getSession();
@@ -54,11 +56,11 @@ export default function TeamSettings() {
   const TABS: Item[] = [
     ...(!isPersonalOrg
       ? [
-          { to: "users", content: "Users" },
-          { to: "invites", content: "Invites" },
+          { to: "users", content: "Utilisateurs" },
+          { to: "invites", content: "Invitations" },
         ]
       : []),
-    { to: "nrm", content: "Non-registered members" },
+    { to: "nrm", content: "Responsables sans compte" },
   ];
 
   const params = useParams();
@@ -68,11 +70,11 @@ export default function TeamSettings() {
       <When truthy={!params.userId}>
         <div className="rounded border bg-white p-4 md:px-10 md:py-8">
           <h1 className="text-[18px] font-semibold">
-            {isPersonalOrg ? "Team" : `${orgName}’s team`}
+            {isPersonalOrg ? "Équipe" : `Équipe de ${orgName}`}
           </h1>
           <p className="mb-6 text-sm text-gray-600">
-            Manage your existing team and give team members custody to certain
-            assets.
+            Gérez votre équipe, vos invitations et les responsables à qui des
+            biens peuvent être affectés.
           </p>
           <HorizontalTabs items={TABS} />
           <Outlet />

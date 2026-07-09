@@ -45,10 +45,10 @@ describe("auditTrialEndsTomorrowEmailText", () => {
       hasPaymentMethod: true,
       trialEndDate,
     });
-    expect(text).toContain("ACTION REQUIRED");
-    expect(text).toContain("charged tomorrow");
+    expect(text).toContain("Votre essai");
+    expect(text).toContain("demain");
     expect(text).toContain(
-      "automatically charged at the regular subscription rate"
+      "moyen de paiement"
     );
   });
 
@@ -58,8 +58,8 @@ describe("auditTrialEndsTomorrowEmailText", () => {
       hasPaymentMethod: false,
       trialEndDate,
     });
-    expect(text).toContain("paused");
-    expect(text).toContain("add a payment method");
+    expect(text).toContain("suspendu");
+    expect(text).toContain("Ajouter un moyen de paiement");
   });
 
   it("formats trialEndDate correctly", () => {
@@ -68,7 +68,7 @@ describe("auditTrialEndsTomorrowEmailText", () => {
       hasPaymentMethod: true,
       trialEndDate,
     });
-    expect(text).toContain("March 24, 2026");
+    expect(text).toContain("24 mars 2026");
   });
 
   it("includes firstName in greeting when provided", () => {
@@ -77,7 +77,7 @@ describe("auditTrialEndsTomorrowEmailText", () => {
       hasPaymentMethod: true,
       trialEndDate,
     });
-    expect(text).toMatch(/^Hey Bob,/);
+    expect(text).toMatch(/^Bonjour Bob,/);
   });
 });
 
@@ -98,7 +98,7 @@ describe("sendAuditTrialEndsTomorrowEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "alice@example.com",
-        subject: "Your Audits trial ends tomorrow — auto-charge reminder",
+        subject: "Votre essai Audits se termine demain : prelevement automatique",
         tags: ["billing", "trial", "audit", "ends-tomorrow"],
       })
     );
@@ -115,7 +115,7 @@ describe("sendAuditTrialEndsTomorrowEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledOnce();
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
-        subject: "Your Audits trial ends tomorrow",
+        subject: "Votre essai Audits se termine demain",
         tags: ["billing", "trial", "audit", "ends-tomorrow"],
       })
     );

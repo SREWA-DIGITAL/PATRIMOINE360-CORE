@@ -42,7 +42,7 @@ describe("subscriptionGrantedText", () => {
       customerName: "Alice",
       subscriptionName: "Team",
     });
-    expect(text).toContain("Team subscription is now active");
+    expect(text).toContain("abonnement Team est maintenant actif");
   });
 });
 
@@ -62,7 +62,7 @@ describe("sendSubscriptionGrantedEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "alice@example.com",
-        subject: "Your Shelf subscription is now active",
+        subject: "Votre abonnement Patrimoine360 est maintenant actif",
         tags: ["billing", "subscription", "activated"],
       })
     );

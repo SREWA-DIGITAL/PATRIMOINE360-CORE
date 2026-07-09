@@ -267,9 +267,9 @@ export default function QrLinkExisting() {
           navigate={handleSelectKit}
           customEmptyStateContent={{
             title: "You haven't added any kits yet.",
-            text: "What are you waiting for? Create your first kit now!",
+            text: "Créez votre premier lot pour pouvoir lier ce QR code.",
             newButtonRoute: `/kits/new?qrId=${qrId}`,
-            newButtonContent: "Create new kit and link",
+            newButtonContent: "Créer et lier un lot",
           }}
           className="h-full border-t-0"
         />

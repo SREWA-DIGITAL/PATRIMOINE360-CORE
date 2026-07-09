@@ -45,9 +45,9 @@ describe("barcodeTrialEndsSoonEmailText", () => {
       hasPaymentMethod: true,
       trialEndDate,
     });
-    expect(text).toContain("ACTION REQUIRED");
+    expect(text).toContain("Votre essai");
     expect(text).toContain(
-      "automatically charged at the regular subscription rate"
+      "moyen de paiement"
     );
   });
 
@@ -57,8 +57,8 @@ describe("barcodeTrialEndsSoonEmailText", () => {
       hasPaymentMethod: false,
       trialEndDate,
     });
-    expect(text).toContain("paused");
-    expect(text).toContain("add a payment method");
+    expect(text).toContain("suspendu");
+    expect(text).toContain("Ajouter un moyen de paiement");
   });
 
   it("formats trialEndDate correctly", () => {
@@ -67,7 +67,7 @@ describe("barcodeTrialEndsSoonEmailText", () => {
       hasPaymentMethod: true,
       trialEndDate,
     });
-    expect(text).toContain("March 24, 2026");
+    expect(text).toContain("24 mars 2026");
   });
 
   it("includes firstName in greeting when provided", () => {
@@ -76,7 +76,7 @@ describe("barcodeTrialEndsSoonEmailText", () => {
       hasPaymentMethod: true,
       trialEndDate,
     });
-    expect(text).toMatch(/^Hey Bob,/);
+    expect(text).toMatch(/^Bonjour Bob,/);
   });
 });
 
@@ -97,8 +97,8 @@ describe("sendBarcodeTrialEndsSoonEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "alice@example.com",
-        subject: "Your Barcodes trial ends in 3 days — auto-charge reminder",
-        tags: ["billing", "trial", "barcode", "ending-soon"],
+        subject: "Votre essai Codes-barres se termine bientot : prelevement automatique",
+        tags: ["billing", "trial", "barcode", "ends-soon"],
       })
     );
   });

@@ -939,11 +939,11 @@ function CustodyEnumField({
     placeholder: "Search team members",
     withValueItem: {
       id: "in-custody",
-      name: "In custody",
+      name: "Affecté",
     },
     withoutValueItem: {
       id: "without-custody",
-      name: "Without custody",
+      name: "Sans affectation",
     },
     disabled,
   };
@@ -971,10 +971,10 @@ function CustodyEnumField({
                   ? selectedIds
                       .map((id) => {
                         if (id === "in-custody") {
-                          return "In custody";
+                          return "Affecté";
                         }
                         if (id === "without-custody") {
-                          return "Without custody";
+                          return "Sans affectation";
                         }
                         const teamMember = data.teamMembers.find(
                           (tm) => tm.id === id

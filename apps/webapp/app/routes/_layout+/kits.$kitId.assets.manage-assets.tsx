@@ -351,9 +351,9 @@ export default function ManageAssetsInKit() {
           }}
           customEmptyStateContent={{
             title: "You haven't added any assets yet.",
-            text: "What are you waiting for? Create your first asset now!",
+            text: "Créez votre premier bien pour l'ajouter à ce lot.",
             newButtonRoute: "/assets/new",
-            newButtonContent: "New asset",
+            newButtonContent: "Nouveau bien",
           }}
           className="-mx-5 flex h-full flex-col justify-start border-0"
           bulkActions={<> </>}
@@ -516,7 +516,7 @@ const RowComponent = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-center justify-center rounded-md border border-warning-200 bg-warning-50 px-1.5 py-0.5 text-center text-xs text-warning-700">
-                          In custody
+                          Affecté
                         </div>
                       </TooltipTrigger>
 

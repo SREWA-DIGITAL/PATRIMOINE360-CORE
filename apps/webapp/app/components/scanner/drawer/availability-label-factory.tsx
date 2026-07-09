@@ -84,8 +84,8 @@ export function createAvailabilityLabels(
 export const assetLabelPresets = {
   inCustody: (isInCustody: boolean = false): AvailabilityLabelConfig => ({
     condition: isInCustody,
-    badgeText: "In custody",
-    tooltipTitle: "Asset is in custody",
+    badgeText: "Affecté",
+    tooltipTitle: "Bien déjà affecté",
     tooltipContent:
       "This asset is already in custody. You need to release it before assigning it again.",
     priority: 100,
@@ -133,8 +133,8 @@ export const assetLabelPresets = {
 export const kitLabelPresets = {
   inCustody: (isInCustody: boolean = false): AvailabilityLabelConfig => ({
     condition: isInCustody,
-    badgeText: "In custody",
-    tooltipTitle: "Kit is in custody",
+    badgeText: "Affecté",
+    tooltipTitle: "Lot déjà affecté",
     tooltipContent:
       "This kit is already in custody. You need to release it before assigning it again.",
     priority: 100,

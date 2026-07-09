@@ -262,7 +262,7 @@ export async function createStatusTransitionNote({
     content,
   });
 
-  // Activity event — records the canonical status transition for reports.
+  // Activity event вЂ” records the canonical status transition for reports.
   // Best-effort: don't fail the note creation if event recording fails.
   try {
     await recordEvent({
@@ -1161,9 +1161,9 @@ export async function reserveBooking({
       await sendBookingEmailToAllRecipients({
         recipients,
         booking: bookingFound,
-        subject: `✅ Booking reserved (${bookingFound.name}) - shelf.nu`,
+        subject: `Reservation confirmee : ${bookingFound.name}`,
         textContent: text,
-        heading: `Booking reservation for ${custodian}`,
+        heading: `Une reservation a ete creee pour ${custodian}`,
         hints,
         emailTags: ["booking", "reserved", "notification"],
         templateProps: {
@@ -1348,7 +1348,7 @@ export async function checkoutBooking({
         });
       }
 
-      // Activity events — one BOOKING_CHECKED_OUT per asset, inside the tx.
+      // Activity events вЂ” one BOOKING_CHECKED_OUT per asset, inside the tx.
       // Must be atomic with checkout for audit trail consistency.
       if (bookingFound.assets.length > 0) {
         await recordEvents(
@@ -1670,7 +1670,7 @@ export async function checkinBooking({
           }
         }
 
-        // Activity events — one BOOKING_CHECKED_IN per asset, inside the tx.
+        // Activity events вЂ” one BOOKING_CHECKED_IN per asset, inside the tx.
         // Must be atomic with booking status update for audit trail consistency.
         if (bookingFound.assets.length > 0) {
           await recordEvents(
@@ -1794,13 +1794,13 @@ export async function checkinBooking({
         // Record the canonical status transition event for reports.
         // The custom system note above replaces the standard transition note,
         // but downstream consumers (Booking Compliance report) still need the
-        // BOOKING_STATUS_CHANGED → COMPLETE ActivityEvent to know when the
+        // BOOKING_STATUS_CHANGED в†’ COMPLETE ActivityEvent to know when the
         // booking was actually checked in. Best-effort, mirroring the pattern
         // inside createStatusTransitionNote.
         try {
           await recordEvent({
             organizationId,
-            // We're inside `if (userId)` — `userId` is a string here.
+            // We're inside `if (userId)` вЂ” `userId` is a string here.
             actorUserId: userId,
             action: "BOOKING_STATUS_CHANGED",
             entityType: "BOOKING",
@@ -1899,9 +1899,9 @@ export async function checkinBooking({
       await sendBookingEmailToAllRecipients({
         recipients,
         booking: updatedBooking,
-        subject: `🎉 Booking complete (${updatedBooking.name}) - shelf.nu`,
+        subject: `Reservation terminee : ${updatedBooking.name}`,
         textContent: text,
-        heading: `Your booking has been completed: "${updatedBooking.name}"`,
+        heading: `La reservation "${updatedBooking.name}" est terminee`,
         hints,
         emailTags: ["booking", "completed", "notification"],
       });
@@ -2090,7 +2090,7 @@ export async function partialCheckinBooking({
         assetIds,
       });
 
-      // Activity events — one BOOKING_PARTIAL_CHECKIN per asset, inside the tx.
+      // Activity events вЂ” one BOOKING_PARTIAL_CHECKIN per asset, inside the tx.
       await recordEvents(
         assetIds.map((assetId) => ({
           organizationId,
@@ -2338,7 +2338,7 @@ export async function updateBookingAssets({
         }
       }
 
-      // Activity events — one BOOKING_ASSETS_ADDED per asset added, inside the tx.
+      // Activity events вЂ” one BOOKING_ASSETS_ADDED per asset added, inside the tx.
       // Must be atomic with asset addition for audit trail consistency.
       if (assetIds.length > 0) {
         await recordEvents(
@@ -2361,7 +2361,7 @@ export async function updateBookingAssets({
     // BOOKING ACTIVITY LOG: Log asset addition activity
     // Creates user-attributed note when assets are added to a booking
     // Skip note creation if kits are involved - kit notes are created separately
-    // Note creation is best-effort — the booking update already succeeded,
+    // Note creation is best-effort вЂ” the booking update already succeeded,
     // so we log failures instead of throwing to prevent false error reports.
     if (!kitIds || kitIds.length === 0) {
       try {
@@ -2515,7 +2515,7 @@ export async function archiveBooking({
       custodianUserId: updatedBooking.custodianUserId || undefined,
     });
 
-    // Semantic event — complements BOOKING_STATUS_CHANGED for filtered queries.
+    // Semantic event вЂ” complements BOOKING_STATUS_CHANGED for filtered queries.
     await recordEvent({
       organizationId,
       actorUserId: userId ?? null,
@@ -2643,9 +2643,9 @@ export async function cancelBooking({
       await sendBookingEmailToAllRecipients({
         recipients,
         booking,
-        subject: `❌ Booking cancelled (${booking.name}) - shelf.nu`,
+        subject: `Reservation annulee : ${booking.name}`,
         textContent: text,
-        heading: `Your booking has been cancelled: "${booking.name}"`,
+        heading: `La reservation "${booking.name}" a ete annulee`,
         hints,
         emailTags: ["booking", "cancelled", "notification"],
         templateProps: {
@@ -2664,7 +2664,7 @@ export async function cancelBooking({
       custodianUserId: booking.custodianUserId || undefined,
     });
 
-    // Semantic event — complements BOOKING_STATUS_CHANGED for filtered queries.
+    // Semantic event вЂ” complements BOOKING_STATUS_CHANGED for filtered queries.
     await recordEvent({
       organizationId,
       actorUserId: userId ?? null,
@@ -2946,9 +2946,9 @@ export async function extendBooking({
       await sendBookingEmailToAllRecipients({
         recipients,
         booking: updatedBooking,
-        subject: `Booking extended (${updatedBooking.name}) - shelf.nu`,
+        subject: `Reservation prolongee : ${updatedBooking.name}`,
         textContent: text,
-        heading: `Booking extended from ${format(booking.to)} to ${format(
+        heading: `Reservation prolongee du ${format(booking.to)} au ${format(
           newEndDate
         )}`,
         hints,
@@ -3471,7 +3471,7 @@ export async function removeAssets({
       assetIds,
     });
 
-    // Activity events — one BOOKING_ASSETS_REMOVED per asset detached.
+    // Activity events вЂ” one BOOKING_ASSETS_REMOVED per asset detached.
     // Best-effort: don't fail the removal if event recording fails.
     if (assetIds.length > 0) {
       try {
@@ -3643,9 +3643,9 @@ export async function deleteBooking(
       await sendBookingEmailToAllRecipients({
         recipients,
         booking: b,
-        subject: `🗑️ Booking deleted (${b.name}) - shelf.nu`,
+        subject: `Reservation supprimee : ${b.name}`,
         textContent: text,
-        heading: `Your booking has been deleted: "${b.name}"`,
+        heading: `La reservation "${b.name}" a ete supprimee`,
         hints,
         emailTags: ["booking", "deleted", "notification"],
         templateProps: {
@@ -4188,9 +4188,9 @@ export async function bulkDeleteBookings({
         await sendBookingEmailToAllRecipients({
           recipients,
           booking: b,
-          subject: `🗑️ Booking deleted (${b.name}) - shelf.nu`,
+          subject: `Reservation supprimee : ${b.name}`,
           textContent: text,
-          heading: `Your booking has been deleted: "${b.name}"`,
+          heading: `La reservation "${b.name}" a ete supprimee`,
           hints,
           emailTags: ["booking", "deleted", "notification"],
           templateProps: {
@@ -4470,9 +4470,9 @@ export async function bulkCancelBookings({
         await sendBookingEmailToAllRecipients({
           recipients,
           booking: b,
-          subject: `❌ Booking cancelled (${b.name}) - shelf.nu`,
+          subject: `Reservation annulee : ${b.name}`,
           textContent: text,
-          heading: `Your booking has been cancelled: "${b.name}"`,
+          heading: `La reservation "${b.name}" a ete annulee`,
           hints,
           emailTags: ["booking", "cancelled", "notification"],
         });
@@ -5213,7 +5213,7 @@ export async function getOngoingBookingForAsset({
 /**
  * Replaces the per-booking notification recipients with the given team
  * member IDs. Uses Prisma's `set` operation, so the caller must provide
- * the complete desired list — any previously connected team members not
+ * the complete desired list вЂ” any previously connected team members not
  * in `teamMemberIds` will be disconnected.
  *
  * These per-booking recipients are resolved in step 6 of

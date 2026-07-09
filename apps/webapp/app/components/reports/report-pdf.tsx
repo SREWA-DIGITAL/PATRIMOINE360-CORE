@@ -317,7 +317,7 @@ function MetricBox({
 function AssetStatusBadge({ status }: { status: string }) {
   const labels: Record<string, string> = {
     AVAILABLE: "Available",
-    IN_CUSTODY: "In custody",
+    IN_CUSTODY: "Affecté",
     CHECKED_OUT: "Checked out",
   };
 

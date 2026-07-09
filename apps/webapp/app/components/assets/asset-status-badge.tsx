@@ -22,13 +22,13 @@ import When from "../when/when";
 export const userFriendlyAssetStatus = (status: ExtendedAssetStatus) => {
   switch (status) {
     case AssetStatus.IN_CUSTODY:
-      return "In custody";
+      return "Affecté";
     case AssetStatus.CHECKED_OUT:
-      return "Checked out";
+      return "Sorti";
     case "PARTIALLY_CHECKED_IN":
-      return "Already checked in";
+      return "Déjà retourné";
     default:
-      return "Available";
+      return "Disponible";
   }
 };
 
@@ -84,7 +84,7 @@ export function AssetStatusBadge({
             {userFriendlyAssetStatus(status)}
           </Badge>
           {!availableToBook && (
-            <UnavailableBadge title="This asset is marked as unavailable for bookings" />
+            <UnavailableBadge title="Ce bien est marqué comme indisponible pour les réservations" />
           )}
         </span>
       </HoverCardTrigger>

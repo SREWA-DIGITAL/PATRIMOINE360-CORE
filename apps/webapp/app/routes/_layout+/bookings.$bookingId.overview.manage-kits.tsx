@@ -595,9 +595,9 @@ export default function AddKitsToBooking() {
           emptyStateClassName="py-10"
           customEmptyStateContent={{
             title: "You haven't created any kits yet.",
-            text: "What are you waiting for? Create your first kit now!",
+            text: "Créez votre premier lot pour l'ajouter à cette réservation.",
             newButtonRoute: "/kits/new",
-            newButtonContent: "New kit",
+            newButtonContent: "Nouveau lot",
           }}
           hideFirstHeaderColumn
           bulkActions={<> </>}

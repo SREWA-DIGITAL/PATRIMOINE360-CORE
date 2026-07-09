@@ -258,9 +258,11 @@ const QRScanner = () => {
         triggerSuccess();
         void navigate(`/qr/${value}`);
       } else if (
-        ["Assign custody", "Release custody", "Update location"].includes(
-          currentAction
-        )
+        [
+          "Affecter",
+          "Libérer l'affectation",
+          "Mettre à jour l'emplacement",
+        ].includes(currentAction)
       ) {
         if (error) {
           triggerError();

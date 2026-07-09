@@ -47,7 +47,7 @@ import {
 import { requirePermission } from "~/utils/roles.server";
 import { resolveTeamMemberName } from "~/utils/user";
 
-export const meta = () => [{ title: appendToMetaTitle("Assign custody") }];
+export const meta = () => [{ title: appendToMetaTitle("Affecter un bien") }];
 
 export async function loader({ context, request, params }: LoaderFunctionArgs) {
   const authSession = context.getSession();

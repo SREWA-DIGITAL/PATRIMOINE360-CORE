@@ -60,13 +60,13 @@ vi.mock("~/database/db.server", () => ({
   },
 }));
 
-// why: sendEmail makes external network calls
-const { mockSendEmail } = vi.hoisted(() => ({
-  mockSendEmail: vi.fn(),
+// why: templated email sending makes external network calls
+const { mockSendTemplatedEmail } = vi.hoisted(() => ({
+  mockSendTemplatedEmail: vi.fn(),
 }));
 
-vi.mock("~/emails/mail.server", () => ({
-  sendEmail: mockSendEmail,
+vi.mock("~/emails/template-registry.server", () => ({
+  sendTemplatedEmail: mockSendTemplatedEmail,
 }));
 
 // why: We need the StripeSignatureVerificationError class for instanceof
@@ -170,30 +170,34 @@ describe("sendAdminInvoiceEmail", () => {
     },
     eventType: "invoice.payment_failed",
     invoiceId: "inv_123",
-    subject: "Invoice alert",
+    status: "payment-failed" as const,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("calls sendEmail when ADMIN_EMAIL is set", () => {
+  it("calls sendTemplatedEmail when ADMIN_EMAIL is set", () => {
     mockAdminEmail.value = "admin@test.com";
     sendAdminInvoiceEmail(baseParams);
-    expect(mockSendEmail).toHaveBeenCalledOnce();
-    expect(mockSendEmail).toHaveBeenCalledWith(
+    expect(mockSendTemplatedEmail).toHaveBeenCalledOnce();
+    expect(mockSendTemplatedEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "admin@test.com",
-        subject: "Invoice alert",
-        tags: ["billing", "invoice", "admin-notification"],
+        template: "billing.invoice-admin-notification",
+        data: expect.objectContaining({
+          eventType: "invoice.payment_failed",
+          invoiceId: "inv_123",
+          status: "payment-failed",
+        }),
       })
     );
   });
 
-  it("does not call sendEmail when ADMIN_EMAIL is falsy", () => {
+  it("does not call sendTemplatedEmail when ADMIN_EMAIL is falsy", () => {
     mockAdminEmail.value = undefined;
     sendAdminInvoiceEmail(baseParams);
-    expect(mockSendEmail).not.toHaveBeenCalled();
+    expect(mockSendTemplatedEmail).not.toHaveBeenCalled();
   });
 });
 

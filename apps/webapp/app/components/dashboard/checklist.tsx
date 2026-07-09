@@ -33,9 +33,9 @@ export default function OnboardingChecklist() {
       </div>
       <div className="mb-8">
         <div className="mb-4">
-          <h4 className=" text-lg font-semibold">Restez organise</h4>
+          <h4 className=" text-lg font-semibold">Restez organisé</h4>
           <p className="text-[14px] text-gray-600">
-            Organiser vos biens ameliore la visibilite et debloque tout le
+            Organiser vos biens améliore la visibilité et débloque tout le
             potentiel des filtres et de la recherche.
           </p>
         </div>
@@ -54,10 +54,10 @@ export default function OnboardingChecklist() {
                 <div className="text-[14px]">
                   <div className="mb-3">
                     <h6 className="font-medium text-gray-700">
-                      Creez votre premier bien
+                      Créez votre premier bien
                     </h6>
                     <p className=" text-gray-600">
-                      Chaque bien recoit son propre QR code chiffre.
+                      Chaque bien reçoit son propre QR code chiffré.
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -93,11 +93,11 @@ export default function OnboardingChecklist() {
                 <div className="text-[14px]">
                   <div className="mb-3">
                     <h6 className="font-medium text-gray-700">
-                      Creez une categorie personnalisee
+                      Créez une catégorie personnalisée
                     </h6>
                     <p className=" text-gray-600">
-                      Consultez, modifiez ou supprimez les categories par
-                      defaut, puis creez les votres.
+                      Consultez, modifiez ou supprimez les catégories par
+                      défaut, puis créez les vôtres.
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -109,7 +109,7 @@ export default function OnboardingChecklist() {
                       En savoir plus
                     </Link>
                     <Button variant="link" to="/categories/new">
-                      Nouvelle categorie
+                      Nouvelle catégorie
                     </Button>
                   </div>
                 </div>
@@ -132,10 +132,10 @@ export default function OnboardingChecklist() {
                 </div>
                 <div className="text-[14px]">
                   <div className="mb-3">
-                    <h6 className="font-medium text-gray-700">Creez un tag</h6>
+                    <h6 className="font-medium text-gray-700">Créez un tag</h6>
                     <p className=" text-gray-600">
                       Les tags sont de petites informations que vous pouvez
-                      ajouter a vos biens.
+                      ajouter à vos biens.
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -155,10 +155,10 @@ export default function OnboardingChecklist() {
       <div className="mb-8">
         <div className="mb-4">
           <h4 className=" text-lg font-semibold">
-            Equipe, affectations et reservations
+            Équipe, affectations et réservations
           </h4>
           <p className="text-[14px] text-gray-600">
-            Affectez les biens a vos collaborateurs. Passez a l'offre Equipe si
+            Affectez les biens à vos collaborateurs. Passez à l'offre Équipe si
             vous souhaitez inviter d'autres utilisateurs dans votre espace.
           </p>
         </div>
@@ -177,11 +177,11 @@ export default function OnboardingChecklist() {
                 <div className="text-[14px]">
                   <div className="mb-3">
                     <h6 className="font-medium text-gray-700">
-                      Ajoutez un membre d'equipe
+                      Ajoutez un membre d'équipe
                     </h6>
                     <p className=" text-gray-600">
-                      Suivez qui detient un bien en ajoutant les membres de
-                      votre equipe a Patrimoine360.
+                      Suivez qui détient un bien en ajoutant les membres de
+                      votre équipe à Patrimoine360.
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -217,21 +217,17 @@ export default function OnboardingChecklist() {
                 <div className="text-[14px]">
                   <div className="mb-3">
                     <h6 className="font-medium text-gray-700">
-                      Affectez un bien a un responsable
+                      Affectez un bien à un responsable
                     </h6>
                     <p className=" text-gray-600">
-                      Definissez clairement qui detient chaque bien pour garder
-                      un suivi operationnel fiable.
+                      Définissez clairement qui détient chaque bien pour garder
+                      un suivi opérationnel fiable.
                     </p>
                   </div>
                   <div className="flex gap-3">
-                    <Link
-                      to="https://www.shelf.nu/knowledge-base/custody-feature-for-long-term-equipment-lend-outs"
-                      target="_blank"
-                      className=" font-semibold text-gray-600"
-                    >
-                      En savoir plus
-                    </Link>
+                    <Button variant="link" to="/custody">
+                      Ouvrir les affectations
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -245,10 +241,10 @@ export default function OnboardingChecklist() {
       <div className="mb-8">
         <div className="mb-4">
           <h4 className=" text-lg font-semibold">
-            Personnalisez votre experience
+            Personnalisez votre expérience
           </h4>
           <p className="text-[14px] text-gray-600">
-            Adaptez votre facon de travailler avec Patrimoine360 selon vos
+            Adaptez votre façon de travailler avec Patrimoine360 selon vos
             besoins et ceux de votre organisation.
           </p>
         </div>
@@ -267,11 +263,11 @@ export default function OnboardingChecklist() {
                 <div className="text-[14px]">
                   <div className="mb-3">
                     <h6 className="font-medium text-gray-700">
-                      Creez un champ personnalise
+                      Créez un champ personnalisé
                     </h6>
                     <p className=" text-gray-600">
                       Enrichissez votre base de biens avec des champs
-                      personnalises.
+                      personnalisés.
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -283,7 +279,7 @@ export default function OnboardingChecklist() {
                       En savoir plus
                     </Link>
                     <Button variant="link" to="/settings/custom-fields/new">
-                      Nouveau champ personnalise
+                      Nouveau champ personnalisé
                     </Button>
                   </div>
                 </div>

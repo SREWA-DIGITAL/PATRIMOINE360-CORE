@@ -567,7 +567,7 @@ function generateAssetActivityCsv(rows: AssetActivityRow[]): string {
 function formatAssetStatus(status: string): string {
   const labels: Record<string, string> = {
     AVAILABLE: "Available",
-    IN_CUSTODY: "In custody",
+    IN_CUSTODY: "Affecté",
     CHECKED_OUT: "Checked out",
   };
   return labels[status] || status;

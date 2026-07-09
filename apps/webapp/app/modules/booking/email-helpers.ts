@@ -46,21 +46,21 @@ export const baseBookingTextEmailContent = ({
     dateStyle: "short",
     timeStyle: "short",
   }).format(to);
-  return `Howdy,
+  return `Bonjour,
 
 ${emailContent}
 
-${bookingName} | ${assetsCount} assets
+${bookingName} | ${assetsCount} biens
 
-Custodian: ${custodian}
-From: ${fromDate}
-To: ${toDate}
+Responsable: ${custodian}
+Debut: ${fromDate}
+Fin: ${toDate}
 
-To view the booking, follow the link below:
+Pour ouvrir la reservation :
 ${SERVER_URL}/bookings/${bookingId}
 ${customEmailFooter ? `\n---\n${customEmailFooter}` : ""}
-Thanks,
-The Shelf Team
+Cordialement,
+L'equipe Patrimoine360
 `;
 };
 
@@ -70,7 +70,7 @@ The Shelf Team
 export const assetReservedEmailContent = (args: BasicEmailContentArgs) =>
   baseBookingTextEmailContent({
     ...args,
-    emailContent: `Booking reservation for ${args.custodian}.`,
+    emailContent: `Une reservation a ete creee pour ${args.custodian}.`,
   });
 
 /**
@@ -79,7 +79,7 @@ export const assetReservedEmailContent = (args: BasicEmailContentArgs) =>
 export const checkoutReminderEmailContent = (args: BasicEmailContentArgs) =>
   baseBookingTextEmailContent({
     ...args,
-    emailContent: `Your booking is due for checkout in ${getTimeRemainingMessage(
+    emailContent: `Votre reservation doit commencer dans ${getTimeRemainingMessage(
       new Date(args.from),
       new Date()
     )}.`,
@@ -92,7 +92,7 @@ export const checkoutReminderEmailContent = (args: BasicEmailContentArgs) =>
 export const checkinReminderEmailContent = (args: BasicEmailContentArgs) =>
   baseBookingTextEmailContent({
     ...args,
-    emailContent: `Your booking is due for checkin in ${getTimeRemainingMessage(
+    emailContent: `Votre reservation doit etre restituee dans ${getTimeRemainingMessage(
       new Date(args.to),
       new Date()
     )}.`,
@@ -133,7 +133,7 @@ export async function sendCheckinReminder(
     resolveUserDisplayName(booking.custodianUser) ||
     (booking.custodianTeamMember?.name as string);
 
-  const subject = `🔔 Checkin reminder (${booking.name}) - shelf.nu`;
+  const subject = `Rappel de restitution : ${booking.name}`;
 
   const text = checkinReminderEmailContent({
     hints,
@@ -149,7 +149,7 @@ export async function sendCheckinReminder(
   for (const recipient of recipients) {
     const html = await bookingUpdatesTemplateString({
       booking,
-      heading: `Your booking is due for checkin in ${getTimeRemainingMessage(
+      heading: `Votre reservation doit etre restituee dans ${getTimeRemainingMessage(
         new Date(booking.to!),
         new Date()
       )}.`,
@@ -177,7 +177,7 @@ export async function sendCheckinReminder(
 export const overdueBookingEmailContent = (args: BasicEmailContentArgs) =>
   baseBookingTextEmailContent({
     ...args,
-    emailContent: `You have passed the deadline for checking in your booking "${args.bookingName}".`,
+    emailContent: `La reservation "${args.bookingName}" a depasse sa date limite de restitution.`,
   });
 
 /**
@@ -188,7 +188,7 @@ export const overdueBookingEmailContent = (args: BasicEmailContentArgs) =>
 export const completedBookingEmailContent = (args: BasicEmailContentArgs) =>
   baseBookingTextEmailContent({
     ...args,
-    emailContent: `Your booking has been completed: "${args.bookingName}".`,
+    emailContent: `La reservation "${args.bookingName}" est terminee.`,
   });
 
 /**
@@ -199,7 +199,7 @@ export const completedBookingEmailContent = (args: BasicEmailContentArgs) =>
 export const deletedBookingEmailContent = (args: BasicEmailContentArgs) =>
   baseBookingTextEmailContent({
     ...args,
-    emailContent: `Your booking has been deleted: "${args.bookingName}".`,
+    emailContent: `La reservation "${args.bookingName}" a ete supprimee.`,
   });
 
 /**
@@ -212,8 +212,8 @@ export const cancelledBookingEmailContent = (
 ) =>
   baseBookingTextEmailContent({
     ...args,
-    emailContent: `Your booking has been cancelled: "${args.bookingName}".${
-      args.cancellationReason ? `\n\nReason: ${args.cancellationReason}` : ""
+    emailContent: `La reservation "${args.bookingName}" a ete annulee.${
+      args.cancellationReason ? `\n\nMotif : ${args.cancellationReason}` : ""
     }`,
   });
 
@@ -233,9 +233,9 @@ export function extendBookingEmailContent({
 
   return baseBookingTextEmailContent({
     ...args,
-    emailContent: `You booking has been extended from ${format(
+    emailContent: `La reservation a ete prolongee du ${format(
       oldToDate
-    )} to ${format(args.to)}`,
+    )} au ${format(args.to)}`,
   });
 }
 
@@ -249,9 +249,9 @@ export const bookingUpdatedEmailContent = (
 ) =>
   baseBookingTextEmailContent({
     ...args,
-    emailContent: `Your booking "${
+    emailContent: `Votre reservation "${
       args.bookingName
-    }" has been updated.\n\nChanges:\n${args.changes
+    }" a ete mise a jour.\n\nModifications :\n${args.changes
       .map((c) => `- ${c}`)
       .join("\n")}`,
   });
@@ -263,7 +263,7 @@ export const bookingUpdatedEmailContent = (
  * `UPDATE` event type, which excludes the editing user from the list.
  * Each recipient gets a personalized email with their reason footer.
  *
- * **Special case — custodian change:** When `oldCustodianEmail` is provided,
+ * **Special case вЂ” custodian change:** When `oldCustodianEmail` is provided,
  * the old custodian may no longer appear in the resolved recipient list
  * (since they're no longer the booking's custodian). This function
  * explicitly checks and sends them a notification if they weren't already
@@ -296,7 +296,7 @@ export async function sendBookingUpdatedEmail({
 
     if (!booking) return;
 
-    // Don't send update emails for draft bookings — the booking hasn't
+    // Don't send update emails for draft bookings вЂ” the booking hasn't
     // been reserved yet, so emailing about changes is noise.
     // Exception: custodian changes still send emails even in draft,
     // because the new custodian needs to know they've been assigned
@@ -308,7 +308,7 @@ export async function sendBookingUpdatedEmail({
         booking.custodianTeamMember?.name) ??
       "";
 
-    const subject = `📝 Booking updated (${booking.name}) - shelf.nu`;
+    const subject = `Reservation mise a jour : ${booking.name}`;
 
     const emailArgs: BasicEmailContentArgs = {
       bookingName: booking.name,
@@ -336,7 +336,7 @@ export async function sendBookingUpdatedEmail({
     for (const recipient of recipients) {
       const html = await bookingUpdatesTemplateString({
         booking,
-        heading: `Your booking "${booking.name}" has been updated`,
+        heading: `Votre reservation "${booking.name}" a ete mise a jour`,
         assetCount: booking._count.assets,
         hints,
         changes,
@@ -367,7 +367,7 @@ export async function sendBookingUpdatedEmail({
         if (!oldCustodianUser || oldCustodianUser.id !== userId) {
           const html = await bookingUpdatesTemplateString({
             booking,
-            heading: `Your booking "${booking.name}" has been updated`,
+            heading: `Votre reservation "${booking.name}" a ete mise a jour`,
             assetCount: booking._count.assets,
             hints,
             changes,
