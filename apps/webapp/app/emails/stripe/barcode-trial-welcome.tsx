@@ -12,10 +12,7 @@ interface BarcodeTrialWelcomeProps {
   hasPaymentMethod: boolean;
 }
 
-type BarcodeTrialWelcomeContentProps = Omit<
-  BarcodeTrialWelcomeProps,
-  "email"
->;
+type BarcodeTrialWelcomeContentProps = Omit<BarcodeTrialWelcomeProps, "email">;
 
 export const sendBarcodeTrialWelcomeEmail = async ({
   email,

@@ -47,9 +47,7 @@ describe("auditTrialEndsTomorrowEmailText", () => {
     });
     expect(text).toContain("Votre essai");
     expect(text).toContain("demain");
-    expect(text).toContain(
-      "moyen de paiement"
-    );
+    expect(text).toContain("moyen de paiement");
   });
 
   it("shows paused/add-payment message when hasPaymentMethod is false", () => {
@@ -98,7 +96,8 @@ describe("sendAuditTrialEndsTomorrowEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "alice@example.com",
-        subject: "Votre essai Audits se termine demain : prelevement automatique",
+        subject:
+          "Votre essai Audits se termine demain : prelevement automatique",
         tags: ["billing", "trial", "audit", "ends-tomorrow"],
       })
     );

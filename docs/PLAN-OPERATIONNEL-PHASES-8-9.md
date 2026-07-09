@@ -424,7 +424,7 @@ préparer un chemin de livraison distinct pour Enterprise.
 
 ### Phase 9A - CI et quality gates Core
 
-Statut : À faire
+Statut : Terminée
 
 Périmètre :
 
@@ -443,9 +443,25 @@ Critères d'acceptation :
 - un contributeur peut lancer les contrôles minimums sans ambiguïté ;
 - la CI Core échoue sur régression réelle, pas sur ambiguïté de setup.
 
+Avancement 2026-07-09 :
+
+- ajout des scripts racine `core:validate:min`, `core:build` et
+  `core:validate:ci` dans
+  [package.json](/C:/dev/patrimoine-360/patrimoine360-core/package.json) ;
+- alignement explicite de la version Node de référence via
+  [.nvmrc](/C:/dev/patrimoine-360/patrimoine360-core/.nvmrc),
+  [.node-version](/C:/dev/patrimoine-360/patrimoine360-core/.node-version) et
+  `actions/setup-node` ;
+- refonte du workflow
+  [.github/workflows/test.yml](/C:/dev/patrimoine-360/patrimoine360-core/.github/workflows/test.yml)
+  pour lancer un PostgreSQL CI local, appliquer les migrations Core puis
+  exécuter les quality gates et le build ;
+- formalisation du runbook 9A dans
+  [CI-QUALITY-GATES-CORE.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/CI-QUALITY-GATES-CORE.md).
+
 ### Phase 9B - Prisma, migrations, seed et données de base
 
-Statut : À faire
+Statut : Terminée
 
 Périmètre :
 
@@ -464,9 +480,21 @@ Critères d'acceptation :
 - les migrations Core s'exécutent seules ;
 - les règles d'extension Enterprise sont explicites.
 
+Avancement 2026-07-09 :
+
+- ajout d'un vrai seed Prisma Core idempotent dans
+  [packages/database/src/seed-core.ts](/C:/dev/patrimoine-360/patrimoine360-core/packages/database/src/seed-core.ts) ;
+- exposition des commandes `db:seed:core` et `db:seed:core:staging` dans
+  [packages/database/package.json](/C:/dev/patrimoine-360/patrimoine360-core/packages/database/package.json)
+  et dans le
+  [package.json](/C:/dev/patrimoine-360/patrimoine360-core/package.json) racine ;
+- formalisation des conventions `DATABASE_URL`, `DIRECT_URL`, migrations et
+  sens Core -> Enterprise dans
+  [PRISMA-MIGRATIONS-ET-SEED-CORE.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/PRISMA-MIGRATIONS-ET-SEED-CORE.md).
+
 ### Phase 9C - Tests d'intégration et E2E prioritaires
 
-Statut : À faire
+Statut : Terminée
 
 Périmètre :
 
@@ -485,9 +513,22 @@ Critères d'acceptation :
 - les flux Core critiques ont au moins un filet de sécurité automatisé ;
 - les régressions majeures sont détectables avant livraison.
 
+Avancement 2026-07-09 :
+
+- conservation du smoke E2E Core existant comme premier filet prioritaire dans
+  [apps/webapp/test/e2e/smoke.spec.ts](/C:/dev/patrimoine-360/patrimoine360-core/apps/webapp/test/e2e/smoke.spec.ts) ;
+- ajout du script dédié `webapp:test:e2e:smoke` côté racine et
+  [apps/webapp/package.json](/C:/dev/patrimoine-360/patrimoine360-core/apps/webapp/package.json) ;
+- stabilisation de la configuration Playwright pour la CI et l'override local
+  via
+  [apps/webapp/playwright.config.ts](/C:/dev/patrimoine-360/patrimoine360-core/apps/webapp/playwright.config.ts) ;
+- documentation des scénarios prioritaires et de la politique minimale de
+  non-régression dans
+  [TESTS-INTEGRATION-E2E-CORE.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/TESTS-INTEGRATION-E2E-CORE.md).
+
 ### Phase 9D - Docker Community et exploitation locale
 
-Statut : À faire
+Statut : Terminée
 
 Périmètre :
 
@@ -507,9 +548,24 @@ Critères d'acceptation :
   implicites ;
 - les services requis au Core sont identifiés.
 
+Avancement 2026-07-09 :
+
+- création d'une stack Community locale
+  [docker/docker-compose.yml](/C:/dev/patrimoine-360/patrimoine360-core/docker/docker-compose.yml)
+  avec PostgreSQL local et build de l'image webapp ;
+- ajout du contrat d'environnement
+  [docker/core.env.example](/C:/dev/patrimoine-360/patrimoine360-core/docker/core.env.example) ;
+- mise à jour de
+  [apps/docs/docker.md](/C:/dev/patrimoine-360/patrimoine360-core/apps/docs/docker.md)
+  pour décrire honnêtement la limite actuelle :
+  PostgreSQL local oui, storage Supabase toujours explicite ;
+- mise à jour de
+  [apps/docs/local-development.md](/C:/dev/patrimoine-360/patrimoine360-core/apps/docs/local-development.md)
+  pour exposer les nouvelles commandes de validation, seed et smoke E2E.
+
 ### Phase 9E - Release Core et synchronisation vers Enterprise
 
-Statut : À faire
+Statut : Terminée
 
 Périmètre :
 
@@ -527,6 +583,16 @@ Critères d'acceptation :
 
 - le chemin de livraison Core est documenté ;
 - la propagation vers Enterprise est séparée, volontaire et tracée.
+
+Avancement 2026-07-09 :
+
+- formalisation du runbook de release et de synchronisation dans
+  [RELEASE-CORE-ET-SYNCHRO-ENTERPRISE.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/RELEASE-CORE-ET-SYNCHRO-ENTERPRISE.md) ;
+- articulation explicite avec le flux GHCR / Dockploy déjà documenté dans
+  [DEPLOIEMENT-STAGING-DOCKPLOY.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/DEPLOIEMENT-STAGING-DOCKPLOY.md) ;
+- rappel des garde-fous Core -> Enterprise :
+  propagation volontaire, filtrée, traçable, sans retour massif Enterprise
+  vers Core.
 
 ### Phase 9F - Préparation du lot Enterprise privé
 

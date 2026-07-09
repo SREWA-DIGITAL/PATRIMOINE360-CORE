@@ -1,161 +1,147 @@
-name: 🧪 Test PR from fork
+name: core-quality-gates
 
 on:
-  pull_request_target:
+  pull_request:
+  push:
+    branches:
+      - main
+      - dev
+      - staging
   workflow_call:
     secrets:
-      SESSION_SECRET:
-        required: true
-      SUPABASE_ANON_PUBLIC:
-        required: true
-      SUPABASE_SERVICE_ROLE:
-        required: true
-      SUPABASE_URL:
-        required: true
-      SERVER_URL:
-        required: true
+      ADMIN_EMAIL:
+        required: false
+      BETTER_AUTH_SECRET:
+        required: false
+      BETTER_AUTH_URL:
+        required: false
       DATABASE_URL:
-        required: true
+        required: false
+      DIRECT_URL:
+        required: false
+      INVITE_TOKEN_SECRET:
+        required: false
+      MAPTILER_TOKEN:
+        required: false
+      SERVER_URL:
+        required: false
+      SESSION_SECRET:
+        required: false
+      SUPPORT_EMAIL:
+        required: false
+      SUPABASE_ANON_PUBLIC:
+        required: false
+      SUPABASE_SERVICE_ROLE:
+        required: false
+      SUPABASE_URL:
+        required: false
+
+concurrency:
+  group: core-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  authorize:
-    environment: ${{ github.event_name == 'pull_request_target' &&
-      github.event.pull_request.head.repo.full_name != github.repository &&
-      'external' || '' }}
-
+  quality:
+    name: quality
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: patrimoine360_core
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d patrimoine360_core"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL || 'admin@patrimoine360.local' }}
+      BETTER_AUTH_BASE_PATH: /api/auth
+      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || 'test-better-auth-secret' }}
+      BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL || 'http://127.0.0.1:3000' }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/patrimoine360_core?schema=public' }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/patrimoine360_core?schema=public' }}
+      EMAIL_PROVIDER: brevo
+      ENABLE_PREMIUM_FEATURES: "false"
+      INVITE_TOKEN_SECRET: ${{ secrets.INVITE_TOKEN_SECRET || 'test-invite-secret' }}
+      LICENSE_TYPE: core
+      MAPTILER_TOKEN: ${{ secrets.MAPTILER_TOKEN || 'test-maptiler-token' }}
+      SERVER_URL: ${{ secrets.SERVER_URL || 'http://127.0.0.1:3000' }}
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'test-session-secret' }}
+      SUPPORT_EMAIL: ${{ secrets.SUPPORT_EMAIL || 'support@patrimoine360.local' }}
+      SUPABASE_ANON_PUBLIC: ${{ secrets.SUPABASE_ANON_PUBLIC || 'test-anon-key' }}
+      SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE || 'test-service-role' }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://example.supabase.co' }}
     steps:
-      - run: echo ✓
-
-  lint:
-    needs: authorize
-    name: ⬣ ESLint
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
-      - name: ⬇️ Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: ⎔ Setup node
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          cache: pnpm
+          node-version: 22.20.0
 
-      - name: 📥 Install deps
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: 🔬 Lint
-        run: pnpm run lint
+      - name: Apply Core migrations
+        run: pnpm db:deploy-migration
 
-  typecheck:
-    needs: authorize
-    name: ʦ TypeScript
+      - name: Run Core quality gates
+        run: pnpm core:validate:min
+
+  build:
+    name: build
+    needs: quality
     runs-on: ubuntu-latest
+    env:
+      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL || 'admin@patrimoine360.local' }}
+      BETTER_AUTH_BASE_PATH: /api/auth
+      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || 'test-better-auth-secret' }}
+      BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL || 'http://127.0.0.1:3000' }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/patrimoine360_core?schema=public' }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://postgres:postgres@127.0.0.1:5432/patrimoine360_core?schema=public' }}
+      EMAIL_PROVIDER: brevo
+      ENABLE_PREMIUM_FEATURES: "false"
+      INVITE_TOKEN_SECRET: ${{ secrets.INVITE_TOKEN_SECRET || 'test-invite-secret' }}
+      LICENSE_TYPE: core
+      MAPTILER_TOKEN: ${{ secrets.MAPTILER_TOKEN || 'test-maptiler-token' }}
+      SERVER_URL: ${{ secrets.SERVER_URL || 'http://127.0.0.1:3000' }}
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'test-session-secret' }}
+      SUPPORT_EMAIL: ${{ secrets.SUPPORT_EMAIL || 'support@patrimoine360.local' }}
+      SUPABASE_ANON_PUBLIC: ${{ secrets.SUPABASE_ANON_PUBLIC || 'test-anon-key' }}
+      SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE || 'test-service-role' }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://example.supabase.co' }}
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
-      - name: ⬇️ Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: ⎔ Setup node
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          cache: pnpm
+          node-version: 22.20.0
 
-      - name: 📥 Install deps
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: 🔎 Type check
-        run: pnpm run typecheck
-
-  vitest:
-    needs: authorize
-    name: ⚡ Vitest
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
-      - name: ⬇️ Checkout repo
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.ref }}
-
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: ⎔ Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: 📥 Install deps
-        run: pnpm install --frozen-lockfile
-
-      - name: 🔧 Generate Prisma client
-        run: pnpm --filter @shelf/database run db:generate
-
-      - name: ⚡ Run vitest
-        run: pnpm --filter @shelf/webapp test -- --run
-
-  # playwright:
-  #   needs: authorize
-  #   name: 🎭 Playwright
-  #   timeout-minutes: 60
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: 🛑 Cancel Previous Runs
-  #       uses: styfle/cancel-workflow-action@0.11.0
-
-  #     - name: ⬇️ Checkout repo
-  #       uses: actions/checkout@v3
-  #       with:
-  #         ref: ${{ github.event.pull_request.head.sha || github.ref }}
-
-  #     - name: 🔑 Make envfile
-  #       uses: SpicyPizza/create-envfile@v2.0
-  #       with:
-  #         envkey_SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
-  #         envkey_SUPABASE_ANON_PUBLIC: ${{ secrets.SUPABASE_ANON_PUBLIC }}
-  #         envkey_SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
-  #         envkey_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-  #         envkey_SERVER_URL: ${{ secrets.SERVER_URL }}
-  #         envkey_DATABASE_URL: ${{ secrets.DATABASE_URL }}
-  #         file_name: .env
-
-  #     - name: ⎔ Setup node
-  #       uses: actions/setup-node@v3
-  #       with:
-  #         node-version: 18
-
-  #     - name: 📥 Download deps
-  #       uses: bahmutov/npm-install@v1
-
-  #     - name: 📥 Install Playwright Browsers
-  #       run: npm run test:e2e:install
-
-  #     - name: ⚙️ Build
-  #       run: npm run build
-
-  #     - name: Run Playwright tests
-  #       run: npx playwright test
-
-  #     - uses: actions/upload-artifact@v3
-  #       if: always()
-  #       with:
-  #         name: playwright-report
-  #         path: playwright-report/
-  #         retention-days: 30
+      - name: Build Core webapp
+        run: pnpm core:build

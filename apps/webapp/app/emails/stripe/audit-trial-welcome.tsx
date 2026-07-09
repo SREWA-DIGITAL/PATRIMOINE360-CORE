@@ -33,7 +33,8 @@ export const sendAuditTrialWelcomeEmail = async ({
     Logger.error(
       new ShelfError({
         cause,
-        message: "Something went wrong while sending the audit trial welcome email",
+        message:
+          "Something went wrong while sending the audit trial welcome email",
         additionalData: { email },
         label: "User",
       })

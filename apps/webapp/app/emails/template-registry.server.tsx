@@ -246,7 +246,9 @@ function getBillingGreeting(name?: string | null, fallback = "Bonjour,") {
   return name?.trim() ? `Bonjour ${name},` : fallback;
 }
 
-function getInvoiceStatusLabel(status: "overdue" | "payment-failed" | "resolved") {
+function getInvoiceStatusLabel(
+  status: "overdue" | "payment-failed" | "resolved"
+) {
   switch (status) {
     case "payment-failed":
       return "incident de paiement";
@@ -561,15 +563,21 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
     defaultLanguage: "fr",
     html: async ({ firstName, hasPaymentMethod, trialEndDate }) =>
       renderTemplate(
-        <PatrimoineEmailLayout title={getTrialEndingSubject({
-          hasPaymentMethod,
-          kind: "audit",
-        })}>
+        <PatrimoineEmailLayout
+          title={getTrialEndingSubject({
+            hasPaymentMethod,
+            kind: "audit",
+          })}
+        >
           {renderParagraphs([
             getBillingGreeting(firstName),
             hasPaymentMethod
-              ? `Votre essai Audits se termine le ${formatLongDate(trialEndDate)}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
-              : `Votre essai Audits se termine le ${formatLongDate(trialEndDate)}. Sans moyen de paiement valide, l'acces aux audits sera suspendu a la fin de l'essai.`,
+              ? `Votre essai Audits se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
+              : `Votre essai Audits se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Sans moyen de paiement valide, l'acces aux audits sera suspendu a la fin de l'essai.`,
           ])}
           <div style={{ marginBottom: "24px" }}>
             <EmailCtaButton
@@ -597,8 +605,12 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
         getBillingGreeting(firstName),
         "",
         hasPaymentMethod
-          ? `Votre essai Audits se termine le ${formatLongDate(trialEndDate)}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
-          : `Votre essai Audits se termine le ${formatLongDate(trialEndDate)}. Sans moyen de paiement valide, l'acces aux audits sera suspendu a la fin de l'essai.`,
+          ? `Votre essai Audits se termine le ${formatLongDate(
+              trialEndDate
+            )}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
+          : `Votre essai Audits se termine le ${formatLongDate(
+              trialEndDate
+            )}. Sans moyen de paiement valide, l'acces aux audits sera suspendu a la fin de l'essai.`,
         hasPaymentMethod
           ? `Gerer mon abonnement : ${subscriptionSettingsUrl()}`
           : `Ajouter un moyen de paiement : ${subscriptionSettingsUrl()}`,
@@ -616,16 +628,22 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
     defaultLanguage: "fr",
     html: async ({ firstName, hasPaymentMethod, trialEndDate }) =>
       renderTemplate(
-        <PatrimoineEmailLayout title={getTrialEndingSubject({
-          hasPaymentMethod,
-          kind: "audit",
-          tomorrow: true,
-        })}>
+        <PatrimoineEmailLayout
+          title={getTrialEndingSubject({
+            hasPaymentMethod,
+            kind: "audit",
+            tomorrow: true,
+          })}
+        >
           {renderParagraphs([
             getBillingGreeting(firstName),
             hasPaymentMethod
-              ? `Votre essai Audits se termine demain, le ${formatLongDate(trialEndDate)}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
-              : `Votre essai Audits se termine demain, le ${formatLongDate(trialEndDate)}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
+              ? `Votre essai Audits se termine demain, le ${formatLongDate(
+                  trialEndDate
+                )}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
+              : `Votre essai Audits se termine demain, le ${formatLongDate(
+                  trialEndDate
+                )}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
           ])}
           <div style={{ marginBottom: "24px" }}>
             <EmailCtaButton
@@ -652,8 +670,12 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
         getBillingGreeting(firstName),
         "",
         hasPaymentMethod
-          ? `Votre essai Audits se termine demain, le ${formatLongDate(trialEndDate)}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
-          : `Votre essai Audits se termine demain, le ${formatLongDate(trialEndDate)}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
+          ? `Votre essai Audits se termine demain, le ${formatLongDate(
+              trialEndDate
+            )}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
+          : `Votre essai Audits se termine demain, le ${formatLongDate(
+              trialEndDate
+            )}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
         hasPaymentMethod
           ? `Verifier mon abonnement : ${subscriptionSettingsUrl()}`
           : `Ajouter un moyen de paiement : ${subscriptionSettingsUrl()}`,
@@ -707,15 +729,21 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
     defaultLanguage: "fr",
     html: async ({ firstName, hasPaymentMethod, trialEndDate }) =>
       renderTemplate(
-        <PatrimoineEmailLayout title={getTrialEndingSubject({
-          hasPaymentMethod,
-          kind: "barcode",
-        })}>
+        <PatrimoineEmailLayout
+          title={getTrialEndingSubject({
+            hasPaymentMethod,
+            kind: "barcode",
+          })}
+        >
           {renderParagraphs([
             getBillingGreeting(firstName),
             hasPaymentMethod
-              ? `Votre essai Codes-barres se termine le ${formatLongDate(trialEndDate)}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
-              : `Votre essai Codes-barres se termine le ${formatLongDate(trialEndDate)}. Sans moyen de paiement valide, l'acces sera suspendu a la fin de l'essai.`,
+              ? `Votre essai Codes-barres se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
+              : `Votre essai Codes-barres se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Sans moyen de paiement valide, l'acces sera suspendu a la fin de l'essai.`,
           ])}
           <div style={{ marginBottom: "24px" }}>
             <EmailCtaButton
@@ -738,8 +766,12 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
         getBillingGreeting(firstName),
         "",
         hasPaymentMethod
-          ? `Votre essai Codes-barres se termine le ${formatLongDate(trialEndDate)}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
-          : `Votre essai Codes-barres se termine le ${formatLongDate(trialEndDate)}. Sans moyen de paiement valide, l'acces sera suspendu a la fin de l'essai.`,
+          ? `Votre essai Codes-barres se termine le ${formatLongDate(
+              trialEndDate
+            )}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
+          : `Votre essai Codes-barres se termine le ${formatLongDate(
+              trialEndDate
+            )}. Sans moyen de paiement valide, l'acces sera suspendu a la fin de l'essai.`,
         hasPaymentMethod
           ? `Gerer mon abonnement : ${subscriptionSettingsUrl()}`
           : `Ajouter un moyen de paiement : ${subscriptionSettingsUrl()}`,
@@ -753,16 +785,22 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
     defaultLanguage: "fr",
     html: async ({ firstName, hasPaymentMethod, trialEndDate }) =>
       renderTemplate(
-        <PatrimoineEmailLayout title={getTrialEndingSubject({
-          hasPaymentMethod,
-          kind: "barcode",
-          tomorrow: true,
-        })}>
+        <PatrimoineEmailLayout
+          title={getTrialEndingSubject({
+            hasPaymentMethod,
+            kind: "barcode",
+            tomorrow: true,
+          })}
+        >
           {renderParagraphs([
             getBillingGreeting(firstName),
             hasPaymentMethod
-              ? `Votre essai Codes-barres se termine demain, le ${formatLongDate(trialEndDate)}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
-              : `Votre essai Codes-barres se termine demain, le ${formatLongDate(trialEndDate)}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
+              ? `Votre essai Codes-barres se termine demain, le ${formatLongDate(
+                  trialEndDate
+                )}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
+              : `Votre essai Codes-barres se termine demain, le ${formatLongDate(
+                  trialEndDate
+                )}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
           ])}
           <div style={{ marginBottom: "24px" }}>
             <EmailCtaButton
@@ -789,8 +827,12 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
         getBillingGreeting(firstName),
         "",
         hasPaymentMethod
-          ? `Votre essai Codes-barres se termine demain, le ${formatLongDate(trialEndDate)}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
-          : `Votre essai Codes-barres se termine demain, le ${formatLongDate(trialEndDate)}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
+          ? `Votre essai Codes-barres se termine demain, le ${formatLongDate(
+              trialEndDate
+            )}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
+          : `Votre essai Codes-barres se termine demain, le ${formatLongDate(
+              trialEndDate
+            )}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
         hasPaymentMethod
           ? `Verifier mon abonnement : ${subscriptionSettingsUrl()}`
           : `Ajouter un moyen de paiement : ${subscriptionSettingsUrl()}`,
@@ -847,7 +889,9 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
     defaultLanguage: "fr",
     html: async ({ eventType, invoiceId, status, user }) =>
       renderTemplate(
-        <PatrimoineEmailLayout title={getInvoiceAdminSubject(status, user.email)}>
+        <PatrimoineEmailLayout
+          title={getInvoiceAdminSubject(status, user.email)}
+        >
           {renderParagraphs([
             `Une notification de facturation a ete emise pour ${user.email}.`,
             `Type d'evenement Stripe : ${eventType}`,
@@ -972,8 +1016,12 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
           {renderParagraphs([
             getBillingGreeting(firstName),
             hasPaymentMethod
-              ? `Votre essai ${planName} se termine le ${formatLongDate(trialEndDate)}. Comme un moyen de paiement est deja enregistre, l'abonnement sera active automatiquement a la fin de l'essai.`
-              : `Votre essai ${planName} se termine le ${formatLongDate(trialEndDate)}. Pour conserver vos fonctionnalites premium sans interruption, passez a un abonnement payant avant l'echeance.`,
+              ? `Votre essai ${planName} se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Comme un moyen de paiement est deja enregistre, l'abonnement sera active automatiquement a la fin de l'essai.`
+              : `Votre essai ${planName} se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Pour conserver vos fonctionnalites premium sans interruption, passez a un abonnement payant avant l'echeance.`,
           ])}
           <div style={{ marginBottom: "24px" }}>
             <EmailCtaButton
@@ -994,8 +1042,12 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
         getBillingGreeting(firstName),
         "",
         hasPaymentMethod
-          ? `Votre essai ${planName} se termine le ${formatLongDate(trialEndDate)}. Comme un moyen de paiement est deja enregistre, l'abonnement sera active automatiquement a la fin de l'essai.`
-          : `Votre essai ${planName} se termine le ${formatLongDate(trialEndDate)}. Pour conserver vos fonctionnalites premium sans interruption, passez a un abonnement payant avant l'echeance.`,
+          ? `Votre essai ${planName} se termine le ${formatLongDate(
+              trialEndDate
+            )}. Comme un moyen de paiement est deja enregistre, l'abonnement sera active automatiquement a la fin de l'essai.`
+          : `Votre essai ${planName} se termine le ${formatLongDate(
+              trialEndDate
+            )}. Pour conserver vos fonctionnalites premium sans interruption, passez a un abonnement payant avant l'echeance.`,
         `Gerer mon abonnement : ${subscriptionSettingsUrl()}`,
         "",
         `Cordialement,`,
@@ -1188,8 +1240,12 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
           {renderParagraphs([
             `Un transfert de propriete a ete realise sur l'espace ${workspaceName}.`,
             `Identifiant espace : ${workspaceId}`,
-            `Ancien proprietaire : ${resolveUserDisplayName(previousOwner)} (${previousOwner.email})`,
-            `Nouveau proprietaire : ${resolveUserDisplayName(newOwner)} (${newOwner.email})`,
+            `Ancien proprietaire : ${resolveUserDisplayName(previousOwner)} (${
+              previousOwner.email
+            })`,
+            `Nouveau proprietaire : ${resolveUserDisplayName(newOwner)} (${
+              newOwner.email
+            })`,
             `Abonnement transfere : ${subscriptionTransferred ? "oui" : "non"}`,
           ])}
           {subscriptionTransferError ? (
@@ -1218,8 +1274,12 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
       joinLines([
         `Un transfert de propriete a ete realise sur l'espace ${workspaceName}.`,
         `Identifiant espace : ${workspaceId}`,
-        `Ancien proprietaire : ${resolveUserDisplayName(previousOwner)} (${previousOwner.email})`,
-        `Nouveau proprietaire : ${resolveUserDisplayName(newOwner)} (${newOwner.email})`,
+        `Ancien proprietaire : ${resolveUserDisplayName(previousOwner)} (${
+          previousOwner.email
+        })`,
+        `Nouveau proprietaire : ${resolveUserDisplayName(newOwner)} (${
+          newOwner.email
+        })`,
         `Abonnement transfere : ${subscriptionTransferred ? "oui" : "non"}`,
         subscriptionTransferError
           ? `Alerte : ${subscriptionTransferError}`
@@ -1353,7 +1413,8 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
         </PatrimoineEmailLayout>
       ),
     status: "a-reecrire",
-    subject: ({ itemLabel }) => `Votre message pour ${itemLabel} a ete transmis`,
+    subject: ({ itemLabel }) =>
+      `Votre message pour ${itemLabel} a ete transmis`,
     tags: ({ reportType }) => [
       "report-found",
       "reporter-confirmation",

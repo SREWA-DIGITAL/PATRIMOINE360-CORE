@@ -39,11 +39,12 @@ export const unpaidInvoiceAdminText = ({
   eventType: string;
   invoiceId: string;
   user: AdminUser;
-}) => [
-  `Notification de facturation pour ${user.email}`,
-  `Type d'evenement Stripe : ${eventType}`,
-  `Facture : ${invoiceId}`,
-].join("\n");
+}) =>
+  [
+    `Notification de facturation pour ${user.email}`,
+    `Type d'evenement Stripe : ${eventType}`,
+    `Facture : ${invoiceId}`,
+  ].join("\n");
 
 export const sendUnpaidInvoiceUserEmail = async ({
   amountDue,

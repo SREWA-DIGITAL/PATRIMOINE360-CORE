@@ -47,9 +47,7 @@ describe("barcodeTrialEndsTomorrowEmailText", () => {
     });
     expect(text).toContain("Votre essai");
     expect(text).toContain("demain");
-    expect(text).toContain(
-      "moyen de paiement"
-    );
+    expect(text).toContain("moyen de paiement");
   });
 
   it("shows paused/add-payment message when hasPaymentMethod is false", () => {
@@ -98,7 +96,8 @@ describe("sendBarcodeTrialEndsTomorrowEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "alice@example.com",
-        subject: "Votre essai Codes-barres se termine demain : prelevement automatique",
+        subject:
+          "Votre essai Codes-barres se termine demain : prelevement automatique",
       })
     );
   });

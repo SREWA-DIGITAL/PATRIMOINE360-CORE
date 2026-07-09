@@ -47,9 +47,7 @@ describe("trialEndsSoonEmailText", () => {
       trialEndDate,
     });
     expect(text).toContain("Votre essai");
-    expect(text).toContain(
-      "moyen de paiement"
-    );
+    expect(text).toContain("moyen de paiement");
     expect(text).toContain("essai Team");
   });
 
@@ -114,7 +112,8 @@ describe("sendTrialEndsSoonEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "alice@example.com",
-        subject: "Votre essai Patrimoine360 se termine bientot : prelevement automatique",
+        subject:
+          "Votre essai Patrimoine360 se termine bientot : prelevement automatique",
         tags: ["billing", "trial", "team", "ends-soon"],
       })
     );
