@@ -276,7 +276,7 @@ export default function LocationKits() {
                     renderItem={(item) => resolveTeamMemberName(item, true)}
                     withoutValueItem={{
                       id: "without-custody",
-                      name: "Without custody",
+                      name: "Sans affectation",
                     }}
                   />
                 </div>
@@ -345,9 +345,9 @@ export default function LocationKits() {
           }
           customEmptyStateContent={{
             title: "You haven't added any kits yet.",
-            text: "What are you waiting for? Add your first kit now!",
+            text: "Ajoutez votre premier lot à cet emplacement pour commencer.",
             newButtonRoute: "manage-kits",
-            newButtonContent: "Add kit",
+            newButtonContent: "Ajouter un lot",
           }}
         />
       </div>

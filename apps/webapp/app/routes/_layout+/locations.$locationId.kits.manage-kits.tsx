@@ -275,9 +275,9 @@ export default function ManageLocationKits() {
           }}
           customEmptyStateContent={{
             title: "You haven't added any kits yet.",
-            text: "What are you waiting for? Create your first kit now!",
+            text: "Créez votre premier lot pour l'associer à cet emplacement.",
             newButtonRoute: "/kits/new",
-            newButtonContent: "New kit",
+            newButtonContent: "Nouveau lot",
           }}
           className="mx-1 flex h-full flex-col justify-start border-0"
           bulkActions={<> </>}

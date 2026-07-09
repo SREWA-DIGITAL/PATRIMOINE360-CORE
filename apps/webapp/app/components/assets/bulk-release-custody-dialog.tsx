@@ -14,8 +14,8 @@ export default function BulkReleaseCustodyDialog() {
     <BulkUpdateDialogContent
       ref={zo.ref}
       type="release-custody"
-      title="Release custody of assets"
-      description="Are you sure you want to release custody of all selected assets?"
+      title="Libérer l'affectation des biens"
+      description="Voulez-vous vraiment libérer l'affectation de tous les biens sélectionnés ?"
       actionUrl="/api/assets/bulk-release-custody"
       arrayFieldId="assetIds"
     >

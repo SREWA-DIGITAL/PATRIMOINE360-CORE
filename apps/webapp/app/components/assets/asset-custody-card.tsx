@@ -75,7 +75,7 @@ export function CustodyCard({
           />
           <div>
             <p className="">
-              In custody of{" "}
+              Affecté à{" "}
               {canViewTeamMemberUsers && custody?.custodian?.userId ? (
                 <Button
                   to={`/settings/team/users/${custody.custodian.userId}/assets`}
@@ -94,7 +94,7 @@ export function CustodyCard({
               <span className="font-semibold">{}</span>
             </p>
             <span>
-              Since <DateS date={custody.createdAt} includeTime />
+              Depuis le <DateS date={custody.createdAt} includeTime />
             </span>
           </div>
         </div>
@@ -134,8 +134,7 @@ export function CustodyCard({
           />
           <div>
             <p className="">
-              In custody of{" "}
-              <span className="font-semibold">{teamMemberName} </span>
+              Affecté à <span className="font-semibold">{teamMemberName} </span>
               via
             </p>
             <Link to={`/bookings/${booking.id}`} className="underline">
@@ -143,7 +142,7 @@ export function CustodyCard({
             </Link>
             <span>
               {" "}
-              Since <DateS date={booking.from} includeTime />
+              depuis le <DateS date={booking.from} includeTime />
             </span>
           </div>
         </div>

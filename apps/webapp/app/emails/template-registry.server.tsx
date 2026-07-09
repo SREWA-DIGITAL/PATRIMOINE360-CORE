@@ -49,6 +49,67 @@ export type EmailTemplatePayloads = {
     email: string;
     url: string;
   };
+  "billing.audit-trial-ending-soon": {
+    firstName?: string | null;
+    hasPaymentMethod: boolean;
+    trialEndDate: Date;
+  };
+  "billing.audit-trial-ending-tomorrow": {
+    firstName?: string | null;
+    hasPaymentMethod: boolean;
+    trialEndDate: Date;
+  };
+  "billing.audit-trial-welcome": {
+    firstName?: string | null;
+    hasPaymentMethod: boolean;
+  };
+  "billing.barcode-trial-ending-soon": {
+    firstName?: string | null;
+    hasPaymentMethod: boolean;
+    trialEndDate: Date;
+  };
+  "billing.barcode-trial-ending-tomorrow": {
+    firstName?: string | null;
+    hasPaymentMethod: boolean;
+    trialEndDate: Date;
+  };
+  "billing.barcode-trial-welcome": {
+    firstName?: string | null;
+    hasPaymentMethod: boolean;
+  };
+  "billing.invoice-admin-notification": {
+    eventType: string;
+    invoiceId: string;
+    status: "overdue" | "payment-failed" | "resolved";
+    user: NamedEmailUser & { id: string };
+  };
+  "billing.invoice-overdue": {
+    amountDue: string;
+    customerEmail: string;
+    customerName?: string | null;
+    dueDate?: string | null;
+    subscriptionName: string;
+  };
+  "billing.invoice-payment-failed": {
+    amountDue: string;
+    customerEmail: string;
+    customerName?: string | null;
+    dueDate?: string | null;
+    subscriptionName: string;
+  };
+  "billing.plan-trial-ending-soon": {
+    firstName?: string | null;
+    hasPaymentMethod: boolean;
+    planName: string;
+    trialEndDate: Date;
+  };
+  "billing.subscription-activated": {
+    customerName?: string | null;
+    subscriptionName: string;
+  };
+  "billing.team-trial-welcome": {
+    firstName?: string | null;
+  };
   "invite.workspace": {
     extraMessage?: string | null;
     invite: InviteWithInviterAndOrg;
@@ -56,6 +117,36 @@ export type EmailTemplatePayloads = {
   };
   "onboarding.welcome": {
     firstName?: string | null;
+  };
+  "organization.ownership-transfer.admin": {
+    newOwner: NamedEmailUser;
+    previousOwner: NamedEmailUser;
+    subscriptionTransferError?: string | null;
+    subscriptionTransferred: boolean;
+    workspaceId: string;
+    workspaceName: string;
+  };
+  "organization.ownership-transfer.new-owner": {
+    newOwnerName: string;
+    subscriptionTransferred: boolean;
+    workspaceName: string;
+  };
+  "organization.ownership-transfer.previous-owner": {
+    newOwnerName: string;
+    previousOwnerName: string;
+    subscriptionTransferred: boolean;
+    workspaceName: string;
+  };
+  "report-found.owner": {
+    itemLabel: string;
+    message: string;
+    ownerEmail: string;
+    reportType: string;
+    reporterEmail: string;
+  };
+  "report-found.reporter": {
+    itemLabel: string;
+    reportType: string;
   };
   "team.access-revoked": {
     customEmailFooter?: string | null;
@@ -119,6 +210,88 @@ function withFooter(text: string, footerText?: string | null) {
 
 function inviteAcceptanceUrl(inviteId: string, token: string) {
   return `${SERVER_URL}/accept-invite/${inviteId}?token=${token}`;
+}
+
+function subscriptionSettingsUrl() {
+  return `${SERVER_URL}/account-details/subscription`;
+}
+
+function workspaceSettingsUrl() {
+  return `${SERVER_URL}/account-details/workspace`;
+}
+
+function auditsUrl() {
+  return `${SERVER_URL}/audits`;
+}
+
+function settingsGeneralUrl() {
+  return `${SERVER_URL}/settings/general`;
+}
+
+function adminDashboardUrl(userId: string) {
+  return `${SERVER_URL}/admin-dashboard/${userId}`;
+}
+
+function formatLongDate(date: Date) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "long",
+  }).format(date);
+}
+
+function getAddonLabel(kind: "audit" | "barcode") {
+  return kind === "audit" ? "Audits" : "Codes-barres";
+}
+
+function getBillingGreeting(name?: string | null, fallback = "Bonjour,") {
+  return name?.trim() ? `Bonjour ${name},` : fallback;
+}
+
+function getInvoiceStatusLabel(
+  status: "overdue" | "payment-failed" | "resolved"
+) {
+  switch (status) {
+    case "payment-failed":
+      return "incident de paiement";
+    case "overdue":
+      return "facture en retard";
+    case "resolved":
+      return "facture regularisee";
+  }
+}
+
+function getInvoiceAdminSubject(
+  status: "overdue" | "payment-failed" | "resolved",
+  email: string
+) {
+  switch (status) {
+    case "payment-failed":
+      return `Facture impayee : ${email}`;
+    case "overdue":
+      return `Facture en retard : ${email}`;
+    case "resolved":
+      return `Facture regularisee : ${email}`;
+  }
+}
+
+function getTrialEndingSubject({
+  hasPaymentMethod,
+  kind,
+  tomorrow = false,
+}: {
+  hasPaymentMethod: boolean;
+  kind: "audit" | "barcode";
+  tomorrow?: boolean;
+}) {
+  const label = getAddonLabel(kind);
+  if (tomorrow) {
+    return hasPaymentMethod
+      ? `Votre essai ${label} se termine demain : prelevement automatique`
+      : `Votre essai ${label} se termine demain`;
+  }
+
+  return hasPaymentMethod
+    ? `Votre essai ${label} se termine bientot : prelevement automatique`
+    : `Votre essai ${label} se termine bientot`;
 }
 
 async function renderTemplate(node: ReactElement) {
@@ -385,6 +558,570 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
         `L'equipe ${productName}`,
       ]),
   },
+  "billing.audit-trial-ending-soon": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ firstName, hasPaymentMethod, trialEndDate }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout
+          title={getTrialEndingSubject({
+            hasPaymentMethod,
+            kind: "audit",
+          })}
+        >
+          {renderParagraphs([
+            getBillingGreeting(firstName),
+            hasPaymentMethod
+              ? `Votre essai Audits se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
+              : `Votre essai Audits se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Sans moyen de paiement valide, l'acces aux audits sera suspendu a la fin de l'essai.`,
+          ])}
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton
+              href={subscriptionSettingsUrl()}
+              label={
+                hasPaymentMethod
+                  ? "Gerer mon abonnement"
+                  : "Ajouter un moyen de paiement"
+              }
+            />
+          </div>
+          {renderParagraphs([
+            hasPaymentMethod
+              ? "Si vous ne souhaitez pas continuer, vous pouvez resilier depuis vos parametres d'abonnement avant la fin de l'essai."
+              : "Ajoutez un moyen de paiement avant l'echeance pour conserver un acces continu a cette fonctionnalite.",
+          ])}
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: ({ hasPaymentMethod }) =>
+      getTrialEndingSubject({ hasPaymentMethod, kind: "audit" }),
+    tags: () => ["billing", "trial", "audit", "ends-soon"],
+    text: ({ firstName, hasPaymentMethod, trialEndDate }) =>
+      joinLines([
+        getBillingGreeting(firstName),
+        "",
+        hasPaymentMethod
+          ? `Votre essai Audits se termine le ${formatLongDate(
+              trialEndDate
+            )}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
+          : `Votre essai Audits se termine le ${formatLongDate(
+              trialEndDate
+            )}. Sans moyen de paiement valide, l'acces aux audits sera suspendu a la fin de l'essai.`,
+        hasPaymentMethod
+          ? `Gerer mon abonnement : ${subscriptionSettingsUrl()}`
+          : `Ajouter un moyen de paiement : ${subscriptionSettingsUrl()}`,
+        "",
+        hasPaymentMethod
+          ? "Si vous ne souhaitez pas continuer, vous pouvez resilier depuis vos parametres d'abonnement avant la fin de l'essai."
+          : "Ajoutez un moyen de paiement avant l'echeance pour conserver un acces continu a cette fonctionnalite.",
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "billing.audit-trial-ending-tomorrow": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ firstName, hasPaymentMethod, trialEndDate }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout
+          title={getTrialEndingSubject({
+            hasPaymentMethod,
+            kind: "audit",
+            tomorrow: true,
+          })}
+        >
+          {renderParagraphs([
+            getBillingGreeting(firstName),
+            hasPaymentMethod
+              ? `Votre essai Audits se termine demain, le ${formatLongDate(
+                  trialEndDate
+                )}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
+              : `Votre essai Audits se termine demain, le ${formatLongDate(
+                  trialEndDate
+                )}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
+          ])}
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton
+              href={subscriptionSettingsUrl()}
+              label={
+                hasPaymentMethod
+                  ? "Verifier mon abonnement"
+                  : "Ajouter un moyen de paiement"
+              }
+            />
+          </div>
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: ({ hasPaymentMethod }) =>
+      getTrialEndingSubject({
+        hasPaymentMethod,
+        kind: "audit",
+        tomorrow: true,
+      }),
+    tags: () => ["billing", "trial", "audit", "ends-tomorrow"],
+    text: ({ firstName, hasPaymentMethod, trialEndDate }) =>
+      joinLines([
+        getBillingGreeting(firstName),
+        "",
+        hasPaymentMethod
+          ? `Votre essai Audits se termine demain, le ${formatLongDate(
+              trialEndDate
+            )}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
+          : `Votre essai Audits se termine demain, le ${formatLongDate(
+              trialEndDate
+            )}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
+        hasPaymentMethod
+          ? `Verifier mon abonnement : ${subscriptionSettingsUrl()}`
+          : `Ajouter un moyen de paiement : ${subscriptionSettingsUrl()}`,
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "billing.audit-trial-welcome": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ firstName, hasPaymentMethod }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout title="Votre essai Audits est actif">
+          {renderParagraphs([
+            getBillingGreeting(firstName),
+            `Votre essai Audits de ${config.freeTrialDays} jours est maintenant actif sur Patrimoine360.`,
+            "Vous pouvez commencer a planifier vos campagnes de verification, suivre les ecarts et centraliser vos controles.",
+          ])}
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton href={auditsUrl()} label="Ouvrir les audits" />
+          </div>
+          {renderParagraphs([
+            hasPaymentMethod
+              ? "Un moyen de paiement est deja enregistre. Si vous ne souhaitez pas continuer apres l'essai, pensez a resilier avant l'echeance depuis vos parametres d'abonnement."
+              : "Aucun moyen de paiement n'est encore enregistre. Vous pourrez en ajouter un plus tard si vous souhaitez poursuivre sans interruption.",
+          ])}
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: () => "Votre essai Audits Patrimoine360 est actif",
+    tags: () => ["billing", "trial", "audit", "welcome"],
+    text: ({ firstName, hasPaymentMethod }) =>
+      joinLines([
+        getBillingGreeting(firstName),
+        "",
+        `Votre essai Audits de ${config.freeTrialDays} jours est maintenant actif sur Patrimoine360.`,
+        "Vous pouvez commencer a planifier vos campagnes de verification, suivre les ecarts et centraliser vos controles.",
+        `Ouvrir les audits : ${auditsUrl()}`,
+        "",
+        hasPaymentMethod
+          ? `Un moyen de paiement est deja enregistre. Si vous ne souhaitez pas continuer apres l'essai, pensez a resilier avant l'echeance : ${subscriptionSettingsUrl()}`
+          : "Aucun moyen de paiement n'est encore enregistre. Vous pourrez en ajouter un plus tard si vous souhaitez poursuivre sans interruption.",
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "billing.barcode-trial-ending-soon": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ firstName, hasPaymentMethod, trialEndDate }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout
+          title={getTrialEndingSubject({
+            hasPaymentMethod,
+            kind: "barcode",
+          })}
+        >
+          {renderParagraphs([
+            getBillingGreeting(firstName),
+            hasPaymentMethod
+              ? `Votre essai Codes-barres se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
+              : `Votre essai Codes-barres se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Sans moyen de paiement valide, l'acces sera suspendu a la fin de l'essai.`,
+          ])}
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton
+              href={subscriptionSettingsUrl()}
+              label={
+                hasPaymentMethod
+                  ? "Gerer mon abonnement"
+                  : "Ajouter un moyen de paiement"
+              }
+            />
+          </div>
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: ({ hasPaymentMethod }) =>
+      getTrialEndingSubject({ hasPaymentMethod, kind: "barcode" }),
+    tags: () => ["billing", "trial", "barcode", "ends-soon"],
+    text: ({ firstName, hasPaymentMethod, trialEndDate }) =>
+      joinLines([
+        getBillingGreeting(firstName),
+        "",
+        hasPaymentMethod
+          ? `Votre essai Codes-barres se termine le ${formatLongDate(
+              trialEndDate
+            )}. Comme un moyen de paiement est deja enregistre, l'abonnement passera automatiquement en payant a la fin de l'essai.`
+          : `Votre essai Codes-barres se termine le ${formatLongDate(
+              trialEndDate
+            )}. Sans moyen de paiement valide, l'acces sera suspendu a la fin de l'essai.`,
+        hasPaymentMethod
+          ? `Gerer mon abonnement : ${subscriptionSettingsUrl()}`
+          : `Ajouter un moyen de paiement : ${subscriptionSettingsUrl()}`,
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "billing.barcode-trial-ending-tomorrow": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ firstName, hasPaymentMethod, trialEndDate }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout
+          title={getTrialEndingSubject({
+            hasPaymentMethod,
+            kind: "barcode",
+            tomorrow: true,
+          })}
+        >
+          {renderParagraphs([
+            getBillingGreeting(firstName),
+            hasPaymentMethod
+              ? `Votre essai Codes-barres se termine demain, le ${formatLongDate(
+                  trialEndDate
+                )}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
+              : `Votre essai Codes-barres se termine demain, le ${formatLongDate(
+                  trialEndDate
+                )}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
+          ])}
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton
+              href={subscriptionSettingsUrl()}
+              label={
+                hasPaymentMethod
+                  ? "Verifier mon abonnement"
+                  : "Ajouter un moyen de paiement"
+              }
+            />
+          </div>
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: ({ hasPaymentMethod }) =>
+      getTrialEndingSubject({
+        hasPaymentMethod,
+        kind: "barcode",
+        tomorrow: true,
+      }),
+    tags: () => ["billing", "trial", "barcode", "ends-tomorrow"],
+    text: ({ firstName, hasPaymentMethod, trialEndDate }) =>
+      joinLines([
+        getBillingGreeting(firstName),
+        "",
+        hasPaymentMethod
+          ? `Votre essai Codes-barres se termine demain, le ${formatLongDate(
+              trialEndDate
+            )}. Le passage a l'abonnement payant se fera automatiquement si vous conservez votre moyen de paiement actuel.`
+          : `Votre essai Codes-barres se termine demain, le ${formatLongDate(
+              trialEndDate
+            )}. Sans moyen de paiement valide, l'acces sera suspendu a l'echeance.`,
+        hasPaymentMethod
+          ? `Verifier mon abonnement : ${subscriptionSettingsUrl()}`
+          : `Ajouter un moyen de paiement : ${subscriptionSettingsUrl()}`,
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "billing.barcode-trial-welcome": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ firstName, hasPaymentMethod }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout title="Votre essai Codes-barres est actif">
+          {renderParagraphs([
+            getBillingGreeting(firstName),
+            `Votre essai Codes-barres de ${config.freeTrialDays} jours est maintenant actif sur Patrimoine360.`,
+            "Vous pouvez des a present generer et exploiter vos QR codes pour fluidifier l'inventaire terrain.",
+          ])}
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton
+              href={settingsGeneralUrl()}
+              label="Ouvrir les parametres"
+            />
+          </div>
+          {renderParagraphs([
+            hasPaymentMethod
+              ? "Un moyen de paiement est deja enregistre. Si vous ne souhaitez pas poursuivre apres l'essai, pensez a resilier avant l'echeance."
+              : "Aucun moyen de paiement n'est encore enregistre. Vous pourrez en ajouter un plus tard si vous souhaitez conserver l'acces.",
+          ])}
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: () => "Votre essai Codes-barres Patrimoine360 est actif",
+    tags: () => ["billing", "trial", "barcode", "welcome"],
+    text: ({ firstName, hasPaymentMethod }) =>
+      joinLines([
+        getBillingGreeting(firstName),
+        "",
+        `Votre essai Codes-barres de ${config.freeTrialDays} jours est maintenant actif sur Patrimoine360.`,
+        "Vous pouvez des a present generer et exploiter vos QR codes pour fluidifier l'inventaire terrain.",
+        `Ouvrir les parametres : ${settingsGeneralUrl()}`,
+        "",
+        hasPaymentMethod
+          ? `Un moyen de paiement est deja enregistre. Si vous ne souhaitez pas poursuivre apres l'essai, pensez a resilier avant l'echeance : ${subscriptionSettingsUrl()}`
+          : "Aucun moyen de paiement n'est encore enregistre. Vous pourrez en ajouter un plus tard si vous souhaitez conserver l'acces.",
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "billing.invoice-admin-notification": {
+    audience: "admin",
+    defaultLanguage: "fr",
+    html: async ({ eventType, invoiceId, status, user }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout
+          title={getInvoiceAdminSubject(status, user.email)}
+        >
+          {renderParagraphs([
+            `Une notification de facturation a ete emise pour ${user.email}.`,
+            `Type d'evenement Stripe : ${eventType}`,
+            `Statut : ${getInvoiceStatusLabel(status)}`,
+            `Facture : ${invoiceId}`,
+          ])}
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton
+              href={adminDashboardUrl(user.id)}
+              label="Ouvrir le tableau de bord admin"
+            />
+          </div>
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: ({ status, user }) => getInvoiceAdminSubject(status, user.email),
+    tags: () => ["billing", "invoice", "admin-notification"],
+    text: ({ eventType, invoiceId, status, user }) =>
+      joinLines([
+        `Une notification de facturation a ete emise pour ${user.email}.`,
+        `Type d'evenement Stripe : ${eventType}`,
+        `Statut : ${getInvoiceStatusLabel(status)}`,
+        `Facture : ${invoiceId}`,
+        `Tableau de bord admin : ${adminDashboardUrl(user.id)}`,
+      ]),
+  },
+  "billing.invoice-overdue": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ amountDue, customerName, dueDate, subscriptionName }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout title="Action requise : facture en retard">
+          {renderParagraphs([
+            getBillingGreeting(customerName),
+            `La facture associee a votre abonnement ${subscriptionName} est actuellement en retard.`,
+          ])}
+          <EmailInfoBox label="Details de la facture">
+            <Text style={{ ...styles.p, margin: 0 }}>
+              Montant : {amountDue}
+              <br />
+              {dueDate ? `Echeance : ${dueDate}` : "Echeance : immediate"}
+            </Text>
+          </EmailInfoBox>
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton
+              href={subscriptionSettingsUrl()}
+              label="Mettre a jour mon paiement"
+            />
+          </div>
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: () => "Action requise : votre facture Patrimoine360 est en retard",
+    tags: () => ["billing", "invoice", "overdue"],
+    text: ({ amountDue, customerName, dueDate, subscriptionName }) =>
+      joinLines([
+        getBillingGreeting(customerName),
+        "",
+        `La facture associee a votre abonnement ${subscriptionName} est actuellement en retard.`,
+        `Montant : ${amountDue}`,
+        `Echeance : ${dueDate ?? "immediate"}`,
+        `Mettre a jour mon paiement : ${subscriptionSettingsUrl()}`,
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "billing.invoice-payment-failed": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ amountDue, customerName, dueDate, subscriptionName }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout title="Action requise : probleme de paiement">
+          {renderParagraphs([
+            getBillingGreeting(customerName),
+            `Nous n'avons pas pu traiter le dernier paiement de votre abonnement ${subscriptionName}.`,
+          ])}
+          <EmailInfoBox label="Details de la facture">
+            <Text style={{ ...styles.p, margin: 0 }}>
+              Montant : {amountDue}
+              <br />
+              {dueDate ? `Echeance : ${dueDate}` : "Echeance : immediate"}
+            </Text>
+          </EmailInfoBox>
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton
+              href={subscriptionSettingsUrl()}
+              label="Mettre a jour mon paiement"
+            />
+          </div>
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: () =>
+      "Action requise : probleme de paiement sur votre abonnement Patrimoine360",
+    tags: () => ["billing", "invoice", "payment-failed"],
+    text: ({ amountDue, customerName, dueDate, subscriptionName }) =>
+      joinLines([
+        getBillingGreeting(customerName),
+        "",
+        `Nous n'avons pas pu traiter le dernier paiement de votre abonnement ${subscriptionName}.`,
+        `Montant : ${amountDue}`,
+        `Echeance : ${dueDate ?? "immediate"}`,
+        `Mettre a jour mon paiement : ${subscriptionSettingsUrl()}`,
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "billing.plan-trial-ending-soon": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ firstName, hasPaymentMethod, planName, trialEndDate }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout
+          title={
+            hasPaymentMethod
+              ? "Votre essai se termine bientot : prelevement automatique"
+              : "Votre essai se termine bientot"
+          }
+        >
+          {renderParagraphs([
+            getBillingGreeting(firstName),
+            hasPaymentMethod
+              ? `Votre essai ${planName} se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Comme un moyen de paiement est deja enregistre, l'abonnement sera active automatiquement a la fin de l'essai.`
+              : `Votre essai ${planName} se termine le ${formatLongDate(
+                  trialEndDate
+                )}. Pour conserver vos fonctionnalites premium sans interruption, passez a un abonnement payant avant l'echeance.`,
+          ])}
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton
+              href={subscriptionSettingsUrl()}
+              label="Gerer mon abonnement"
+            />
+          </div>
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: ({ hasPaymentMethod }) =>
+      hasPaymentMethod
+        ? "Votre essai Patrimoine360 se termine bientot : prelevement automatique"
+        : "Votre essai Patrimoine360 se termine bientot",
+    tags: () => ["billing", "trial", "team", "ends-soon"],
+    text: ({ firstName, hasPaymentMethod, planName, trialEndDate }) =>
+      joinLines([
+        getBillingGreeting(firstName),
+        "",
+        hasPaymentMethod
+          ? `Votre essai ${planName} se termine le ${formatLongDate(
+              trialEndDate
+            )}. Comme un moyen de paiement est deja enregistre, l'abonnement sera active automatiquement a la fin de l'essai.`
+          : `Votre essai ${planName} se termine le ${formatLongDate(
+              trialEndDate
+            )}. Pour conserver vos fonctionnalites premium sans interruption, passez a un abonnement payant avant l'echeance.`,
+        `Gerer mon abonnement : ${subscriptionSettingsUrl()}`,
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "billing.subscription-activated": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ customerName, subscriptionName }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout title="Votre abonnement est actif">
+          {renderParagraphs([
+            getBillingGreeting(customerName),
+            `Bonne nouvelle : votre abonnement ${subscriptionName} est maintenant actif.`,
+            "Vous pouvez des a present profiter des fonctionnalites associees a votre formule.",
+          ])}
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton href={SERVER_URL} label="Ouvrir Patrimoine360" />
+          </div>
+          {renderParagraphs([
+            `Vous pouvez gerer votre abonnement a tout moment depuis ${subscriptionSettingsUrl()}.`,
+          ])}
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: () => "Votre abonnement Patrimoine360 est maintenant actif",
+    tags: () => ["billing", "subscription", "activated"],
+    text: ({ customerName, subscriptionName }) =>
+      joinLines([
+        getBillingGreeting(customerName),
+        "",
+        `Bonne nouvelle : votre abonnement ${subscriptionName} est maintenant actif.`,
+        `Ouvrir Patrimoine360 : ${SERVER_URL}`,
+        `Gerer mon abonnement : ${subscriptionSettingsUrl()}`,
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "billing.team-trial-welcome": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ firstName }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout title="Votre essai Equipe est pret">
+          {renderParagraphs([
+            getBillingGreeting(firstName),
+            `Votre essai Equipe Patrimoine360 de ${config.freeTrialDays} jours est maintenant actif.`,
+            "Pour en tirer le meilleur parti, creez un espace de travail, importez vos premiers biens et invitez votre equipe.",
+          ])}
+          <div style={{ marginBottom: "24px" }}>
+            <EmailCtaButton
+              href={workspaceSettingsUrl()}
+              label="Configurer mon espace"
+            />
+          </div>
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: () => "Votre essai Equipe Patrimoine360 est pret",
+    tags: () => ["billing", "trial", "team", "welcome"],
+    text: ({ firstName }) =>
+      joinLines([
+        getBillingGreeting(firstName),
+        "",
+        `Votre essai Equipe Patrimoine360 de ${config.freeTrialDays} jours est maintenant actif.`,
+        "Pour en tirer le meilleur parti, creez un espace de travail, importez vos premiers biens et invitez votre equipe.",
+        `Configurer mon espace : ${workspaceSettingsUrl()}`,
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
   "invite.workspace": {
     audience: "workspace-member",
     defaultLanguage: "fr",
@@ -476,6 +1213,217 @@ export const emailTemplateCatalog: EmailTemplateCatalogue = {
         "",
         "Votre espace Patrimoine360 est pret.",
         "Si vous souhaitez nous partager votre contexte, vos priorites ou les fonctionnalites que vous attendez, repondez simplement a cet e-mail.",
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "organization.ownership-transfer.admin": {
+    audience: "admin",
+    defaultLanguage: "fr",
+    html: async ({
+      newOwner,
+      previousOwner,
+      subscriptionTransferError,
+      subscriptionTransferred,
+      workspaceId,
+      workspaceName,
+    }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout
+          title={
+            subscriptionTransferError
+              ? `Transfert d'espace avec alerte : ${workspaceName}`
+              : `Transfert d'espace : ${workspaceName}`
+          }
+        >
+          {renderParagraphs([
+            `Un transfert de propriete a ete realise sur l'espace ${workspaceName}.`,
+            `Identifiant espace : ${workspaceId}`,
+            `Ancien proprietaire : ${resolveUserDisplayName(previousOwner)} (${
+              previousOwner.email
+            })`,
+            `Nouveau proprietaire : ${resolveUserDisplayName(newOwner)} (${
+              newOwner.email
+            })`,
+            `Abonnement transfere : ${subscriptionTransferred ? "oui" : "non"}`,
+          ])}
+          {subscriptionTransferError ? (
+            <EmailInfoBox label="Details de l'alerte">
+              <Text style={{ ...styles.p, margin: 0 }}>
+                {subscriptionTransferError}
+              </Text>
+            </EmailInfoBox>
+          ) : null}
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: ({ subscriptionTransferError, workspaceName }) =>
+      subscriptionTransferError
+        ? `Transfert d'espace avec alerte : ${workspaceName}`
+        : `Transfert d'espace : ${workspaceName}`,
+    tags: () => ["organization", "ownership-transfer", "admin-notification"],
+    text: ({
+      newOwner,
+      previousOwner,
+      subscriptionTransferError,
+      subscriptionTransferred,
+      workspaceId,
+      workspaceName,
+    }) =>
+      joinLines([
+        `Un transfert de propriete a ete realise sur l'espace ${workspaceName}.`,
+        `Identifiant espace : ${workspaceId}`,
+        `Ancien proprietaire : ${resolveUserDisplayName(previousOwner)} (${
+          previousOwner.email
+        })`,
+        `Nouveau proprietaire : ${resolveUserDisplayName(newOwner)} (${
+          newOwner.email
+        })`,
+        `Abonnement transfere : ${subscriptionTransferred ? "oui" : "non"}`,
+        subscriptionTransferError
+          ? `Alerte : ${subscriptionTransferError}`
+          : "",
+      ]),
+  },
+  "organization.ownership-transfer.new-owner": {
+    audience: "workspace-member",
+    defaultLanguage: "fr",
+    html: async ({ newOwnerName, subscriptionTransferred, workspaceName }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout title="Vous etes maintenant proprietaire de l'espace">
+          {renderParagraphs([
+            getBillingGreeting(newOwnerName),
+            `Vous etes maintenant proprietaire de l'espace ${workspaceName}.`,
+            "Vous pouvez desormais gerer les reglages, les utilisateurs et la facturation associee.",
+            subscriptionTransferred
+              ? "L'abonnement en cours a egalement ete transfere vers votre compte."
+              : "Aucun transfert d'abonnement n'a ete realise dans cette operation.",
+          ])}
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: ({ workspaceName }) =>
+      `Vous etes maintenant proprietaire de ${workspaceName}`,
+    tags: () => ["organization", "ownership-transfer", "new-owner"],
+    text: ({ newOwnerName, subscriptionTransferred, workspaceName }) =>
+      joinLines([
+        getBillingGreeting(newOwnerName),
+        "",
+        `Vous etes maintenant proprietaire de l'espace ${workspaceName}.`,
+        "Vous pouvez desormais gerer les reglages, les utilisateurs et la facturation associee.",
+        subscriptionTransferred
+          ? "L'abonnement en cours a egalement ete transfere vers votre compte."
+          : "Aucun transfert d'abonnement n'a ete realise dans cette operation.",
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "organization.ownership-transfer.previous-owner": {
+    audience: "workspace-member",
+    defaultLanguage: "fr",
+    html: async ({
+      newOwnerName,
+      previousOwnerName,
+      subscriptionTransferred,
+      workspaceName,
+    }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout title="Le transfert de propriete a ete confirme">
+          {renderParagraphs([
+            getBillingGreeting(previousOwnerName),
+            `Vous avez transfere la propriete de l'espace ${workspaceName} a ${newOwnerName}.`,
+            "Vous conservez un acces administrateur, sans les droits de proprietaire ni de facturation.",
+            subscriptionTransferred
+              ? `${newOwnerName} gere desormais aussi l'abonnement associe a cet espace.`
+              : "Aucun transfert d'abonnement n'a ete realise dans cette operation.",
+          ])}
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: ({ workspaceName }) =>
+      `Le transfert de propriete de ${workspaceName} est confirme`,
+    tags: () => ["organization", "ownership-transfer", "previous-owner"],
+    text: ({
+      newOwnerName,
+      previousOwnerName,
+      subscriptionTransferred,
+      workspaceName,
+    }) =>
+      joinLines([
+        getBillingGreeting(previousOwnerName),
+        "",
+        `Vous avez transfere la propriete de l'espace ${workspaceName} a ${newOwnerName}.`,
+        "Vous conservez un acces administrateur, sans les droits de proprietaire ni de facturation.",
+        subscriptionTransferred
+          ? `${newOwnerName} gere desormais aussi l'abonnement associe a cet espace.`
+          : "Aucun transfert d'abonnement n'a ete realise dans cette operation.",
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "report-found.owner": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ itemLabel, message, reportType, reporterEmail }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout title={`Signalement recu pour ${itemLabel}`}>
+          {renderParagraphs([
+            `Votre ${reportType} ${itemLabel} a ete signale comme retrouve.`,
+            `Adresse de contact du declarant : ${reporterEmail}`,
+          ])}
+          <EmailInfoBox label="Message recu">
+            <Text style={{ ...styles.p, margin: 0, whiteSpace: "pre-wrap" }}>
+              {message}
+            </Text>
+          </EmailInfoBox>
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: ({ itemLabel }) => `Signalement recu pour ${itemLabel}`,
+    tags: ({ reportType }) => [
+      "report-found",
+      "owner-notification",
+      reportType.toLowerCase(),
+    ],
+    text: ({ itemLabel, message, reportType, reporterEmail }) =>
+      joinLines([
+        `Votre ${reportType} ${itemLabel} a ete signale comme retrouve.`,
+        `Adresse de contact du declarant : ${reporterEmail}`,
+        "",
+        "Message recu :",
+        message,
+        "",
+        `Cordialement,`,
+        `L'equipe ${productName}`,
+      ]),
+  },
+  "report-found.reporter": {
+    audience: "user",
+    defaultLanguage: "fr",
+    html: async ({ itemLabel, reportType }) =>
+      renderTemplate(
+        <PatrimoineEmailLayout title="Votre message a bien ete transmis">
+          {renderParagraphs([
+            `Merci. Le proprietaire du ${reportType} ${itemLabel} a bien ete informe de votre message.`,
+            "Il pourra vous recontacter directement s'il souhaite donner suite.",
+          ])}
+        </PatrimoineEmailLayout>
+      ),
+    status: "a-reecrire",
+    subject: ({ itemLabel }) =>
+      `Votre message pour ${itemLabel} a ete transmis`,
+    tags: ({ reportType }) => [
+      "report-found",
+      "reporter-confirmation",
+      reportType.toLowerCase(),
+    ],
+    text: ({ itemLabel, reportType }) =>
+      joinLines([
+        `Merci. Le proprietaire du ${reportType} ${itemLabel} a bien ete informe de votre message.`,
+        "Il pourra vous recontacter directement s'il souhaite donner suite.",
         "",
         `Cordialement,`,
         `L'equipe ${productName}`,

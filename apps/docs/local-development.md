@@ -10,7 +10,7 @@ Today, the official Core developer setup still assumes:
 
 ## Prerequisites ✅
 
-- ✅ **Node.js** (>=22.20.0)
+- ✅ **Node.js** (`22.20.0` recommended via `.nvmrc` / `.node-version`)
 - ✅ **pnpm** (9.15.4+) — install via `corepack enable && corepack prepare pnpm@9.15.4 --activate`
 - ✅ **Git**
 - ✅ **Supabase project** configured for PostgreSQL + Storage ([Setup Guide](./supabase-setup.md))
@@ -50,6 +50,7 @@ pnpm webapp:setup               # Generate Prisma client and deploy migrations
 pnpm db:generate         # Generate Prisma client after schema changes
 pnpm db:prepare-migration # Create new database migration
 pnpm db:deploy-migration  # Apply migrations and regenerate client
+pnpm db:seed:core        # Seed the minimal Core reference data
 pnpm db:reset            # Reset database (destructive!)
 ```
 
@@ -180,6 +181,7 @@ pnpm turbo typecheck # Run TypeScript checks (all packages)
 pnpm webapp:setup               # Initial database setup
 pnpm db:prepare-migration # Create new migration
 pnpm db:deploy-migration  # Apply migrations and regenerate client
+pnpm db:seed:core        # Seed the minimal Core reference data
 pnpm db:reset            # Reset database (careful!)
 ```
 
@@ -188,6 +190,8 @@ pnpm db:reset            # Reset database (careful!)
 ```bash
 pnpm turbo lint        # Run ESLint (all packages)
 pnpm run format        # Format code with Prettier
+pnpm core:validate:min # Run the minimum Core validation gate
+pnpm core:validate:ci  # Run the Core CI gate including build
 pnpm webapp:validate   # Run all checks (lint, typecheck, format, tests)
 pnpm webapp:doctor     # React health scan (react-doctor) — advisory, not gated
 ```
@@ -224,6 +228,7 @@ We use [Lefthook](https://github.com/evilmartians/lefthook) to run automated che
 
 ```bash
 pnpm webapp:test -- --run                    # Run unit tests (always use --run flag)
+pnpm webapp:test:e2e:smoke                  # Run the priority Core smoke suite
 pnpm --filter @shelf/webapp test:e2e         # Run end-to-end tests
 pnpm --filter @shelf/webapp test:e2e:dev     # Run E2E tests in dev mode
 pnpm --filter @shelf/webapp test:e2e:install # Install Playwright browsers
@@ -404,8 +409,14 @@ When you modify `packages/database/prisma/schema.prisma`:
 2. **Review the generated SQL** in `packages/database/prisma/migrations/`
 
 3. **Apply migration:**
+
    ```bash
    pnpm db:deploy-migration
+   ```
+
+4. **Seed the Core baseline if needed:**
+   ```bash
+   pnpm db:seed:core
    ```
 
 ---
@@ -430,6 +441,7 @@ components/
 
 ```bash
 pnpm --filter @shelf/webapp test:e2e:install  # Install browsers (first time)
+pnpm webapp:test:e2e:smoke                    # Run the priority Core smoke suite
 pnpm --filter @shelf/webapp test:e2e:dev      # Run tests in development
 ```
 

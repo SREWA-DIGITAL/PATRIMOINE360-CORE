@@ -174,7 +174,7 @@ export default function CategoriesPage() {
             title: "No categories yet",
             text: "Categories help you organize assets by type. Create categories to group and filter your inventory.",
             newButtonRoute: "/categories/new",
-            newButtonContent: "Create your first category",
+            newButtonContent: "Créer votre première catégorie",
           }}
           ItemComponent={CategoryItem}
           headerChildren={

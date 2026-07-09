@@ -5,9 +5,48 @@
 
 > [!IMPORTANT]
 > The current Docker path builds and runs the application container only.
-> It does not yet provide a full Community stack with bundled PostgreSQL and
-> MinIO. For Patrimoine360 Core today, Docker still expects an external
-> Supabase project for PostgreSQL and file storage.
+> It does not yet provide a fully self-hosted Core stack with bundled storage.
+> For Patrimoine360 Core today, Docker can now launch the webapp with a local
+> PostgreSQL service, but file storage still expects explicit Supabase
+> configuration.
+
+## Community Compose Stack
+
+A root compose stack is now available for local Core exploitation:
+
+- [docker/docker-compose.yml](/C:/dev/patrimoine-360/patrimoine360-core/docker/docker-compose.yml)
+- [docker/core.env.example](/C:/dev/patrimoine-360/patrimoine360-core/docker/core.env.example)
+
+This stack provides:
+
+- a local PostgreSQL container;
+- the Patrimoine360 Core webapp built from `apps/webapp/Dockerfile.image`.
+
+It still does **not** provide:
+
+- a MinIO runtime integrated in Core;
+- a self-hosted replacement for Supabase Storage already wired in the app.
+
+### Quick start
+
+```bash
+cp docker/core.env.example docker/core.env
+cp docker/core.host.env.example docker/core.host.env
+pnpm docker:core:up
+```
+
+Then apply migrations and the minimal Core seed from the repository root:
+
+```bash
+pnpm db:deploy-migration:docker
+pnpm db:seed:core:docker
+```
+
+The split between `core.env` and `core.host.env` is intentional:
+
+- `docker/core.env` feeds the application container;
+- `docker/core.host.env` feeds Prisma commands launched from the host against
+  the local PostgreSQL container on `127.0.0.1:5432`.
 
 ## Prerequisites
 
@@ -63,8 +102,9 @@ docker run -d \
 
 `DATABASE_URL` and `DIRECT_URL` are mandatory when using Supabase Cloud. Learn more in the [Supabase Setup Guide](./supabase-setup.md).
 
-There is not yet a root `docker/docker-compose.yml` Community stack in this
-repository. That future target belongs to a later delivery phase.
+The compose stack is intentionally honest about the current Core boundary:
+PostgreSQL can be local, but storage remains an explicit external dependency
+until a dedicated provider path is implemented.
 
 For Patrimoine360 Core staging deployments where server resources are limited,
 prefer the GHCR image flow documented in

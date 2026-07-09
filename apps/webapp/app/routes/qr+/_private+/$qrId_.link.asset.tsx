@@ -308,9 +308,9 @@ export default function QrLinkExisting() {
           navigate={handleSelectAsset}
           customEmptyStateContent={{
             title: "You haven't added any assets yet.",
-            text: "What are you waiting for? Create your first asset now!",
+            text: "Créez votre premier bien pour pouvoir lier ce QR code.",
             newButtonRoute: `/assets/new?qrId=${qrId}`,
-            newButtonContent: "Create new asset and link",
+            newButtonContent: "Créer et lier un bien",
           }}
           className="h-full border-t-0"
         />

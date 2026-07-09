@@ -39,7 +39,7 @@ import {
 describe("welcomeToTrialEmailText", () => {
   it("includes the recipient name when provided", () => {
     const text = welcomeToTrialEmailText({ firstName: "Alice" });
-    expect(text).toContain("Hey Alice");
+    expect(text).toContain("Bonjour Alice,");
   });
 
   it("includes the workspace creation CTA", () => {
@@ -63,7 +63,7 @@ describe("sendTeamTrialWelcomeEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "alice@example.com",
-        subject: "Your Shelf Team Trial is Ready - Next Steps",
+        subject: "Votre essai Equipe Patrimoine360 est pret",
         tags: ["billing", "trial", "team", "welcome"],
       })
     );

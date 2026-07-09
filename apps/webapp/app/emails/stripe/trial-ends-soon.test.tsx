@@ -46,11 +46,9 @@ describe("trialEndsSoonEmailText", () => {
       planName: "Team",
       trialEndDate,
     });
-    expect(text).toContain("ACTION REQUIRED");
-    expect(text).toContain(
-      "automatically charged at the regular subscription rate"
-    );
-    expect(text).toContain("Shelf Team");
+    expect(text).toContain("Votre essai");
+    expect(text).toContain("moyen de paiement");
+    expect(text).toContain("essai Team");
   });
 
   it("shows upgrade message when hasPaymentMethod is false", () => {
@@ -61,8 +59,8 @@ describe("trialEndsSoonEmailText", () => {
       trialEndDate,
     });
     expect(text).not.toContain("ACTION REQUIRED");
-    expect(text).toContain("Shelf Team trial");
-    expect(text).toContain("upgrade to a paid plan");
+    expect(text).toContain("essai Team");
+    expect(text).toContain("abonnement payant");
   });
 
   it("includes planName in the text", () => {
@@ -72,7 +70,7 @@ describe("trialEndsSoonEmailText", () => {
       planName: "Plus",
       trialEndDate,
     });
-    expect(text).toContain("Shelf Plus trial");
+    expect(text).toContain("essai Plus");
   });
 
   it("formats trialEndDate correctly", () => {
@@ -82,7 +80,7 @@ describe("trialEndsSoonEmailText", () => {
       planName: "Team",
       trialEndDate,
     });
-    expect(text).toContain("March 24, 2026");
+    expect(text).toContain("24 mars 2026");
   });
 
   it("includes firstName in greeting when provided", () => {
@@ -92,7 +90,7 @@ describe("trialEndsSoonEmailText", () => {
       planName: "Team",
       trialEndDate,
     });
-    expect(text).toMatch(/^Hey Bob,/);
+    expect(text).toMatch(/^Bonjour Bob,/);
   });
 });
 
@@ -114,8 +112,9 @@ describe("sendTrialEndsSoonEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "alice@example.com",
-        subject: "Your Shelf Team trial ends in 3 days — auto-charge reminder",
-        tags: ["billing", "trial", "team", "ending-soon"],
+        subject:
+          "Votre essai Patrimoine360 se termine bientot : prelevement automatique",
+        tags: ["billing", "trial", "team", "ends-soon"],
       })
     );
   });
@@ -132,8 +131,8 @@ describe("sendTrialEndsSoonEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledOnce();
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
-        subject: "Your Shelf Plus trial is ending soon",
-        tags: ["billing", "trial", "team", "ending-soon"],
+        subject: "Votre essai Patrimoine360 se termine bientot",
+        tags: ["billing", "trial", "team", "ends-soon"],
       })
     );
   });

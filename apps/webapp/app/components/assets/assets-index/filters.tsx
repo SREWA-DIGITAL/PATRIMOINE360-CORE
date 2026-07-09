@@ -162,7 +162,7 @@ export function AssetIndexFilters({
                 countKey="totalTeamMembers"
                 withoutValueItem={{
                   id: "without-custody",
-                  name: "Without custody",
+                  name: "Sans affectation",
                 }}
               />
             </When>

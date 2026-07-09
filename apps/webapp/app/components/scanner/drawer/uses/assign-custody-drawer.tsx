@@ -452,7 +452,7 @@ function CustodyForm({ disableSubmit }: { disableSubmit: boolean }) {
 
         <div className="px-4 md:pl-0">
           <div className="relative z-50 my-8 ">
-            <h5 className="mb-1">Assign custody to:</h5>
+            <h5 className="mb-1">Affecter à :</h5>
             <DynamicSelect
               defaultValue={
                 isSelfService && teamMembers?.length > 0
@@ -502,7 +502,7 @@ function CustodyForm({ disableSubmit }: { disableSubmit: boolean }) {
               width="full"
               disabled={disabled || disableSubmit || idsTotalCount === 0}
             >
-              Assign custody
+              Affecter
             </Button>
           </div>
         </div>

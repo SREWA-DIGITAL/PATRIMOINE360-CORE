@@ -133,7 +133,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
       header: {
         title: "Responsables et affectations",
         subHeading:
-          "Vue Core des biens actuellement affectés et des responsables actifs.",
+          "Vue d'ensemble des biens actuellement affectés et des responsables actifs.",
       },
       summary: {
         activeAssignmentsCount,
@@ -198,13 +198,12 @@ export default function CustodyPage() {
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="space-y-1">
               <h3 className="text-sm font-semibold text-gray-900">
-                Point d'entrée Core aligné PRD
+                Suivi opérationnel des affectations
               </h3>
               <p className="max-w-3xl text-sm text-gray-600">
-                Cette page ferme le trou fonctionnel du Core sur le suivi "qui
-                détient quoi". Le périmètre reste volontairement simple :
-                affectations en cours, responsables actifs, rapport basique et
-                renvoi vers la gestion d'équipe.
+                Suivez rapidement qui détient quoi, les affectations les plus
+                récentes et les responsables déjà actifs dans votre
+                organisation.
               </p>
             </div>
 
@@ -271,7 +270,7 @@ export default function CustodyPage() {
           <Card className="my-0 overflow-hidden p-0">
             <SectionHeader
               title="Affectations récentes"
-              description="Derniers biens affectés dans le périmètre Core."
+              description="Derniers biens affectés dans votre organisation."
             />
 
             {recentAssignments.length > 0 ? (

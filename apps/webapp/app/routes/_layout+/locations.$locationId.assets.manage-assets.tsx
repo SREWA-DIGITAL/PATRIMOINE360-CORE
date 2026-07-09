@@ -363,9 +363,9 @@ export default function AddAssetsToLocation() {
           }}
           customEmptyStateContent={{
             title: "You haven't added any assets yet.",
-            text: "What are you waiting for? Create your first asset now!",
+            text: "Créez votre premier bien pour l'associer à cet emplacement.",
             newButtonRoute: "/assets/new",
-            newButtonContent: "New asset",
+            newButtonContent: "Nouveau bien",
           }}
           className="mx-1 flex h-full flex-col justify-start border-0"
           bulkActions={<> </>}

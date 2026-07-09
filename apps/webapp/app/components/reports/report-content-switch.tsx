@@ -212,8 +212,8 @@ export function ReportContentSwitch({
       return (
         <ReportEmptyState
           reason="error"
-          title="Report not implemented"
-          description="This report type is not yet supported."
+          title="Rapport non implémenté"
+          description="Ce type de rapport n'est pas encore pris en charge."
         />
       );
   }
@@ -230,27 +230,27 @@ export function ReportContentSwitch({
 function getEmptyStateTitle(reportId: string): string {
   switch (reportId) {
     case "booking-compliance":
-      return "No bookings to analyze";
+      return "Aucune réservation à analyser";
     case "overdue-items":
-      return "No overdue bookings";
+      return "Aucun retard de réservation";
     case "idle-assets":
-      return "No idle assets";
+      return "Aucun bien inactif";
     case "custody-snapshot":
-      return "No assets in custody";
+      return "Aucun bien affecté";
     case "top-booked-assets":
-      return "No booking activity";
+      return "Aucune activité de réservation";
     case "distribution":
-      return "No assets";
+      return "Aucun bien";
     case "asset-inventory":
-      return "No assets in inventory";
+      return "Aucun bien dans l'inventaire";
     case "monthly-booking-trends":
-      return "No booking data";
+      return "Aucune donnée de réservation";
     case "asset-utilization":
-      return "No utilization data";
+      return "Aucune donnée d'utilisation";
     case "asset-activity":
-      return "No activity recorded";
+      return "Aucune activité enregistrée";
     default:
-      return "No data in this timeframe";
+      return "Aucune donnée sur cette période";
   }
 }
 
@@ -260,27 +260,27 @@ function getEmptyStateDescription(reportId: string): string {
       // This is an analytics report - focus on finding data, not creating it.
       // The report analyzes check-out/check-in compliance for bookings that
       // fall within the selected timeframe.
-      return "This report tracks whether bookings were checked out and returned on time. Try selecting a longer timeframe to see compliance metrics for past bookings.";
+      return "Ce rapport suit si les réservations ont été sorties et restituées à temps. Essayez une période plus longue pour afficher l'historique de conformité.";
     case "overdue-items":
-      return "Great news! All bookings are on track. No items are currently overdue.";
+      return "Bonne nouvelle : aucune réservation n'est actuellement en retard.";
     case "idle-assets":
-      return "All your assets have been actively used within the selected timeframe. Consider adjusting the idle threshold to find assets with lower utilization.";
+      return "Tous vos biens ont été utilisés sur la période sélectionnée. Ajustez le seuil d'inactivité pour repérer les biens les moins sollicités.";
     case "custody-snapshot":
-      return "No team members currently have assets assigned to them. Assets appear here when custody is assigned.";
+      return "Aucun responsable n'a actuellement de bien affecté. Les biens apparaîtront ici dès qu'une affectation sera créée.";
     case "top-booked-assets":
-      return "No assets have been booked within the selected timeframe. Try selecting a longer period to see booking activity.";
+      return "Aucun bien n'a été réservé sur la période sélectionnée. Essayez une période plus longue pour voir l'activité.";
     case "distribution":
-      return "Add assets to your inventory to see distribution breakdowns by category, location, and status.";
+      return "Ajoutez des biens à votre inventaire pour afficher leur répartition par catégorie, localisation et statut.";
     case "asset-inventory":
-      return "Your inventory is empty. Add assets to see them listed here with filtering and export options.";
+      return "Votre inventaire est vide. Ajoutez des biens pour les retrouver ici avec les options de filtre et d'export.";
     case "monthly-booking-trends":
-      return "No bookings have been created within the selected timeframe. Try selecting a longer period to see trends.";
+      return "Aucune réservation n'a été créée sur la période sélectionnée. Essayez une période plus longue pour voir les tendances.";
     case "asset-utilization":
-      return "No booking activity within the selected timeframe. Assets need bookings to calculate utilization rates.";
+      return "Aucune activité de réservation sur la période sélectionnée. Des réservations sont nécessaires pour calculer les taux d'utilisation.";
     case "asset-activity":
-      return "No activity has been recorded for your assets in this timeframe. Activity appears when assets are updated, booked, or custody changes.";
+      return "Aucune activité n'a été enregistrée pour vos biens sur cette période. L'activité apparaît lors des mises à jour, réservations ou changements d'affectation.";
     default:
-      return "Try selecting a different timeframe to find data for this report.";
+      return "Essayez une autre période pour trouver des données pour ce rapport.";
   }
 }
 

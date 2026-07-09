@@ -58,7 +58,7 @@ const checkoutReminder = async ({ data }: PgBoss.Job<SchedulerData>) => {
         resolveUserDisplayName(booking.custodianUser) ||
         (booking.custodianTeamMember?.name as string);
 
-      const subject = `🔔 Checkout reminder (${booking.name}) - shelf.nu`;
+      const subject = `Rappel de debut : ${booking.name}`;
 
       const text = checkoutReminderEmailContent({
         bookingName: booking.name,
@@ -74,7 +74,7 @@ const checkoutReminder = async ({ data }: PgBoss.Job<SchedulerData>) => {
       for (const recipient of recipients) {
         const html = await bookingUpdatesTemplateString({
           booking,
-          heading: `Your booking is due for checkout in ${getTimeRemainingMessage(
+          heading: `Votre reservation doit commencer dans ${getTimeRemainingMessage(
             new Date(booking.from),
             new Date()
           )}.`,
@@ -199,7 +199,7 @@ const overdueHandler = async ({ data }: PgBoss.Job<SchedulerData>) => {
       resolveUserDisplayName(booking.custodianUser) ||
       (booking.custodianTeamMember?.name as string);
 
-    const subject = `⚠️ Overdue booking (${booking.name}) - shelf.nu`;
+    const subject = `Reservation en retard : ${booking.name}`;
 
     const text = overdueBookingEmailContent({
       bookingName: booking.name,
@@ -215,7 +215,7 @@ const overdueHandler = async ({ data }: PgBoss.Job<SchedulerData>) => {
     for (const recipient of recipients) {
       const html = await bookingUpdatesTemplateString({
         booking,
-        heading: `You have passed the deadline for checking in your booking "${booking.name}".`,
+        heading: `La reservation "${booking.name}" a depasse sa date limite de restitution.`,
         assetCount: booking._count.assets,
         hints: data.hints,
         recipientReason: recipient.reason,
@@ -275,7 +275,7 @@ const autoArchiveHandler = async ({ data }: PgBoss.Job<SchedulerData>) => {
       return;
     }
 
-    // Archive the booking atomically — include status in where clause
+    // Archive the booking atomically вЂ” include status in where clause
     // to prevent race with concurrent manual archive (TOCTOU)
     const now = new Date();
     const updatedBooking = await db.booking

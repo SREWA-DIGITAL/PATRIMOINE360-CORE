@@ -182,7 +182,7 @@ export default function CategoriesPage() {
             title: "No tags yet",
             text: "Tags let you label assets with flexible keywords. Create tags to add custom metadata to your inventory.",
             newButtonRoute: "/tags/new",
-            newButtonContent: "Create your first tag",
+            newButtonContent: "Créer votre premier tag",
           }}
           ItemComponent={TagItem}
           headerChildren={

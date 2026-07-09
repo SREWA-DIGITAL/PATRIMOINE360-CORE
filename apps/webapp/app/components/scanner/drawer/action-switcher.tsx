@@ -32,12 +32,12 @@ const ACTION_CONFIGS = [
     permissionAction: PermissionAction.read,
   },
   {
-    id: "Assign custody",
+    id: "Affecter",
     permissionEntity: PermissionEntity.asset,
     permissionAction: PermissionAction.custody,
   },
   {
-    id: "Release custody",
+    id: "Libérer l'affectation",
     permissionEntity: PermissionEntity.asset,
     permissionAction: PermissionAction.custody,
   },
@@ -132,10 +132,10 @@ export function ActionSwitcher() {
   return (
     <div>
       {/* Drawers */}
-      <When truthy={action === "Assign custody"}>
+      <When truthy={action === "Affecter"}>
         <AssignCustodyDrawer isLoading={isLoading} />
       </When>
-      <When truthy={action === "Release custody"}>
+      <When truthy={action === "Libérer l'affectation"}>
         <ReleaseCustodyDrawer isLoading={isLoading} />
       </When>
       <When truthy={action === "Update location"}>
@@ -224,8 +224,8 @@ function getActionScope(action: ActionType) {
   switch (action) {
     case "View asset":
       return "single";
-    case "Assign custody":
-    case "Release custody":
+    case "Affecter":
+    case "Libérer l'affectation":
     case "Update location":
       return "bulk";
   }

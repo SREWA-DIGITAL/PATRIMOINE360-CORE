@@ -14,8 +14,8 @@ export default function BulkReleaseCustodyDialog() {
     <BulkUpdateDialogContent
       ref={zo.ref}
       type="release-custody"
-      title="Release custody over kits"
-      description="Are you sure you want to release custody of all selected kits?"
+      title="Libérer l'affectation des lots"
+      description="Voulez-vous vraiment libérer l'affectation de tous les lots sélectionnés ?"
       actionUrl="/api/kits/bulk-actions"
       arrayFieldId="kitIds"
     >

@@ -36,33 +36,28 @@ export const EmptyState = ({
   const singular = modelName?.singular || modelNameData.singular;
   const plural = modelName?.plural || modelNameData.plural;
 
-  // When there's an active search OR filter, always show contextual "no results"
-  // messaging — even if customContent is provided. customContent is only
-  // used for the true zero-data state (nothing active, nothing in DB).
   const hasSearch = !!search;
   const isFiltered = hasSearch || !!hasActiveFilters;
 
   const filteredTexts = hasSearch
     ? {
-        title: `No ${plural} found`,
-        p: `Your search for "${search}" did not match any ${plural} in the database.`,
+        title: `Aucun résultat pour ${plural}`,
+        p: `Votre recherche "${search}" ne correspond à aucun ${plural}.`,
       }
     : {
-        title: `No ${plural} found`,
-        p: `No ${plural} match the applied filters. Try adjusting or clearing your filters.`,
+        title: `Aucun résultat pour ${plural}`,
+        p: `Aucun ${plural} ne correspond aux filtres appliqués. Ajustez ou réinitialisez vos filtres.`,
       };
 
   const zeroDataTexts = {
-    title: `No ${plural} on database`,
-    p: `What are you waiting for? Create your first ${singular} now!`,
+    title: `Aucun ${plural}`,
+    p: `Créez votre premier ${singular} pour commencer.`,
   };
 
-  /** Determine which "clear" button to show */
   const clearButton = (() => {
     if (!isFiltered) return null;
 
     if (hasSearch && hasActiveFilters) {
-      // Both search and filters active — single "Clear All" button
       return (
         <Button
           type="button"
@@ -71,7 +66,7 @@ export const EmptyState = ({
             setSearchParams(() => new URLSearchParams());
           }}
         >
-          Clear All
+          Réinitialiser
         </Button>
       );
     }
@@ -89,12 +84,11 @@ export const EmptyState = ({
             });
           }}
         >
-          Clear Search
+          Effacer la recherche
         </Button>
       );
     }
 
-    // Only filters active
     return (
       <Button
         type="button"
@@ -111,7 +105,7 @@ export const EmptyState = ({
           });
         }}
       >
-        Clear Filters
+        Effacer les filtres
       </Button>
     );
   })();
@@ -164,7 +158,7 @@ export const EmptyState = ({
               >
                 {customContent?.newButtonContent
                   ? customContent.newButtonContent
-                  : `New ${singular}`}
+                  : `Nouveau ${singular}`}
               </Button>
             )}
       </div>

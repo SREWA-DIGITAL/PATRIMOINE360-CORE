@@ -41,7 +41,7 @@ function getBrevoDefaultSender() {
     return `"${BREVO_SENDER_NAME.trim()}" <${senderEmail}>`;
   }
 
-  return senderEmail;
+  return `"Patrimoine360" <${senderEmail}>`;
 }
 
 function getDefaultReplyTo() {
@@ -66,7 +66,7 @@ export async function deliverEmail(payload: EmailPayloadType) {
       payload.from ||
       (provider === "brevo"
         ? getBrevoDefaultSender()
-        : SMTP_FROM || '"Shelf" <hello@example.com>'),
+        : SMTP_FROM || '"Patrimoine360" <hello@example.com>'),
     replyTo: payload.replyTo || getDefaultReplyTo(),
   };
 

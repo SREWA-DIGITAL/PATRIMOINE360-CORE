@@ -61,12 +61,12 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     ]);
 
     const header: HeaderData = {
-      title: `Settings - Manage Team Members`,
+      title: `Paramètres - Responsables sans compte`,
     };
 
     const modelName = {
-      singular: "non-registered member",
-      plural: "non-registered members",
+      singular: "responsable sans compte",
+      plural: "responsables sans compte",
     };
 
     return payload({
@@ -175,8 +175,9 @@ export default function NrmSettings() {
   return (
     <div>
       <p className="mb-6 text-xs text-gray-600">
-        Non-registered members can be given custody of an asset. If you want
-        them to get reminders, invite them via email.
+        Les responsables sans compte peuvent recevoir des biens en affectation.
+        Si vous souhaitez qu'ils reçoivent aussi des rappels, invitez-les par
+        e-mail.
       </p>
 
       <ListContentWrapper>
@@ -190,7 +191,7 @@ export default function NrmSettings() {
               to="add-member"
               className="mt-2 w-full md:mt-0 md:w-max"
             >
-              <span className=" whitespace-nowrap">Add NRM</span>
+              <span className=" whitespace-nowrap">Ajouter un responsable</span>
             </Button>
           </div>
         </Filters>
@@ -202,17 +203,17 @@ export default function NrmSettings() {
           className="overflow-x-visible md:overflow-x-auto"
           ItemComponent={TeamMemberRow}
           customEmptyStateContent={{
-            title: "No team members on database",
-            text: "What are you waiting for? Add your first team member now!",
+            title: "Aucun responsable sans compte",
+            text: "Ajoutez votre premier responsable sans compte pour suivre les affectations terrain.",
             newButtonRoute: "add-member",
-            newButtonContent: "Add NRM",
+            newButtonContent: "Ajouter un responsable",
           }}
           hideFirstHeaderColumn
           headerChildren={
             <>
               <Th>ID</Th>
-              <Th>Name</Th>
-              <Th>Custodies</Th>
+              <Th>Nom</Th>
+              <Th>Affectations</Th>
               <Th>Actions</Th>
             </>
           }

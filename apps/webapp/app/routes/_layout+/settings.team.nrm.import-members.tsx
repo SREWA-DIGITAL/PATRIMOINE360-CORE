@@ -177,13 +177,13 @@ function ImportForm() {
             disabled={!selectedFile}
             className="mt-4 w-full"
           >
-            Confirm Non-registered members import
+            Confirmer l'import des responsables sans compte
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Confirm Non-registered members import
+              Confirmer l'import des responsables sans compte
             </AlertDialogTitle>
             {!isSuccessful ? (
               <>
@@ -219,7 +219,7 @@ function ImportForm() {
           {isSuccessful ? (
             <div>
               <b className="text-green-500">Success!</b>
-              <p>Your Non-registered members have been imported.</p>
+              <p>Les responsables sans compte ont été importés.</p>
             </div>
           ) : null}
 

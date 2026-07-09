@@ -14,9 +14,7 @@
  * inside `useMemo` with `maxDays` in the dependency array. Memoization is
  * still required to keep cell function references stable between renders so
  * TanStack `flexRender` does not unmount/remount every `AssetCell` (and the
- * `AssetImage` inside it) on each render — see the inline comment.
- *
- * @see {@link file://../../routes/_layout+/reports.$reportId.tsx}
+ * `AssetImage` inside it) on each render.
  */
 
 import { useMemo } from "react";
@@ -34,28 +32,13 @@ import type { CustodySnapshotRow, ReportKpi } from "~/modules/reports/types";
 import { useHints } from "~/utils/client-hints";
 import { formatCurrency } from "~/utils/currency";
 
-/** Props for {@link CustodySnapshotContent}. */
 type Props = {
-  /** Active custody assignments to display in the table. */
   rows: CustodySnapshotRow[];
-  /** KPI values driving the hero section (total in custody, custodians, value, avg tenure). */
   kpis: ReportKpi[];
-  /** Total row count, shown as a pill next to the table heading. */
   totalRows: number;
-  /** Optional row click handler — typically navigates to the asset detail page. */
   onRowClick?: (row: CustodySnapshotRow) => void;
 };
 
-/**
- * Custody Snapshot report body.
- *
- * Computes a relative tenure-bar scale from `rows` (the longest-held asset
- * defines 100% width) and renders the hero KPIs followed by the assignment
- * table.
- *
- * @param props - See {@link Props}.
- * @returns The rendered report content.
- */
 export function CustodySnapshotContent({
   rows,
   kpis,
@@ -65,15 +48,8 @@ export function CustodySnapshotContent({
   const currentOrganization = useCurrentOrganization();
   const { locale } = useHints();
 
-  // Calculate max days for relative bar width
   const maxDays = Math.max(...rows.map((r) => r.daysInCustody), 1);
 
-  // Column definitions for custody snapshot table.
-  // Memoized so cell function refs are stable across re-renders. Without
-  // this, TanStack flexRender hands React a new component type on every
-  // render → every AssetCell unmounts/remounts → every AssetImage
-  // remounts → image-fetch storm. Deps include `maxDays` because the
-  // tenure-bar cell closes over it.
   const columns: ColumnDef<CustodySnapshotRow>[] = useMemo(
     () => [
       {
@@ -100,14 +76,12 @@ export function CustodySnapshotContent({
           const percentage = Math.min((days / maxDays) * 100, 100);
           return (
             <div className="flex items-center gap-3">
-              {/* Tenure bar - visual indicator of relative duration */}
               <div className="relative h-2 w-16 overflow-hidden rounded-full bg-gray-100">
                 <div
                   className="absolute inset-y-0 left-0 rounded-full bg-primary-500 transition-all"
                   style={{ width: `${percentage}%` }}
                 />
               </div>
-              {/* Days value */}
               <span className="min-w-16 text-sm font-medium tabular-nums text-gray-900">
                 {days} <span className="font-normal text-gray-500">jours</span>
               </span>
@@ -143,7 +117,6 @@ export function CustodySnapshotContent({
     [maxDays]
   );
 
-  // Extract KPI values
   const totalInCustody =
     (kpis.find((k) => k.id === "total_in_custody")?.rawValue as number) || 0;
   const totalCustodians =
@@ -155,10 +128,8 @@ export function CustodySnapshotContent({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Hero section */}
       <div className="rounded border border-gray-200 bg-white">
         <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between md:p-6">
-          {/* Main metric */}
           <div className="flex items-center gap-4">
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-semibold text-gray-900">
@@ -176,7 +147,6 @@ export function CustodySnapshotContent({
             </div>
           </div>
 
-          {/* Supporting stats */}
           <div className="flex gap-6 border-t border-gray-100 pt-3 md:border-l md:border-t-0 md:pl-6 md:pt-0">
             <div className="flex flex-col">
               <span className="text-xs text-gray-500">Valeur totale</span>
@@ -202,7 +172,6 @@ export function CustodySnapshotContent({
         </div>
       </div>
 
-      {/* Data table */}
       <div className="overflow-hidden rounded border border-gray-200 bg-white">
         <div className="flex items-center gap-2 border-b border-gray-100 px-4 py-3 md:px-6">
           <h3 className="text-sm font-semibold text-gray-900">

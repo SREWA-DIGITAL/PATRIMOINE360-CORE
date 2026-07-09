@@ -19,11 +19,16 @@
     "db:migrate": "prisma migrate deploy",
     "db:prepare-migration": "prisma generate && prisma migrate dev --create-only --skip-seed && tsx src/post-migration.ts",
     "db:deploy-migration": "prisma migrate deploy && prisma generate",
+    "db:seed:core": "prisma db seed",
     "db:prepare-migration:staging": "dotenv -e ../../.env.staging -- prisma generate && prisma migrate dev --create-only --skip-seed && tsx src/post-migration.ts",
     "db:deploy-migration:staging": "dotenv -e ../../.env.staging -- prisma migrate deploy && prisma generate",
+    "db:seed:core:staging": "dotenv -e ../../.env.staging -- prisma db seed",
     "db:deploy-migration:production": "dotenv -e ../../.env.production -- prisma migrate deploy && prisma generate",
     "db:reset": "prisma migrate reset",
     "db:reset:staging": "dotenv -e ../../.env.staging -- prisma migrate reset"
+  },
+  "prisma": {
+    "seed": "tsx src/seed-core.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3"
