@@ -596,7 +596,7 @@ Avancement 2026-07-09 :
 
 ### Phase 9F - Préparation du lot Enterprise privé
 
-Statut : À faire
+Statut : Terminée
 
 Périmètre :
 
@@ -610,12 +610,23 @@ Livrables attendus :
 - ordre d'implémentation Enterprise ;
 - périmètre et dépendances par module ;
 - point de passage entre Core et Enterprise.
-  u
-  Critères d'acceptation :
+
+Critères d'acceptation :
 
 - le dépôt Enterprise peut consommer un plan clair sans ambiguïté sur la
   frontière produit ;
 - les modules privés sont séquencés et priorisés.
+
+Avancement 2026-07-09 :
+
+- formalisation du backlog d'initialisation Enterprise dans
+  [PREPARATION-LOT-ENTERPRISE-PRIVE.md](/C:/dev/patrimoine-360/patrimoine360-core/docs/PREPARATION-LOT-ENTERPRISE-PRIVE.md) ;
+- ordre recommandé explicite :
+  `licence -> SSO -> contrats -> fiches de visite -> travaux -> dashboard
+  avancé -> Excel CNPS -> WhatsApp` ;
+- dépendances et points de passage Core -> Enterprise posés par module pour
+  éviter toute ambiguïté de frontière avant implémentation dans le dépôt
+  privé.
 
 ## Ordre recommandé d'exécution
 

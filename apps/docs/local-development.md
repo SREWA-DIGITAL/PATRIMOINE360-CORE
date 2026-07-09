@@ -409,6 +409,7 @@ When you modify `packages/database/prisma/schema.prisma`:
 2. **Review the generated SQL** in `packages/database/prisma/migrations/`
 
 3. **Apply migration:**
+
    ```bash
    pnpm db:deploy-migration
    ```
