@@ -1,10 +1,13 @@
-# Select All Pattern
+# Pattern "Tout sélectionner"
 
-This guide documents the "Select All" pattern used in Shelf.nu for bulk operations across multiple pages of filtered data.
+Ce guide documente le pattern `Select All` utilisé dans Patrimoine360 Core pour
+les opérations de masse sur plusieurs pages de données filtrées.
 
-## Overview
+## Vue d'ensemble
 
-The `ALL_SELECTED_KEY` pattern enables users to select **all items matching current filters**, even when those items span multiple pages. This is critical for bulk operations like:
+Le pattern `ALL_SELECTED_KEY` permet de sélectionner **tous les éléments
+correspondant aux filtres actifs**, même lorsqu'ils sont répartis sur plusieurs
+pages. C'est essentiel pour des opérations de masse comme :
 
 - Exporting filtered assets
 - Bulk deleting assets
@@ -57,7 +60,8 @@ Every bulk operation using `ALL_SELECTED_KEY` follows this pattern:
 
 ### Important: Simple vs Advanced Mode
 
-Shelf has two index modes that require different filtering approaches:
+Le Core possède deux modes d'index qui nécessitent des approches de filtrage
+différentes :
 
 - **Simple Mode**: Uses Prisma where clauses (`Prisma.AssetWhereInput`)
 - **Advanced Mode**: Uses raw SQL queries with filter parsing

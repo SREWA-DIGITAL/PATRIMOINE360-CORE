@@ -1,10 +1,13 @@
-# Booking Conflict Queries & Reservation Logic
+# Conflits de réservation et logique de disponibilité
 
-This document provides comprehensive documentation for all booking conflict detection patterns used throughout the Shelf.nu codebase. Understanding these patterns is crucial for maintaining consistency when modifying booking-related functionality.
+Ce document décrit les principaux schémas de détection de conflits de
+réservation utilisés dans Patrimoine360 Core. Les comprendre est essentiel
+pour modifier les flux de réservation sans casser la cohérence métier.
 
-## Overview
+## Vue d'ensemble
 
-Shelf.nu uses three distinct patterns for handling booking conflicts and asset availability:
+Le Core utilise trois grands schémas pour gérer les conflits de réservation et
+la disponibilité :
 
 1. **[Booking Conflict Detection](#pattern-1-booking-conflict-detection)** - Finding conflicting bookings for availability labels
 2. **[Asset/Kit Filtering](#pattern-2-assetkit-filtering)** - Filtering unavailable assets/kits from query results

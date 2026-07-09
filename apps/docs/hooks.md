@@ -1,9 +1,11 @@
 # Hooks
 
-Shelf comes with a few utility hooks that will make your usage of shelf easier.
+Le projet fournit plusieurs hooks utilitaires qui simplifient l'usage de
+l'interface et des composants du Core.
 
 > [!NOTE]
-> Not all hooks are documented. If you find a hook that is missing in the documentation, feel free to add your contribution by explaining what the hook does, using the same formatting as we typically use.
+> Tous les hooks ne sont pas encore documentés. Si vous en repérez un absent,
+> vous pouvez compléter la documentation en reprenant le format déjà utilisé.
 
 ## useViewportHeight
 
