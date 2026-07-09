@@ -1,6 +1,8 @@
-# Database Triggers
+# Triggers de base de données
 
-This document contains information about all PostgreSQL triggers used in Shelf.nu. Triggers are database-level functions that automatically execute in response to certain events (like INSERT, UPDATE, DELETE) on specific tables.
+Ce document présente les triggers PostgreSQL utilisés dans Patrimoine360 Core.
+Un trigger est une fonction base de données exécutée automatiquement en réponse
+à certains événements comme `INSERT`, `UPDATE` ou `DELETE`.
 
 ## Why We Use Triggers
 

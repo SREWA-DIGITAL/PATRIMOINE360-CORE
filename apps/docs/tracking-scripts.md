@@ -1,8 +1,16 @@
-# Tracking & Analytics Scripts
+# Scripts de tracking et d'analytics
 
-Shelf supports several optional tracking and analytics integrations. Most of them follow the same pattern: set an environment variable with the service token/ID, and the script loads automatically on page load. Some UI-based tools (for example, the Crisp chat widget) are still configured via environment variable but only activate in response to user interaction. In all cases, if the required variable is not set, no script is injected — keeping the app lightweight for self-hosted instances.
+Patrimoine360 Core peut activer plusieurs intégrations optionnelles de suivi et
+d'analytics. Le principe reste simple : une variable d'environnement porte le
+token ou l'identifiant du service, puis le script n'est injecté que si cette
+valeur est présente.
 
-This approach keeps tokens out of the open-source codebase while allowing each deployment to configure its own analytics or support tooling.
+Certaines intégrations UI, comme le widget Crisp, ne s'activent qu'en réponse à
+une interaction utilisateur. Si la variable requise n'est pas définie, aucun
+script n'est injecté, ce qui garde l'application plus légère en self-hosted.
+
+Cette approche évite d'exposer les tokens dans le code public tout en laissant
+chaque déploiement choisir ses propres outils de support ou d'analyse.
 
 ## How it works
 
@@ -56,7 +64,8 @@ MICROSOFT_CLARITY_ID="your-clarity-project-id"
 
 ### Crisp Chat
 
-Live chat widget for customer support. Shelf configures it with the logged-in user's name and email so support agents have context.
+Widget de chat pour le support. L'application peut y transmettre le nom et
+l'e-mail de l'utilisateur connecté afin de donner du contexte aux équipes.
 
 **Environment variable:** `CRISP_WEBSITE_ID`
 
@@ -76,7 +85,9 @@ CRISP_WEBSITE_ID="your-crisp-website-id"
 
 ### Sentry
 
-Error tracking and performance monitoring. Shelf includes a tunnel endpoint (`/api/sentry-tunnel`) that proxies Sentry events through the app's own domain, avoiding ad-blocker interference.
+Suivi des erreurs et de la performance. Le projet inclut un endpoint tunnel
+(`/api/sentry-tunnel`) qui relaie les événements Sentry via le domaine de
+l'application pour limiter l'impact des bloqueurs.
 
 **Environment variables:**
 

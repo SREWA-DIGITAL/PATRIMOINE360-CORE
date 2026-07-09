@@ -1,43 +1,66 @@
-# Enable SSO
+# Activer le SSO
 
-Shelf offers single sign-on (SSO) as a login option to provide additional account security for your team. This allows company administrators to enforce the use of an identity provider when logging into Shelf. SSO improves the onboarding and offboarding experience of the company as the employee only needs a single set of credentials to access third-party applications or tools which can also be revoked easily by an administrator.
+Patrimoine360 Core permet d'activer le single sign-on (SSO) pour renforcer la
+sécurité des accès et simplifier l'onboarding comme l'offboarding des équipes.
+Les administrateurs peuvent imposer l'usage d'un fournisseur d'identité pour
+les connexions de leur organisation.
 
-Shelf currently provides SAML SSO for Team and Enterprise plan customers. Please contact Sales to have this enabled for your organization.
+Dans le Core actuel, le SSO reste une capacité réservée aux déploiements
+Enterprise ou aux environnements explicitement configurés pour cela.
 
-## Setup and limitations [#](#setup-and-limitations)
+## Mise en place et limites [#](#mise-en-place-et-limites)
 
-Shelf supports most identity providers that support the SAML 2.0 SSO protocol. We've prepared these guides for commonly used identity providers to help you get started. If you use a different provider, our support stands ready to help you out.
+Patrimoine360 s'appuie sur des fournisseurs d'identité compatibles SAML 2.0.
+Des guides sont fournis pour les cas les plus courants :
 
-- [Google Workspaces (formerly GSuite)](./providers/google-workspace.md)
-- [Microsoft Entra (formerly Azure Active Directory)](./providers/microsoft-entra.md)
+- [Google Workspace](./providers/google-workspace.md)
+- [Microsoft Entra](./providers/microsoft-entra.md)
 - Okta
 
-Accounts signing in with SSO have certain limitations. The following sections outline the limitations when SSO is enabled or disabled for your team.
+Les comptes qui se connectent via SSO ont quelques particularités. Les points
+ci-dessous résument le comportement attendu lorsque le SSO est activé.
 
 > [!IMPORTANT]
-> When setting up SSO for your organization, you **must ensure that at least one non-SSO user remains as the owner** of all workspaces. This user will serve as the administrative fallback and maintain ownership of organizational resources.
->
-> This non-SSO user account is only needed for rare administrative tasks such as SSO configuration changes - your team members will not need to access this account during normal operations and can use their SSO credentials for daily work.
+> Lors de l'activation du SSO pour votre organisation, vous devez conserver au
+> moins un utilisateur non SSO comme propriétaire administratif de secours.
+> Ce compte sert uniquement aux rares opérations de maintenance liées à la
+> configuration SSO.
 
-### Enable SSO for your organization [#](#enable-sso-for-your-organization)
+### Activer le SSO pour une organisation [#](#activer-le-sso-pour-une-organisation)
 
-- Workspace invites are not restricted to company members belonging to the same identity provider. You can also invite normal users to your workspace
-- SSO users don't get a personal workspace which by default comes with any normal user
-- An SSO user will not be able to update or reset their password since the company administrator manages their access via the identity provider.
-- An SSO user will not be able to buy their own subscription to Shelf.
-- If an SSO user with the following email of huis@zaans.com attempts to sign in with email, they will be refused access to shelf. Once a email is linked to an SSO account, they are not able to create a normal account with the same email
-- If a user with email huis@zaans.com already exists as a standard user, they will not be able to login via SSO. Please contact support to get this resolved.
-- An SSO user will see and be added only to organizations that are mapped to their groups inside the IDP
+- les invitations d'espace de travail ne sont pas limitées aux seuls membres
+  du fournisseur d'identité ;
+- un utilisateur SSO ne reçoit pas d'espace de travail personnel par défaut ;
+- un utilisateur SSO ne peut pas modifier ou réinitialiser son mot de passe
+  dans l'application, car l'accès est piloté par le fournisseur d'identité ;
+- un utilisateur SSO ne gère pas lui-même un abonnement individuel ;
+- si l'adresse `huis@zaans.com` est déjà liée à un compte SSO, cette même
+  adresse ne peut plus être recréée comme compte standard ;
+- si un utilisateur standard existe déjà avec cette adresse, la connexion SSO
+  doit être traitée avec prudence et éventuellement reprise par
+  l'administrateur ;
+- un utilisateur SSO ne voit que les organisations qui lui sont attribuées via
+  les groupes remontés par le fournisseur d'identité.
 
-### Disable SSO for your team [#](#disable-sso-for-your-team)
+### Désactiver le SSO pour une équipe [#](#desactiver-le-sso-pour-une-equipe)
 
-- You can prevent a user's account from further access to Shelf by removing or disabling their account in your identity provider.
-- You can then optionally remove them from any workspaces inside Shelf. All custodies and bookings assigned to them will be transfered to a non-registered team member.
+- vous pouvez bloquer l'accès d'un utilisateur en le supprimant ou en le
+  désactivant dans votre fournisseur d'identité ;
+- vous pouvez ensuite le retirer des espaces de travail dans Patrimoine360 ;
+- les affectations et réservations portées par cet utilisateur doivent alors
+  être réattribuées si nécessaire.
 
-## Developers [#](#developers)
+## Pour les développeurs [#](#pour-les-developpeurs)
 
-If you are self-hosting shelf and want to setup SSO, please refer to the supabase documentation for adding providers: [https://supabase.com/docs/guides/auth/enterprise-sso/auth-sso-saml](https://supabase.com/docs/guides/auth/enterprise-sso/auth-sso-saml)
+Si vous hébergez vous-même Patrimoine360 et souhaitez activer le SSO, référez-
+vous à la documentation Supabase pour l'ajout de fournisseurs SAML :
+[https://supabase.com/docs/guides/auth/enterprise-sso/auth-sso-saml](https://supabase.com/docs/guides/auth/enterprise-sso/auth-sso-saml)
 
-### Attribute mapping [#](#attribute-mapping)
+### Mapping des attributs [#](#mapping-des-attributs)
 
-For SSO users to be able to login to shelf, you will need to do some attribute mapping as per [Supabase documentation](https://supabase.com/docs/guides/auth/enterprise-sso/auth-sso-saml?queryGroups=language&language=js#understanding-attribute-mappings). We already provide a file for mapping attributes which you can find inside the project root [./sso/attributes.json](../../sso/attributes.json)
+Pour qu'un utilisateur SSO puisse se connecter correctement, il faut mapper les
+attributs attendus conformément à la documentation Supabase :
+[https://supabase.com/docs/guides/auth/enterprise-sso/auth-sso-saml?queryGroups=language&language=js#understanding-attribute-mappings](https://supabase.com/docs/guides/auth/enterprise-sso/auth-sso-saml?queryGroups=language&language=js#understanding-attribute-mappings)
+
+Un exemple de mapping d'attributs est disponible dans le dépôt :
+[../../sso/attributes.json](../../sso/attributes.json)

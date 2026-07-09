@@ -1,39 +1,43 @@
-# Set Up SSO with Google Workspace
+# Configurer le SSO avec Google Workspace
 
-Shelf supports single sign-on (SSO) using Google Workspace (formerly known as GSuite).
+Patrimoine360 peut être connecté à Google Workspace via SAML.
 
-## Step 1: Open the Google Workspace web and mobile apps console [#](#step-1-open-the-google-workspace-web-and-mobile-apps-console)
+## Étape 1 : ouvrir la console Google Workspace [#](#etape-1--ouvrir-la-console-google-workspace)
 
 ![step-1](../../img/google-workspace-step-1.png)
 
-## Step 2: Choose Add custom SAML app [#](#step-2-choose-add-custom-saml-app)
+## Étape 2 : choisir l'ajout d'une application SAML personnalisée [#](#etape-2--choisir-lajout-dune-application-saml-personnalisee)
 
-From the _Add app_ button in the toolbar choose _Add custom SAML app_.
+Depuis le bouton _Add app_, choisissez _Add custom SAML app_.
 
 ![step-2](../../img/google-workspace-step-2.png)
 
-## Step 3: Fill out app details [#](#step-3-fill-out-app-details)
+## Étape 3 : renseigner les détails de l'application [#](#etape-3--renseigner-les-details-de-lapplication)
 
-The information you enter here is for visibility into your Google Workspace. You can choose any values you like. Optionally enter a description.
+Les informations saisies ici servent surtout à l'affichage dans Google
+Workspace. Vous pouvez choisir les valeurs de votre choix et ajouter une
+description si besoin.
 
 ![step-3](../../img/google-workspace-step-3.png)
 
-## Step 4: Download IdP metadata [#](#step-4-download-idp-metadata)
+## Étape 4 : télécharger les métadonnées IdP [#](#etape-4--telecharger-les-metadonnees-idp)
 
-This is a very important step. Click on _DOWNLOAD METADATA_ and save the file that was downloaded.
+Cliquez sur _DOWNLOAD METADATA_ puis enregistrez le fichier téléchargé.
 
 ![step-4](../../img/google-workspace-step-4.png)
 
-It's very important to send this file to your support contact at Shelf to complete the SSO setup process. If you're not sure where to send this file, you can always reach us at [hello@shelf.nu](mailto:hello@shelf.nu).
+Ce fichier doit ensuite être transmis à votre contact support ou à votre
+équipe d'exploitation Patrimoine360 pour finaliser la configuration SSO.
 
 > [!IMPORTANT]
-> Make sure the certificate as shown on screen has at least 1 year before it expires. Mark down this date in your calendar so you will be reminded that you need to update the certificate without any downtime for your users.
+> Vérifiez que le certificat affiché à l'écran reste valide au moins un an.
+> Notez sa date d'expiration afin d'anticiper son renouvellement sans coupure.
 
-## Step 5: Add service provider details [#](#step-5-add-service-provider-details)
+## Étape 5 : ajouter les informations du fournisseur de service [#](#etape-5--ajouter-les-informations-du-fournisseur-de-service)
 
-Fill out these service provider details on the next screen.
+Renseignez les éléments suivants sur l'écran de configuration suivant :
 
-| Detail         | Value                                                                |
+| Détail         | Valeur                                                               |
 | -------------- | -------------------------------------------------------------------- |
 | ACS URL        | `https://nmmqcuiasekdacmhwsxk.supabase.co/auth/v1/sso/saml/acs`      |
 | Entity ID      | `https://nmmqcuiasekdacmhwsxk.supabase.co/auth/v1/sso/saml/metadata` |
@@ -42,86 +46,101 @@ Fill out these service provider details on the next screen.
 
 ![step-5](../../img/google-workspace-step-5.png)
 
-## Step 6: Configure attribute mapping [#](#step-6-configure-attribute-mapping)
+## Étape 6 : configurer le mapping des attributs [#](#etape-6--configurer-le-mapping-des-attributs)
 
-Attribute mappings allow Shelf to get information about your Google Workspace users on each login.
+Le mapping d'attributs permet à Patrimoine360 de récupérer les informations
+utiles sur vos utilisateurs à chaque connexion.
 
-All attribute mappings are required. If in doubt, replicate the same config as shown in the screenshot below.
+Tous les attributs affichés dans l'exemple sont requis. En cas de doute,
+reproduisez la configuration montrée dans la capture.
 
 ![step-6](../../img/google-workspace-step-6.png)
 
 > [!NOTE]
-> You will come back to this step at a later stage once you have your groups created and users assigned
+> Vous reviendrez sur cette étape plus tard, une fois les groupes créés et les
+> utilisateurs affectés.
 
-## Step 7: Wait for confirmation [#](#step-7-wait-for-confirmation)
+## Étape 7 : attendre la confirmation d'activation [#](#etape-7--attendre-la-confirmation-dactivation)
 
-Once you’ve configured the Google Workspace app as shown above, make sure you send the metadata file you downloaded to your support contact at Shelf.
+Une fois l'application Google Workspace configurée, transmettez le fichier de
+métadonnées à votre contact d'exploitation Patrimoine360.
 
-This information needs to be entered into Shelf before SSO is activated end-to-end.
+Les informations doivent être injectées côté plateforme avant que le SSO soit
+actif de bout en bout.
 
-Wait for confirmation that this information has successfully been added to Shelf. It usually takes us 1 business day to configure this information for you.
+Pendant ce délai, vous pouvez continuer avec la configuration des groupes.
 
-In the meantime, you can continue with the next steps that will show you how to setup your groups and users.
+## Étape 8 : créer les groupes et affecter les utilisateurs [#](#etape-8--creer-les-groupes-et-affecter-les-utilisateurs)
 
-## Step 8: Create groups and assign users [#](#step-8-create-groups-and-assign-users)
+Patrimoine360 s'appuie sur des groupes pour attribuer les accès et les rôles
+dans chaque espace de travail.
 
-In order to manage which users get access to which workspace and with what role, Shelf uses groups for the mapping.
-For each workspace you will have to create 3 groups, each one representing a different role in Shelf:
+Pour chaque espace de travail, créez trois groupes :
 
-- Admin group
-- Self service group
-- Base user group
+- groupe administrateur ;
+- groupe self-service ;
+- groupe utilisateur de base.
 
-### 8.1: Create your groups in Google Workspace [#](#81-create-your-groups-in-google-workspace)
+### 8.1 Créer les groupes dans Google Workspace [#](#81-creer-les-groupes-dans-google-workspace)
 
-First step is to create the groups in the google workspace. Inside your admin panel, navigate to Directory > Groups > Create group
+Depuis l'administration Google Workspace, allez dans `Directory > Groups >
+Create group`.
 
 ![step-8.1](../../img/google-workspace-step-8-1.png)
 
-Add a name, email and make sure the group is labeled as security. Optionally fill in the other fields as well. Make sure to create 2 groups for each workspace, one for Admins and one for Self service users.
+Renseignez le nom, l'adresse e-mail et marquez le groupe comme groupe de
+sécurité. Créez les groupes nécessaires pour chaque espace de travail.
 
 > [!NOTE]
-> Due to how Google Workspaces works, it returns group names instead of IDs when the user tries to login. We recommend using lower cased group names without spaces, to avoid mismatch. This is not required, but can ensure a better integration.
+> Google Workspace renvoie les noms de groupes plutôt que leurs identifiants au
+> moment de la connexion. Il est donc recommandé d'utiliser des noms en
+> minuscules et sans espaces pour limiter les erreurs de correspondance.
 
-### 8.2: Assign members to each group [#](#82-assign-members-to-each-group)
+### 8.2 Affecter les membres aux groupes [#](#82-affecter-les-membres-aux-groupes)
 
-Once you have created your groups, you can assign any of your organization members to them. It is recommended that a member only belongs to 1 group within the same workspace. If they are added to both, the admin role will take precedence.
+Une fois les groupes créés, affectez-y les membres de votre organisation. Il
+est recommandé qu'un utilisateur n'appartienne qu'à un seul groupe pour un
+même espace de travail.
 
-### 8.3: Allow groups to access Shelf app [#](#83-groups-to-access-shelf-app)
+### 8.3 Autoriser les groupes à accéder à l'application [#](#83-autoriser-les-groupes-a-acceder-a-lapplication)
 
-You can configure which Google Workspace user accounts will get access to Shelf. This is required as only users added to groups will be able to access Shelf.
+Vous pouvez définir quels comptes Google Workspace ont accès à Patrimoine360.
+Seuls les utilisateurs autorisés via les groupes pourront ensuite se connecter.
 
-You can configure this access by clicking on the _User access_ card (or down-arrow). Follow the instructions on screen.
-
-Changes from this step sometimes take a while to propagate across Google’s systems. Wait at least 15 minutes before proceeding to the next step.
+Cette configuration se fait depuis la carte _User access_.
 
 ![step-8.3](../../img/google-workspace-step-8-3.png)
 
-### 8.4: Map groups to app attributes [#](#84-map-groups-to-app-attributes)
+Les changements peuvent mettre quelques minutes à se propager dans Google.
 
-Once you have created all your groups, you have to make sure to add them to the attributes returned by the app.
+### 8.4 Mapper les groupes dans les attributs de l'application [#](#84-mapper-les-groupes-dans-les-attributs-de-lapplication)
+
+Ajoutez ensuite les groupes créés aux attributs renvoyés par l'application.
 
 ![step-8.4](../../img/google-workspace-step-8-4.png)
 
-Make sure to add all groups that you want to access Shelf. The **_App attribute_** name should be **_groups_**
+Le nom de l'attribut d'application doit être `groups`.
 
-## Step 9: Map Google workspace groups inside Shelf [#](#step-9-map-google-workspace-groups-inside-shelf)
+## Étape 9 : mapper les groupes Google Workspace dans Patrimoine360 [#](#etape-9--mapper-les-groupes-google-workspace-dans-patrimoine360)
 
-Once you have the groups ready, you need to add their names in the workspace settings inside Shelf. If you have multiple workspaces, you will need to map each one.
+Une fois les groupes prêts, ajoutez leurs noms dans les paramètres de l'espace
+de travail Patrimoine360 concerné.
 
-Go the the workspace settings and place the name of the ADMIN, BASE & SELF SERVICE groups.
+Si vous gérez plusieurs espaces de travail, répétez l'opération pour chacun.
 
 > [!IMPORTANT]
-> Those fields are case sensitive. The name should be placed exactly as the group name is in Google workspace.
+> Ces champs sont sensibles à la casse. Le nom doit être strictement identique
+> à celui configuré dans Google Workspace.
 
 ![step-9](../../img/google-workspace-step-9.png)
 
-## Step 10: Test single sign-on [#](#step-10-test-single-sign-on)
+## Étape 10 : tester la connexion SSO [#](#etape-10--tester-la-connexion-sso)
 
-Once you’ve completed all the steps above, ask one of those users to help you out in testing the setup.
+Demandez ensuite à un utilisateur concerné de tester la connexion :
 
-It often helps to ask them to log out of their Google account and log back in.
+- déconnexion éventuelle du compte Google ;
+- reconnexion ;
+- saisie du domaine de l'organisation sur la page de connexion SSO.
 
-Ask them to enter the domain of their in the Login in with SSO page.
-
-If sign in is not working correctly, reach out to your support contact at Shelf.
+Si la connexion ne fonctionne pas correctement, rapprochez-vous de votre équipe
+de support ou d'exploitation.

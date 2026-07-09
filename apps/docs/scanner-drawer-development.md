@@ -1,6 +1,7 @@
-# Scanner Drawer Development Guide
+# Guide de développement des drawers scanner
 
-This guide explains how to create and maintain scanner drawers in Shelf.nu, ensuring consistency and proper use of existing patterns and atoms.
+Ce guide explique comment créer et maintenir les drawers scanner de
+Patrimoine360 Core, en respectant les patterns et atoms déjà en place.
 
 ## Overview
 
