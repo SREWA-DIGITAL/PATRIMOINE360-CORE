@@ -89,10 +89,10 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     if (isPersonalOrg(currentOrganization)) {
       throw new ShelfError({
         cause: null,
-        title: "Not allowed",
+        title: "Non autorisé",
         message:
-          "You cannot use bookings in a personal workspaces. Please create a Team workspace to create bookings.",
-        label: "Booking",
+          "Les réservations ne sont pas disponibles dans un espace personnel. Créez un espace d'équipe pour gérer des réservations.",
+        label: "Réservation",
         shouldBeCaptured: false,
       });
     }
@@ -509,7 +509,9 @@ const ListBookingsContent = ({
           items={item.tags}
           idKey="id"
           labelKey="name"
-          emptyMessage={<div className="text-sm text-gray-500">No tags</div>}
+          emptyMessage={
+            <div className="text-sm text-gray-500">Aucune étiquette</div>
+          }
         />
       </Td>
 

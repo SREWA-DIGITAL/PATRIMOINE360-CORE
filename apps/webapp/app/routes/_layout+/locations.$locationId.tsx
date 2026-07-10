@@ -172,8 +172,8 @@ export async function action({ context, request, params }: ActionFunctionArgs) {
     await deleteLocation({ id, organizationId });
 
     sendNotification({
-      title: "Location deleted",
-      message: "Your location has been deleted successfully",
+      title: "Site supprimé",
+      message: "Votre site a bien été supprimé.",
       icon: { name: "trash", variant: "error" },
       senderId: authSession.userId,
     });
@@ -203,10 +203,10 @@ export default function LocationPage() {
   const currentRoute: RouteHandleWithName = matches[matches.length - 1];
 
   const items = [
-    { to: "overview", content: "Overview" },
-    { to: "assets", content: "Assets" },
-    { to: "kits", content: "Kits" },
-    { to: "activity", content: "Activity" },
+    { to: "overview", content: "Vue d'ensemble" },
+    { to: "assets", content: "Biens" },
+    { to: "kits", content: "Lots" },
+    { to: "activity", content: "Activité" },
   ];
 
   /**
@@ -255,7 +255,7 @@ export default function LocationPage() {
           {childLocations?.length ? (
             <Card>
               <div className="text-sm font-semibold text-gray-900">
-                Child locations
+                Sous-sites
               </div>
               <div className="mt-3 text-sm text-gray-700">
                 <LocationTree nodes={childLocations} />
@@ -269,10 +269,10 @@ export default function LocationPage() {
             </Card>
           ) : null}
 
-          <TextualDivider text="Details" className="my-8 lg:hidden" />
+          <TextualDivider text="Détails" className="my-8 lg:hidden" />
 
           <div className="flex items-start justify-between gap-10 rounded border border-gray-200 bg-white px-4 py-5">
-            <span className=" text-xs font-medium text-gray-600">Address</span>
+            <span className=" text-xs font-medium text-gray-600">Adresse</span>
             <span className="font-medium">{location.address ?? "-"}</span>
           </div>
 
@@ -287,11 +287,11 @@ export default function LocationPage() {
                     target="_blank"
                     rel="nofollow noopener noreferrer"
                   >
-                    See in Google Maps
+                    Voir dans Google Maps
                   </Button>
                 </p>
                 <p className="mt-2 text-xs">
-                  Geocoding by{" "}
+                  Géocodage par{" "}
                   <a
                     href="https://nominatim.openstreetmap.org/"
                     target="_blank"
@@ -308,8 +308,8 @@ export default function LocationPage() {
               <MapPlaceholder
                 description={
                   location.address
-                    ? "We couldn't geolocate your address. Please try formatting it differently."
-                    : "Add an address to see it on the map."
+                    ? "Nous n'avons pas pu géolocaliser cette adresse. Essayez un format différent."
+                    : "Ajoutez une adresse pour l'afficher sur la carte."
                 }
               />
             </div>

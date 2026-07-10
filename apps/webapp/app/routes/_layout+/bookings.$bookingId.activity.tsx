@@ -67,7 +67,7 @@ export async function loader({ context, request, params }: LoaderFunctionArgs) {
     ]);
 
     const header: HeaderData = {
-      title: `${booking.name}'s activity`,
+      title: `${booking.name} - Activité`,
     };
 
     return payload({ booking: { ...booking, notes: bookingNotes }, header });
@@ -219,8 +219,8 @@ export default function BookingActivity() {
             <div className="mb-4 inline-flex size-8 items-center justify-center  rounded-full bg-primary-100 p-2 text-primary-600">
               <NoPermissionsIcon />
             </div>
-            <h5>Insufficient permissions</h5>
-            <p>You are not allowed to view booking notes</p>
+            <h5>Permissions insuffisantes</h5>
+            <p>Vous n'êtes pas autorisé à consulter les notes de cette réservation.</p>
           </div>
         </div>
       )}

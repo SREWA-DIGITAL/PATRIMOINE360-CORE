@@ -10,7 +10,7 @@ import {
 } from "~/utils/permissions/permission.data";
 import { requirePermission } from "~/utils/roles.server";
 
-export const meta = () => [{ title: appendToMetaTitle("Locations") }];
+export const meta = () => [{ title: appendToMetaTitle("Sites") }];
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
   const authSession = context.getSession();
@@ -32,7 +32,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 }
 
 export const handle = {
-  breadcrumb: () => <Link to="/locations">Locations</Link>,
+  breadcrumb: () => <Link to="/locations">Sites</Link>,
 };
 
 export default function LocationsPage() {

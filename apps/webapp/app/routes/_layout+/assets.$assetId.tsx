@@ -314,15 +314,15 @@ export default function AssetDetailsPage() {
   const { roles } = useUserRoleHelper();
 
   const items = [
-    { to: "overview", content: "Overview" },
-    { to: "activity", content: "Activity" },
-    { to: "bookings", content: "Bookings" },
+    { to: "overview", content: "Vue d'ensemble" },
+    { to: "activity", content: "Activité" },
+    { to: "bookings", content: "Réservations" },
     ...(userHasPermission({
       roles,
       entity: PermissionEntity.assetReminders,
       action: PermissionAction.read,
     })
-      ? [{ to: "reminders", content: "Reminders" }]
+      ? [{ to: "reminders", content: "Rappels" }]
       : []),
   ];
 
@@ -339,7 +339,7 @@ export default function AssetDetailsPage() {
                 thumbnailImage: asset.thumbnailImage,
                 mainImageExpiration: asset.mainImageExpiration,
               }}
-              alt={`Image of ${asset.title}`}
+              alt={`Image de ${asset.title}`}
               className={tw(
                 "mr-4 size-14 cursor-pointer rounded border object-cover"
               )}
