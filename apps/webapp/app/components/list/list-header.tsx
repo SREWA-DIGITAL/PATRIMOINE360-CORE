@@ -61,7 +61,7 @@ export const ListHeader = ({
               )}
             >
               <div className="flex items-center gap-1">
-                Name{" "}
+                Nom{" "}
                 {modeIsAdvanced && freezeColumn ? (
                   <span className=" size-4 text-gray-400">
                     <LockIcon />
@@ -118,7 +118,7 @@ function AdvancedModeDropdown() {
 
   return (
     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-      <PopoverTrigger aria-label="Adjust name column options">
+      <PopoverTrigger aria-label="Ajuster les options de la colonne Nom">
         <ChevronRight className="rotate-90" />
       </PopoverTrigger>
       <PopoverPortal>
@@ -147,7 +147,7 @@ function AdvancedModeDropdown() {
               name="intent"
               value="changeFreeze"
             >
-              {freezeColumn ? "Unfreeze column" : "Freeze column"}
+              {freezeColumn ? "Libérer la colonne" : "Figer la colonne"}
             </Button>
           </freezeFetcher.Form>
 
@@ -170,7 +170,9 @@ function AdvancedModeDropdown() {
               name="intent"
               value="changeShowImage"
             >
-              {showAssetImage ? "Hide asset image" : "Show asset image"}
+              {showAssetImage
+                ? "Masquer l'image du bien"
+                : "Afficher l'image du bien"}
             </Button>
           </showImageFetcher.Form>
         </PopoverContent>

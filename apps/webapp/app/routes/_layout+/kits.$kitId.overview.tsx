@@ -63,7 +63,7 @@ export async function loader({ context, request, params }: LoaderFunctionArgs) {
     });
 
     const header: HeaderData = {
-      title: `${kit.name}'s overview`,
+      title: `${kit.name} - Vue d'ensemble`,
     };
 
     return payload({
@@ -83,7 +83,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => [
 ];
 
 export const handle = {
-  breadcrumb: () => "Overview",
+  breadcrumb: () => "Vue d'ensemble",
 };
 
 export default function KitOverview() {
@@ -110,7 +110,7 @@ export default function KitOverview() {
         {kit?.qrCodes?.[0] ? (
           <li className="w-full border-b-[1.1px] border-b-gray-100 p-4 last:border-b-0 md:flex">
             <span className="w-1/4 text-[14px] font-medium text-gray-900">
-              Shelf QR ID
+              ID QR Patrimoine360
             </span>
             <div className="mt-1 w-3/5 text-gray-600 md:mt-0">
               {kit.qrCodes[0].id}
@@ -119,7 +119,7 @@ export default function KitOverview() {
         ) : null}
         <li className="w-full border-b-[1.1px] border-b-gray-100 p-4 last:border-b-0 md:flex">
           <span className="w-1/4 text-[14px] font-medium text-gray-900">
-            Created
+            Créé le
           </span>
           <div className="mt-1 w-3/5 text-gray-600 md:mt-0">
             <DateS date={kit.createdAt} includeTime />
@@ -140,7 +140,7 @@ export default function KitOverview() {
         <When truthy={!!kit.category}>
           <li className="w-full border-b-[1.1px] border-b-gray-100 p-4 last:border-b-0 md:flex">
             <span className="w-1/4 text-[14px] font-medium text-gray-900">
-              Category
+              Catégorie
             </span>
             <div className="mt-1 whitespace-pre-wrap text-gray-600 md:mt-0 md:w-3/5">
               <CategoryBadge category={kit.category} />
@@ -151,7 +151,7 @@ export default function KitOverview() {
         <When truthy={!!kit.location}>
           <li className="w-full border-b-[1.1px] border-b-gray-100 p-4 last:border-b-0 md:flex">
             <span className="w-1/4 text-[14px] font-medium text-gray-900">
-              Location
+              Site
             </span>
             <div className="mt-1 md:mt-0 md:w-3/5">
               {kit.location ? (
@@ -170,15 +170,15 @@ export default function KitOverview() {
 
         <li className="w-full border-b-[1.1px] border-b-gray-100 p-4 last:border-b-0 md:flex">
           <span className="w-1/4 text-[14px] font-medium text-gray-900">
-            Total value{" "}
+            Valeur totale{" "}
             <InfoTooltip
               iconClassName="size-4"
               content={
                 <>
-                  <h6>Total value</h6>
+                  <h6>Valeur totale</h6>
                   <p>
-                    A sum of all assets' values in this kit. If no assets are
-                    present, this will be zero.
+                    Somme des valeurs de tous les biens de ce lot. S'il n'y a
+                    aucun bien, cette valeur reste à zéro.
                   </p>
                 </>
               }
@@ -209,16 +209,16 @@ export default function KitOverview() {
                 iconClassName="size-4"
                 content={
                   <>
-                    <h6>Barcodes support</h6>
+                    <h6>Prise en charge des codes-barres</h6>
                     <p>
-                      Want to know more about barcodes? Check out our knowledge
-                      base article on{" "}
+                      Pour en savoir plus sur les codes-barres, consultez
+                      notre article de base de connaissances sur{" "}
                       <Button
                         variant="link"
                         target="_blank"
                         to="https://www.shelf.nu/knowledge-base/alternative-barcodes"
                       >
-                        barcode support
+                        la prise en charge des codes-barres
                       </Button>
                     </p>
                   </>

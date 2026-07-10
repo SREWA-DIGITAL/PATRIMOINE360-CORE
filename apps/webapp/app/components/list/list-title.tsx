@@ -97,11 +97,14 @@ export default function ListTitle({
               onClick={clearSelectedItems}
               variant="secondary"
               className="p-[2px] text-[14px]"
-              aria-label="Clear selected items"
+              aria-label="Effacer la sélection"
             >
               <X size={12} strokeWidth={3} className="text-gray-600" />
             </Button>
-            {hasSelectedAllItems ? totalItems : selectedBulkItemsCount} selected
+            {hasSelectedAllItems ? totalItems : selectedBulkItemsCount} sélectionné
+            {(hasSelectedAllItems ? totalItems : selectedBulkItemsCount) > 1
+              ? "s"
+              : ""}
             {!disableSelectAllItems &&
               !hasSelectedAllItems &&
               selectedBulkItemsCount < totalItems && (
@@ -110,7 +113,7 @@ export default function ListTitle({
                   onClick={handleSelectAllItems}
                   variant="block-link"
                 >
-                  Select all {totalItems} entries
+                  Tout sélectionner ({totalItems})
                 </Button>
               )}
           </div>
@@ -119,7 +122,7 @@ export default function ListTitle({
             {perPage < totalItems ? (
               <p>
                 {items.length} {items.length > 1 ? plural : singular}{" "}
-                <span className="text-gray-400">out of {totalItems}</span>
+                <span className="text-gray-400">sur {totalItems}</span>
               </p>
             ) : (
               <span>

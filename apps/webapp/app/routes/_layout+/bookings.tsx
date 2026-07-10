@@ -3,7 +3,7 @@ import { Link, Outlet } from "react-router";
 import { ErrorContent } from "~/components/errors";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
 
-export const meta = () => [{ title: appendToMetaTitle("Bookings") }];
+export const meta = () => [{ title: appendToMetaTitle("Réservations") }];
 
 export function loader() {
   return null;
@@ -25,7 +25,7 @@ export function shouldRevalidate({
 }
 
 export const handle = {
-  breadcrumb: () => <Link to="/bookings">Bookings</Link>,
+  breadcrumb: () => <Link to="/bookings">Réservations</Link>,
 };
 
 export default function BookingsPage() {

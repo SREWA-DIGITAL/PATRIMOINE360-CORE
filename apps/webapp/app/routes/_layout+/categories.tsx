@@ -72,11 +72,11 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     const totalPages = Math.ceil(totalCategories / perPage);
 
     const header: HeaderData = {
-      title: "Categories",
+      title: "Catégories",
     };
     const modelName = {
-      singular: "category",
-      plural: "categories",
+      singular: "catégorie",
+      plural: "catégories",
     };
 
     return data(
@@ -130,8 +130,8 @@ export async function action({ context, request }: ActionFunctionArgs) {
     await deleteCategory({ id, organizationId });
 
     sendNotification({
-      title: "Category deleted",
-      message: "Your category has been deleted successfully",
+      title: "Catégorie supprimée",
+      message: "Votre catégorie a bien été supprimée.",
       icon: { name: "trash", variant: "error" },
       senderId: userId,
     });
@@ -144,7 +144,7 @@ export async function action({ context, request }: ActionFunctionArgs) {
 }
 
 export const handle = {
-  breadcrumb: () => <Link to="/categories">Categories</Link>,
+  breadcrumb: () => <Link to="/categories">Catégories</Link>,
 };
 export const ErrorBoundary = () => <ErrorContent />;
 
@@ -157,10 +157,10 @@ export default function CategoriesPage() {
         <Button
           to="new"
           role="link"
-          aria-label={`new category`}
+          aria-label="nouvelle catégorie"
           data-test-id="createNewCategory"
         >
-          New category
+          Nouvelle catégorie
         </Button>
       </Header>
       <ListContentWrapper>
@@ -171,8 +171,8 @@ export default function CategoriesPage() {
             isBaseOrSelfService ? undefined : <BulkActionsDropdown />
           }
           customEmptyStateContent={{
-            title: "No categories yet",
-            text: "Categories help you organize assets by type. Create categories to group and filter your inventory.",
+            title: "Aucune catégorie pour le moment",
+            text: "Les catégories vous aident à organiser vos biens par type. Créez-en pour regrouper et filtrer votre inventaire.",
             newButtonRoute: "/categories/new",
             newButtonContent: "Créer votre première catégorie",
           }}
@@ -180,7 +180,7 @@ export default function CategoriesPage() {
           headerChildren={
             <>
               <Th>Description</Th>
-              <Th>Assets</Th>
+              <Th>Biens</Th>
               <Th>Actions</Th>
             </>
           }
@@ -200,7 +200,7 @@ const CategoryItem = ({
   };
 }) => (
   <>
-    <Td title={`Category: ${item.name}`} className="w-1/4">
+    <Td title={`Catégorie : ${item.name}`} className="w-1/4">
       <Badge color={item.color} withDot={false}>
         {item.name}
       </Badge>
