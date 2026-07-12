@@ -1,166 +1,166 @@
-# Set Up SSO with Microsoft Entra
+# Configurer le SSO avec Microsoft Entra
 
-Shelf supports single sign-on (SSO) using Microsoft Entra.
+Patrimoine360 peut être connecté à Microsoft Entra via SAML.
 
-## Step 1: Add and register an Enterprise application [#](#step-1-add-and-register-an-enterprise-application)
+## Étape 1 : créer ou enregistrer une application Enterprise [#](#etape-1--creer-ou-enregistrer-une-application-enterprise)
 
-Open the Microsoft Entra dashboard and navigate to the [Overview](https://entra.microsoft.com/#view/Microsoft_AAD_IAM/TenantOverview.ReactView?Microsoft_AAD_IAM_legacyAADRedirect=true).
+Ouvrez le tableau de bord Microsoft Entra puis accédez à la page
+[Overview](https://entra.microsoft.com/#view/Microsoft_AAD_IAM/TenantOverview.ReactView?Microsoft_AAD_IAM_legacyAADRedirect=true).
 
-Click the _Add_ button then Enterprise application.
+Cliquez sur _Add_, puis sur _Enterprise application_.
 
 ![step-1](../../img/microsoft-entra-step-1.png)
 
-## Step 2: Choose Create your own application [#](#step-2-choose-create-your-own-application)
+## Étape 2 : choisir la création d'une application personnalisée [#](#etape-2--choisir-la-creation-dune-application-personnalisee)
 
-You'll be using the custom enterprise application setup for Shelf.
+Vous allez utiliser le mode de création d'application Enterprise personnalisée.
 
 ![step-2](../../img/microsoft-entra-step-2.png)
 
-## Step 3: Fill out app details [#](#step-3-fill-out-app-details)
+## Étape 3 : renseigner les détails de l'application [#](#etape-3--renseigner-les-details-de-lapplication)
 
-In the modal titled Create your own application, enter a display name for Shelf. This is the name your Entra users see when signing in to Shelf using SSO via Entra. We recommend to use the name Shelf.
+Dans la fenêtre _Create your own application_, saisissez un nom d'affichage
+pour Patrimoine360. C'est le nom que verront les utilisateurs Entra au moment
+de se connecter.
 
-Make sure to choose the third option: _Integrate any other application you
-don't find in the gallery (Non-gallery)._
+Choisissez ensuite la troisième option :
+_Integrate any other application you don't find in the gallery (Non-gallery)_.
 
 ![step-3](../../img/microsoft-entra-step-3.png)
 
-## Step 4: Choose the Set up single sign-on option [#](#step-4-choose-the-set-up-single-sign-on-option)
+## Étape 4 : ouvrir l'option de configuration SSO [#](#etape-4--ouvrir-loption-de-configuration-sso)
 
-Before you get to assigning users and groups, which would allow accounts in Microsoft Entra to access Shelf, you need to configure the SAML details that allows Shelf to accept sign in requests from Microsoft Entra.
+Avant d'affecter les utilisateurs et les groupes, configurez les détails SAML
+qui permettront à Patrimoine360 d'accepter les demandes de connexion venant de
+Microsoft Entra.
 
 ![step-4](../../img/microsoft-entra-step-4.png)
 
-## Step 5: Select SAML single sign-on method [#](#step-5-select-saml-single-sign-on-method)
+## Étape 5 : sélectionner la méthode SAML [#](#etape-5--selectionner-la-methode-saml)
 
-Shelf only supports the SAML 2.0 protocol for Single Sign-On, which is an industry standard.
+Patrimoine360 s'appuie sur le protocole standard SAML 2.0.
 
 ![step-5](../../img/microsoft-entra-step-5.png)
 
-## Step 6: Setup Basic SAML Configuration [#](#step-5-setup-basic-saml-configuration)
+## Étape 6 : renseigner la configuration SAML de base [#](#etape-6--renseigner-la-configuration-saml-de-base)
 
-In order for the connection to work, you need to make sure your Enterprise application connects to Shelf.
+Ajoutez les informations suivantes dans la configuration du fournisseur de
+service :
 
 ![step-6-1](../../img/microsoft-entra-step-6-1.png)
-
-Now you need to add the Service provider details. Insert the details from the table below and save them.
-
 ![step-6-2](../../img/microsoft-entra-step-6-2.png)
 
-| Detail      | Value                                                                |
+| Détail      | Valeur                                                               |
 | ----------- | -------------------------------------------------------------------- |
 | ACS URL     | `https://nmmqcuiasekdacmhwsxk.supabase.co/auth/v1/sso/saml/acs`      |
 | Entity ID   | `https://nmmqcuiasekdacmhwsxk.supabase.co/auth/v1/sso/saml/metadata` |
 | Relay State | `https://app.shelf.nu/oauthcallback`                                 |
 
-## Step 7: Configure attribute mapping [#](#step-7-configure-attribute-mapping)
+## Étape 7 : configurer le mapping des attributs [#](#etape-7--configurer-le-mapping-des-attributs)
 
-Attribute mappings allow Shelf to get information about your Microsoft Entra users on each login.
-All attribute mappings are required. If in doubt, replicate the same config as shown in the screenshot below.
+Le mapping d'attributs permet à Patrimoine360 de récupérer les informations
+nécessaires sur les utilisateurs Microsoft Entra.
 
-### Step 7.1: Remove all existing additional claims, except mail.
+### Étape 7.1 : supprimer les claims additionnels inutiles
 
-You should end up with your claims looking like this:
+Ne conservez que les claims attendus, en gardant notamment `mail`.
 
 ![step-7-1](../../img/microsoft-entra-step-7-1.png)
 
-### Step 7.2: Add new attributes
+### Étape 7.2 : ajouter les attributs attendus
 
-The table below shows which values you need to use for each attribute. To add a new one, just click on _+ Add new claim_
-If you would like to sync contact information, you will have to inform your account manager.
+| Nom           | Attribut source      | Requis |
+| ------------- | -------------------- | ------ |
+| firstname     | `user.givenname`     | oui    |
+| lastname      | `user.surname`       | oui    |
+| mobilephone   | `user.mobilephone`   | non    |
+| streetaddress | `user.streetaddress` | non    |
+| city          | `user.city`          | non    |
+| stateprovince | `user.state`         | non    |
+| postalcode    | `user.postalcode`    | non    |
+| country       | `user.country`       | non    |
 
-| Name          | Source attribute     | Required |
-| ------------- | -------------------- | -------- |
-| firstname     | `user.givenname`     | yes      |
-| lastname      | `user.surname`       | yes      |
-| mobilephone   | `user.mobilephone`   | no       |
-| streetaddress | `user.streetaddress` | no       |
-| city          | `user.city`          | no       |
-| stateprovince | `user.state`         | no       |
-| postalcode    | `user.postalcode`    | no       |
-| country       | `user.country`       | no       |
-
-Example of adding a claim for `firstname`:
+Exemple d'ajout pour `firstname` :
 
 ![step-7-example](../../img/microsoft-entra-step-7-2.png)
 
-### Step 7.3: Add group claims
+### Étape 7.3 : ajouter les claims de groupe
 
-In order to be able to give the right permissions to your users in shelf, you need to assign them to group.
+Ajoutez ensuite un claim de groupe pour permettre la remontée des groupes Entra
+dans Patrimoine360.
 
 > [!NOTE]
-> We will do that at a later stage. For now we just make sure to add the group claim so Microsoft Entra sends the correct data to shelf.
-
-Click on the _ + Add a group claim_ button and fill in the information as seen below.
+> L'affectation métier viendra ensuite. À ce stade, il faut seulement s'assurer
+> que Microsoft Entra renvoie bien l'information de groupe.
 
 ![step-7-example](../../img/microsoft-entra-step-7-3.png)
 
-## Step 8: Obtain metadata URL and send to Shelf [#](#step-8-obtain-metadata-url-and-send-to-shelf)
+## Étape 8 : récupérer l'URL de métadonnées et la transmettre [#](#etape-8--recuperer-lurl-de-metadonnees-et-la-transmettre)
 
-In order for shelf to be able to connect to your newly created Enterprise Application you need to send the following information to your account manager:
+Pour que Patrimoine360 puisse se connecter à votre application Enterprise,
+transmettez à votre équipe d'exploitation :
 
-- **Domain** - the domain which your users will use to sign-into shelf
-- **App Federation Metadata URL** - you can find that URL in _section 3 SAML Certificates_ of the application you created:
+- le **domaine** utilisé par les utilisateurs pour se connecter ;
+- l'**App Federation Metadata URL**, disponible dans la section
+  _SAML Certificates_.
 
 ![step-8](../../img/microsoft-entra-step-8.png)
 
-It's very important to send this information to your support contact at Shelf to complete the SSO setup process. If you're not sure where to send this file, you can always reach us at [hello@shelf.nu](mailto:hello@shelf.nu).
+Ne testez pas la connexion avant confirmation de la prise en compte côté
+plateforme.
 
-Do not test the login until you have heard back from the support contact.
+## Étape 9 : attendre la confirmation [#](#etape-9--attendre-la-confirmation)
 
-## Step 9: Wait for confirmation [#](#step-9-wait-for-confirmation)
+Une fois la configuration envoyée, attendez la confirmation d'activation du
+paramétrage côté plateforme. Vous pouvez profiter de ce délai pour préparer les
+groupes et les utilisateurs.
 
-Once you’ve configured the Microsoft Entra app as shown above, make sure you send the required information to your support contact at Shelf.
+## Étape 10 : créer les groupes et affecter les utilisateurs [#](#etape-10--creer-les-groupes-et-affecter-les-utilisateurs)
 
-This information needs to be entered into Shelf before SSO is activated end-to-end.
+Patrimoine360 s'appuie sur des groupes pour gérer les rôles d'accès par espace
+de travail.
 
-Wait for confirmation that this information has successfully been added to Shelf. It usually takes us 1 business day to configure this information for you.
+Créez trois groupes par espace de travail :
 
-In the meantime, you can continue with the next steps that will show you how to setup your groups and users.
-
-## Step 10: Create groups and assign users [#](#step-10-create-groups-and-assign-users)
-
-In order to manage which users get access to which workspace and with what role, Shelf uses groups for the mapping.
-For each workspace you will have to create 3 groups, each one representing a different role in Shelf:
-
-- Admin group
-- Self service group
-- Base user group
+- groupe administrateur ;
+- groupe self-service ;
+- groupe utilisateur de base.
 
 > [!NOTE]
-> A user should not be added to more than 1 group within the application as it may cause undesired behaviour.
+> Un utilisateur ne devrait pas appartenir à plusieurs groupes pour une même
+> application afin d'éviter des comportements inattendus.
 
-### Step 10.1: Create groups
+### Étape 10.1 : créer les groupes
 
-Navigate to Groups interface within Microsoft Entra and click click _New group_ to create the groups.
-You can give the groups any name you desire.
+Allez dans l'interface `Groups` de Microsoft Entra puis cliquez sur
+_New group_.
 
 ![step 10.1](../../img/microsoft-entra-step-8-1.png)
 
-The example above shows you what settings to use for creating a group. Once you have created the groups you can move to the next step.
-Feel free to already add desired team members to each group.
+Vous pouvez ensuite affecter les membres aux groupes créés.
 
-### Step 10.2: Give access of the groups to the Shelf application
+### Étape 10.2 : donner l'accès à l'application Patrimoine360
 
-Navigate back to your Shelf enterprise application and go to _Users and Groups_.
-Click _Add user/group_ and select the groups you just created.
-
-Once confirmed you should end up with a setup similar to this:
+Revenez sur votre application Enterprise Patrimoine360, ouvrez
+_Users and Groups_, puis cliquez sur _Add user/group_ pour sélectionner les
+groupes concernés.
 
 ![Step 10.2](../../img/microsoft-entra-step-8-2.png)
 
-## Step 11: Map Microsoft Entra groups inside Shelf [#](#step-9-map-google-workspace-groups-inside-shelf)
+## Étape 11 : mapper les groupes Entra dans Patrimoine360 [#](#etape-11--mapper-les-groupes-entra-dans-patrimoine360)
 
 > [!NOTE]
-> You can only complete this step, once you have received confirmation from your contact person at Shelf that the setup has been completed.
+> Cette étape ne peut être finalisée qu'après confirmation de l'activation SSO.
 >
-> Keep in mind that the OWNER of the workspace in shelf, cannot be an SSO user. The workspace needs to be created by a normal user. If you are having trouble with this, please feel free to contact your account manager to help it get resolved.
+> Le propriétaire d'un espace de travail ne doit pas être uniquement un compte
+> SSO. Conservez un compte standard de secours pour l'administration.
 
-Once you have the groups ready, you need to add their IDs in the workspace settings inside Shelf. If you have multiple workspaces, you will need to map each one.
+Une fois les groupes prêts, ajoutez leurs identifiants dans les paramètres de
+l'espace de travail Patrimoine360 correspondant.
 
-Go the the workspace settings and place the id of the ADMIN, BASE & SELF SERVICE groups. You can find the ID by clicking on each group in Entra and copying the _Object ID_
+Vous pouvez récupérer l'identifiant d'un groupe dans Entra via son _Object ID_.
 
 > [!IMPORTANT]
-> Those fields are case sensitive. The name should be placed exactly as the group name is in Google workspace.
+> Les valeurs saisies doivent correspondre exactement aux groupes configurés.
 
 ![step-9](../../img/google-workspace-step-9.png)

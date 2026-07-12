@@ -1,7 +1,7 @@
-import { supabase } from "../supabase";
+import { clearAuthSession, getStoredAccessToken } from "../auth-storage";
 
 /**
- * Base URL for the Shelf webapp API.
+ * Base URL for the Patrimoine360 API.
  * In development, this is your local dev server.
  * In production, this would be the deployed webapp URL.
  */
@@ -30,42 +30,14 @@ const REQUEST_TIMEOUT_MS = 20_000;
 /** Max automatic retries for timeout/network errors */
 const MAX_RETRIES = 1;
 
-// ── Session cache ──────────────────────────────────────
-// Cache the Supabase session in memory to avoid repeated SecureStore reads.
-// Each getSession() call reads encrypted data from disk (2-3 chunks on iOS).
-// With dozens of API calls per navigation, this eliminates massive I/O overhead.
-const SESSION_CACHE_TTL_MS = 30_000; // 30 seconds
-let cachedAccessToken: string | null = null;
-let cachedAt = 0;
-
-// Invalidate cache when auth state changes (login, logout, token refresh)
-supabase.auth.onAuthStateChange(() => {
-  cachedAccessToken = null;
-  cachedAt = 0;
-});
-
-/** Returns a valid access token, using cache when possible. */
+/** Returns the current Better Auth bearer token from secure storage. */
 export async function getAccessToken(): Promise<string | null> {
-  const now = Date.now();
-  if (cachedAccessToken && now - cachedAt < SESSION_CACHE_TTL_MS) {
-    return cachedAccessToken;
-  }
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (session?.access_token) {
-    cachedAccessToken = session.access_token;
-    cachedAt = now;
-    return cachedAccessToken;
-  }
-  cachedAccessToken = null;
-  cachedAt = 0;
-  return null;
+  return getStoredAccessToken();
 }
 
 /**
- * Makes an authenticated API call to the Shelf webapp.
- * Automatically attaches the current Supabase session JWT.
+ * Makes an authenticated API call to the Patrimoine360 API.
+ * Automatically attaches the current Better Auth bearer token.
  * - Returns structured { data, error } -- never throws.
  * - Detects 401/session-expired and notifies global auth listeners.
  * - Enforces a request timeout to avoid hanging on slow networks.
@@ -133,6 +105,7 @@ export async function apiFetch<T>(
     if (!response.ok) {
       // 401 = unauthenticated → session expired, redirect to login
       if (response.status === 401) {
+        await clearAuthSession();
         notifyAuthError();
         return {
           data: null,
@@ -184,7 +157,7 @@ export async function apiFetch<T>(
 }
 
 /**
- * Makes an authenticated multipart upload to the Shelf webapp.
+ * Makes an authenticated multipart upload to the Patrimoine360 API.
  * Used for image uploads where we send FormData instead of JSON.
  */
 export async function apiUpload<T>(
@@ -234,6 +207,7 @@ export async function apiUpload<T>(
 
     if (!response.ok) {
       if (response.status === 401) {
+        await clearAuthSession();
         notifyAuthError();
         return { data: null, error: "Session expired. Please sign in again." };
       }

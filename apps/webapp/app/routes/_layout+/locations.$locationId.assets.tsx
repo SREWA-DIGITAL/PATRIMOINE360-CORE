@@ -292,7 +292,7 @@ export default function LocationAssets() {
                     countKey="totalTeamMembers"
                     withoutValueItem={{
                       id: "without-custody",
-                      name: "Without custody",
+                      name: "Sans affectation",
                     }}
                     renderItem={(item) => resolveTeamMemberName(item, true)}
                   />

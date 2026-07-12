@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: patrimoine360-core-postgres
+    environment:
+      POSTGRES_DB: patrimoine360_core
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d patrimoine360_core"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - patrimoine360-core-postgres-data:/var/lib/postgresql/data
+
+  webapp:
+    build:
+      context: ..
+      dockerfile: apps/webapp/Dockerfile.image
+    container_name: patrimoine360-core-webapp
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./core.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/patrimoine360_core?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@postgres:5432/patrimoine360_core?schema=public
+      SERVER_URL: http://localhost:3000
+      BETTER_AUTH_URL: http://localhost:3000
+    ports:
+      - "3000:8080"
+    restart: unless-stopped
+
+volumes:
+  patrimoine360-core-postgres-data:

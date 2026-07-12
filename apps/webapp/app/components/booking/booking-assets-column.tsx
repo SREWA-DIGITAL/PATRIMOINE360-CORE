@@ -109,14 +109,14 @@ export function BookingAssetsColumn() {
       isCompleted || isArchived || isCancelled || cantManageAssetsAsBase
         ? {
             reason: isCompleted
-              ? "Booking is completed. You cannot change the assets anymore"
+              ? "La réservation est terminée. Vous ne pouvez plus modifier les biens."
               : isArchived
-              ? "Booking is archived. You cannot change the assets anymore"
+              ? "La réservation est archivée. Vous ne pouvez plus modifier les biens."
               : isCancelled
-              ? "Booking is cancelled. You cannot change the assets anymore"
+              ? "La réservation est annulée. Vous ne pouvez plus modifier les biens."
               : cantManageAssetsAsBase
-              ? "You are unable to add assets at this point because the booking is already reserved. Cancel this booking and create another one if you need to make changes."
-              : "You need to select a start and end date and save your booking before you can add assets to your booking",
+              ? "Vous ne pouvez plus ajouter de biens car cette réservation est déjà confirmée. Annulez-la et créez-en une nouvelle si vous devez la modifier."
+              : "Sélectionnez une date de début et de fin, puis enregistrez la réservation avant d'ajouter des biens.",
           }
         : false,
     [isCompleted, isArchived, isCancelled, cantManageAssetsAsBase]
@@ -151,7 +151,7 @@ export function BookingAssetsColumn() {
   return (
     <div className="flex-1">
       <div className="w-full">
-        <TextualDivider text="Assets & Kits" className="mb-8 lg:hidden" />
+        <TextualDivider text="Biens & lots" className="mb-8 lg:hidden" />
         <div className="mb-3 flex gap-4 lg:hidden"></div>
         <div className="flex flex-col">
           {/* Filters */}
@@ -174,10 +174,10 @@ export function BookingAssetsColumn() {
               <EmptyState
                 className="py-10"
                 customContent={{
-                  title: "Start by defining a booking period",
-                  text: "Assets added to your booking will show up here. Scan tags or search for assets to add to your booking.",
+                  title: "Commencez par définir une période de réservation",
+                  text: "Les biens ajoutés à cette réservation apparaîtront ici. Scannez un tag ou recherchez un bien à ajouter.",
                   newButtonRoute: manageAssetsUrl,
-                  newButtonContent: "Add assets",
+                  newButtonContent: "Ajouter des biens",
                   buttonProps: {
                     disabled: manageAssetsButtonDisabled,
                   },
@@ -188,32 +188,32 @@ export function BookingAssetsColumn() {
                 <Table className="border-collapse">
                   <ListHeader hideFirstColumn>
                     <BulkListHeader itemsGetter={itemsGetter} />
-                    <Th>Name</Th>
+                    <Th>Nom</Th>
                     <Th> </Th>
-                    <Th>Category</Th>
+                    <Th>Catégorie</Th>
                     <Th>Tags</Th>
                     {shouldShowCheckinColumns && (
                       <>
                         <Th className="whitespace-nowrap">
-                          Checked in on{" "}
+                          Retourné le{" "}
                           <InfoTooltip
                             iconClassName="size-4"
                             content={
                               <p>
-                                Shows the date when the asset was checked in via
-                                a partial check-in.
+                                Affiche la date de retour du bien lors d'un
+                                retour partiel.
                               </p>
                             }
                           />
                         </Th>
                         <Th className="whitespace-nowrap">
-                          Checked in by{" "}
+                          Retourné par{" "}
                           <InfoTooltip
                             iconClassName="size-4"
                             content={
                               <p>
-                                Shows the user who checked in the asset via a
-                                partial check-in.
+                                Affiche l'utilisateur ayant retourné le bien
+                                lors d'un retour partiel.
                               </p>
                             }
                           />
@@ -304,7 +304,7 @@ function BookingAssetsHeader({
     return (
       <div className="flex justify-between">
         <ListTitle
-          title={"Assets & Kits"}
+          title={"Biens & lots"}
           titleClassName="text-transform normal-case"
           hasBulkActions
           itemsGetter={itemsGetter}
@@ -320,14 +320,14 @@ function BookingAssetsHeader({
               to="scan-assets"
               disabled={manageAssetsButtonDisabled}
             >
-              Scan to add
+              Scanner
             </Button>
             <Button
               to={manageAssetsUrl}
               className="whitespace-nowrap"
               disabled={manageAssetsButtonDisabled}
             >
-              Add assets
+              Ajouter des biens
             </Button>
           </div>
         </When>
@@ -341,7 +341,7 @@ function BookingAssetsHeader({
       {/* First row: ListTitle and ListBulkActionsDropdown */}
       <div className="flex items-start justify-between">
         <ListTitle
-          title="Assets & Kits"
+          title="Biens & lots"
           hasBulkActions
           itemsGetter={itemsGetter}
           disableSelectAllItems
@@ -361,14 +361,14 @@ function BookingAssetsHeader({
             disabled={manageAssetsButtonDisabled}
             className="flex-1"
           >
-            Scan
+            Scanner
           </Button>
           <Button
             to={manageAssetsUrl}
             className="flex-1 whitespace-nowrap"
             disabled={manageAssetsButtonDisabled}
           >
-            Add assets
+            Ajouter des biens
           </Button>
         </div>
       </When>

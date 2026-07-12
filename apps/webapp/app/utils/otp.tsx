@@ -14,44 +14,44 @@ export type OtpPageData = Record<
 
 export const OTP_PAGE_MAP: OtpPageData = {
   login: {
-    title: "Fill your code",
+    title: "Saisissez votre code",
     SubHeading: ({ email }) => (
       <SubHeading className="-mt-4 text-center">
-        We have sent a code to{" "}
-        <span className="font-bold text-gray-900">{email}</span>. Fill the code
-        below to log in.
+        Nous avons envoyé un code à{" "}
+        <span className="font-bold text-gray-900">{email}</span>. Saisissez-le
+        ci-dessous pour vous connecter.
       </SubHeading>
     ),
-    buttonTitle: "Log In",
+    buttonTitle: "Se connecter",
   },
   signup: {
-    title: "Create an account",
+    title: "Créer un compte",
     SubHeading: () => (
       <SubHeading className="-mt-4 text-center">
-        Start your journey with Shelf.
+        Commencez votre parcours avec Patrimoine360.
       </SubHeading>
     ),
-    buttonTitle: "Create Account",
+    buttonTitle: "Créer le compte",
   },
   confirm_signup: {
-    title: "Confirm your email",
+    title: "Confirmez votre adresse e-mail",
     SubHeading: ({ email }) => (
       <SubHeading className="-mt-4 text-center">
-        We have sent a code to{" "}
-        <span className="font-bold text-gray-900">{email}</span>. Fill the code
-        below to confirm you email.
+        Nous avons envoyé un code à{" "}
+        <span className="font-bold text-gray-900">{email}</span>. Saisissez-le
+        ci-dessous pour confirmer votre adresse e-mail.
       </SubHeading>
     ),
-    buttonTitle: "Confirm",
+    buttonTitle: "Confirmer",
   },
 };
 
 export const DEFAULT_PAGE_DATA: OtpPageData["login"] = {
-  title: "One Time Password",
-  buttonTitle: "Continue",
+  title: "Code à usage unique",
+  buttonTitle: "Continuer",
   SubHeading: () => (
     <SubHeading className="-mt-4 text-center">
-      Please confirm your OTP to continue
+      Veuillez confirmer votre code OTP pour continuer
     </SubHeading>
   ),
 };

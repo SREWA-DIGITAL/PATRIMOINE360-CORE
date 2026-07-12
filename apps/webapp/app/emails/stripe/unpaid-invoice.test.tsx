@@ -45,7 +45,7 @@ describe("unpaidInvoiceUserText", () => {
       amountDue: "$99",
       dueDate: "March 24, 2026",
     });
-    expect(text).toContain("Amount due: $99");
+    expect(text).toContain("Montant : $99");
   });
 });
 
@@ -61,14 +61,14 @@ describe("sendUnpaidInvoiceUserEmail", () => {
       subscriptionName: "Team",
       amountDue: "$99",
       dueDate: "March 24, 2026",
-      subject: "Payment issue",
     });
 
     expect(mockSendEmail).toHaveBeenCalledOnce();
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "alice@example.com",
-        subject: "Payment issue",
+        subject:
+          "Action requise : probleme de paiement sur votre abonnement Patrimoine360",
         tags: ["billing", "invoice", "payment-failed"],
       })
     );

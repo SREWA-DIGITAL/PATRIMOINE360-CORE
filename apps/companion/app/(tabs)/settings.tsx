@@ -13,6 +13,7 @@ import { Image } from "expo-image";
 import Constants from "expo-constants";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/lib/auth-context";
+import { API_BASE_URL } from "@/lib/api";
 import { useOrg } from "@/lib/org-context";
 import { fontSize, spacing, borderRadius } from "@/lib/constants";
 import { useTheme, type ThemePreference } from "@/lib/theme-context";
@@ -311,7 +312,7 @@ export default function SettingsScreen() {
                 size={20}
                 color={colors.foreground}
               />
-              <Text style={styles.settingLabel}>Shelf Companion</Text>
+              <Text style={styles.settingLabel}>Patrimoine360</Text>
             </View>
             <Text style={styles.settingValue}>v{appVersion}</Text>
           </View>
@@ -348,7 +349,7 @@ export default function SettingsScreen() {
             onPress={() => {
               Alert.alert(
                 "Delete Account",
-                "Account deletion is handled through the Shelf web app. You will be redirected to shelf.nu to complete this process.",
+                "Account deletion is handled through the Patrimoine360 web app. You will be redirected to complete this process.",
                 [
                   { text: "Cancel", style: "cancel" },
                   {
@@ -356,7 +357,7 @@ export default function SettingsScreen() {
                     style: "destructive",
                     onPress: () =>
                       WebBrowser.openBrowserAsync(
-                        "https://app.shelf.nu/settings/general"
+                        `${API_BASE_URL}/settings/general`
                       ),
                   },
                 ]
@@ -382,9 +383,9 @@ export default function SettingsScreen() {
         For advanced features, visit{" "}
         <Text
           style={styles.companionFooterLink}
-          onPress={() => WebBrowser.openBrowserAsync("https://app.shelf.nu")}
+          onPress={() => WebBrowser.openBrowserAsync(API_BASE_URL)}
         >
-          app.shelf.nu
+          {API_BASE_URL.replace(/^https?:\/\//, "")}
         </Text>
       </Text>
 

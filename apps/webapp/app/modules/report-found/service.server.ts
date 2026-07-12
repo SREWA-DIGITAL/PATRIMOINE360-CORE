@@ -1,6 +1,6 @@
 import type { Asset, Kit, Prisma, ReportFound, User } from "@prisma/client";
 import { db } from "~/database/db.server";
-import { sendEmail } from "~/emails/mail.server";
+import { sendTemplatedEmail } from "~/emails/template-registry.server";
 import type { QR_SELECT_FOR_REPORT } from "~/routes/qr+/_public+/$qrId_.contact-owner";
 import { ShelfError } from "~/utils/error";
 import { normalizeQrData } from "~/utils/qr";
@@ -63,30 +63,30 @@ export function sendReportEmails({
   const { item, type, normalizedName } = normalizeQrData(qr);
   const isUnlinked = !qr.assetId && !qr.kitId;
   const reportType = type ?? "item";
-
-  const subject = isUnlinked
-    ? "Reported unlinked qr found"
-    : `Reported ${reportType} found`;
+  const itemLabel = item ? normalizedName : `QR ${qr.id}`;
 
   try {
     /** Send email to owner */
-    sendEmail({
+    void sendTemplatedEmail({
       to: ownerEmail,
-      subject,
-      text: item
-        ? `Your ${reportType} ${normalizedName} has been reported found. The reason is: \n\n| ${message} \n\n For contact use this email: ${reporterEmail}\n\nEmail sent via shelf.nu\n\n`
-        : `The QR code own (${qr.id}) has been reported found. The reason is: \n\n| ${message} \n\n For contact use this email: ${reporterEmail}\n\nEmail sent via shelf.nu\n\n`,
-      tags: ["report-found", "owner-notification", reportType.toLowerCase()],
+      template: "report-found.owner",
+      data: {
+        itemLabel,
+        message,
+        ownerEmail,
+        reportType: isUnlinked ? "code QR" : reportType,
+        reporterEmail,
+      },
     });
 
     /** Send email to reporter */
-    sendEmail({
+    void sendTemplatedEmail({
       to: reporterEmail,
-      subject,
-      text: item
-        ? `Thank you for contacting the owner of the ${reportType} you found. They have been notified of your message and will contact you if they are interested.\n\nEmail sent via shelf.nu\n\n`
-        : `Thank you for contacting the owner of the QR code you found. They have been notified of your message and will contact you if they are interested.\n\nEmail sent via shelf.nu\n\n`,
-      tags: ["report-found", "reporter-confirmation", reportType.toLowerCase()],
+      template: "report-found.reporter",
+      data: {
+        itemLabel,
+        reportType: isUnlinked ? "code QR" : reportType,
+      },
     });
 
     return;

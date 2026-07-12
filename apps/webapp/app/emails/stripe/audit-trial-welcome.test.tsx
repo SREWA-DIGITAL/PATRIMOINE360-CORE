@@ -42,7 +42,7 @@ describe("auditTrialWelcomeEmailText", () => {
       firstName: "Alice",
       hasPaymentMethod: false,
     });
-    expect(text).toMatch(/^Hey Alice,/);
+    expect(text).toMatch(/^Bonjour Alice,/);
   });
 
   it("uses generic greeting when firstName is null", () => {
@@ -50,7 +50,7 @@ describe("auditTrialWelcomeEmailText", () => {
       firstName: null,
       hasPaymentMethod: false,
     });
-    expect(text).toMatch(/^Hey,/);
+    expect(text).toMatch(/^Bonjour,/);
   });
 
   it("includes payment method warning when hasPaymentMethod is true", () => {
@@ -58,7 +58,7 @@ describe("auditTrialWelcomeEmailText", () => {
       firstName: "Alice",
       hasPaymentMethod: true,
     });
-    expect(text).toContain("your subscription will automatically continue");
+    expect(text).toContain("moyen de paiement");
   });
 
   it("omits payment method warning when hasPaymentMethod is false", () => {
@@ -66,7 +66,7 @@ describe("auditTrialWelcomeEmailText", () => {
       firstName: "Alice",
       hasPaymentMethod: false,
     });
-    expect(text).not.toContain("your subscription will automatically continue");
+    expect(text).toContain("Aucun moyen de paiement");
   });
 });
 
@@ -86,7 +86,7 @@ describe("sendAuditTrialWelcomeEmail", () => {
     expect(mockSendEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "alice@example.com",
-        subject: "Your 7-day Audits trial is now active!",
+        subject: "Votre essai Audits Patrimoine360 est actif",
         tags: ["billing", "trial", "audit", "welcome"],
       })
     );

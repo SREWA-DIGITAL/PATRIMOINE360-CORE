@@ -123,9 +123,18 @@ vi.mock("~/utils/emitter/send-notification.server", () => ({
 
 vi.mock("~/utils/env", () => ({
   ADMIN_EMAIL: "admin@example.com",
+  COLLECT_BUSINESS_INTEL: false,
+  DISABLE_SIGNUP: false,
+  DISABLE_SSO: false,
+  ENABLE_PREMIUM_FEATURES: false,
+  FREE_TRIAL_DAYS: "7",
+  GEOCODING_USER_AGENT: "test-agent",
   LICENSE_TYPE: "community",
   NODE_ENV: "test",
+  SEND_ONBOARDING_EMAIL: false,
   SERVER_URL: "http://localhost:3000",
+  SHOW_HOW_DID_YOU_FIND_US: false,
+  SUPPORT_EMAIL: "support@example.com",
 }));
 
 vi.mock("~/utils/roles.server", () => ({

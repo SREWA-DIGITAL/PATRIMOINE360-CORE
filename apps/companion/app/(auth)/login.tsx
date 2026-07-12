@@ -17,8 +17,6 @@ import { useAuth } from "@/lib/auth-context";
 import { fontSize, spacing, borderRadius } from "@/lib/constants";
 import { useTheme } from "@/lib/theme-context";
 import { createStyles } from "@/lib/create-styles";
-import ShelfIcon from "@/components/brand/shelf-icon";
-import ShelfWordmark from "@/components/brand/shelf-wordmark";
 
 export default function LoginScreen() {
   const { signIn } = useAuth();
@@ -95,10 +93,10 @@ export default function LoginScreen() {
         >
           {/* ── Brand Section ─────────────────────────────────────── */}
           <View style={styles.brand}>
-            <ShelfIcon size={72} />
-            <View style={styles.wordmarkWrap}>
-              <ShelfWordmark width={100} color={colors.foreground} />
+            <View style={styles.logoMark}>
+              <Text style={styles.logoText}>P360</Text>
             </View>
+            <Text style={styles.brandName}>Patrimoine360</Text>
           </View>
 
           {/* ── Welcome Text ──────────────────────────────────────── */}
@@ -196,7 +194,7 @@ export default function LoginScreen() {
           </View>
 
           <Text style={styles.footer}>
-            Use the same credentials as your Shelf web account.
+            Use the same credentials as your Patrimoine360 web account.
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -218,8 +216,24 @@ const useStyles = createStyles((colors, shadows) => ({
     alignItems: "center",
     marginBottom: spacing.xxxl,
   },
-  wordmarkWrap: {
+  logoMark: {
+    width: 72,
+    height: 72,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoText: {
+    color: colors.primaryForeground,
+    fontSize: fontSize.xl,
+    fontWeight: "800",
+  },
+  brandName: {
     marginTop: spacing.md,
+    color: colors.foreground,
+    fontSize: fontSize.xxl,
+    fontWeight: "800",
   },
   welcomeSection: {
     alignItems: "center",

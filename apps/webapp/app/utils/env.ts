@@ -54,7 +54,11 @@ declare global {
       SMTP_USER: string;
       SMTP_FROM: string;
       EMAIL_PROVIDER: "smtp" | "brevo";
+      EMAIL_REPLY_TO: string;
+      EMAIL_REPLY_TO_NAME: string;
       BREVO_API_KEY: string;
+      BREVO_SENDER_EMAIL: string;
+      BREVO_SENDER_NAME: string;
       BREVO_TIMEOUT_SECONDS: string;
       BETTER_AUTH_SECRET: string;
       BETTER_AUTH_URL: string;
@@ -82,6 +86,32 @@ type EnvOptions = {
   isRequired?: boolean;
   allowEmpty?: boolean;
 };
+
+const PLACEHOLDER_PUBLIC_ENV_VALUES = new Set([
+  "sentry-dsn",
+  "microsoft-clarity-id",
+  "your-cloudflare-web-analytics-token",
+  "your-cloudflare-web-analytics-id",
+  "your-clarity-id",
+]);
+
+export function sanitizeOptionalPublicEnv(
+  value: string | undefined
+): string | undefined {
+  if (!value) return undefined;
+
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return undefined;
+  }
+
+  if (PLACEHOLDER_PUBLIC_ENV_VALUES.has(trimmedValue)) {
+    return undefined;
+  }
+
+  return trimmedValue;
+}
 
 export function getEnv<K extends keyof NodeJS.ProcessEnv>(
   name: K,
@@ -173,21 +203,45 @@ export const STRIPE_WEBHOOK_ENDPOINT_SECRET = getEnv(
   "STRIPE_WEBHOOK_ENDPOINT_SECRET",
   { isSecret: true, isRequired: false }
 );
-export const SMTP_PWD = getEnv("SMTP_PWD", { allowEmpty: true });
-export const SMTP_HOST = getEnv("SMTP_HOST");
-export const SMTP_PORT = getEnv("SMTP_PORT", {
-  isRequired: false,
-});
-export const SMTP_USER = getEnv("SMTP_USER", { allowEmpty: true });
-export const SMTP_FROM = getEnv("SMTP_FROM", {
-  isRequired: false,
-});
 export const EMAIL_PROVIDER =
   getEnv("EMAIL_PROVIDER", {
     isSecret: false,
     isRequired: false,
-  }) || "smtp";
+  }) || "brevo";
+export const SMTP_PWD = getEnv("SMTP_PWD", {
+  allowEmpty: true,
+  isRequired: EMAIL_PROVIDER === "smtp",
+});
+export const SMTP_HOST = getEnv("SMTP_HOST", {
+  isRequired: EMAIL_PROVIDER === "smtp",
+});
+export const SMTP_PORT = getEnv("SMTP_PORT", {
+  isRequired: EMAIL_PROVIDER === "smtp",
+});
+export const SMTP_USER = getEnv("SMTP_USER", {
+  allowEmpty: true,
+  isRequired: EMAIL_PROVIDER === "smtp",
+});
+export const SMTP_FROM = getEnv("SMTP_FROM", {
+  isRequired: false,
+});
+export const EMAIL_REPLY_TO = getEnv("EMAIL_REPLY_TO", {
+  isSecret: false,
+  isRequired: false,
+});
+export const EMAIL_REPLY_TO_NAME = getEnv("EMAIL_REPLY_TO_NAME", {
+  isSecret: false,
+  isRequired: false,
+});
 export const BREVO_API_KEY = getEnv("BREVO_API_KEY", {
+  isRequired: false,
+});
+export const BREVO_SENDER_EMAIL = getEnv("BREVO_SENDER_EMAIL", {
+  isSecret: false,
+  isRequired: false,
+});
+export const BREVO_SENDER_NAME = getEnv("BREVO_SENDER_NAME", {
+  isSecret: false,
   isRequired: false,
 });
 export const BREVO_TIMEOUT_SECONDS = getEnv("BREVO_TIMEOUT_SECONDS", {
@@ -213,10 +267,12 @@ export const DATABASE_URL = getEnv("DATABASE_URL");
 export const DIRECT_URL = getEnv("DIRECT_URL", {
   isRequired: false,
 });
-export const SENTRY_DSN = getEnv("SENTRY_DSN", {
-  isSecret: false,
-  isRequired: false,
-});
+export const SENTRY_DSN = sanitizeOptionalPublicEnv(
+  getEnv("SENTRY_DSN", {
+    isSecret: false,
+    isRequired: false,
+  })
+);
 
 export const ADMIN_EMAIL = getEnv("ADMIN_EMAIL", {
   isRequired: false,
@@ -248,16 +304,17 @@ export const CRISP_WEBSITE_ID = getEnv("CRISP_WEBSITE_ID", {
   isSecret: false,
   isRequired: false,
 });
-export const MICROSOFT_CLARITY_ID = getEnv("MICROSOFT_CLARITY_ID", {
-  isSecret: false,
-  isRequired: false,
-});
-export const CLOUDFLARE_WEB_ANALYTICS_TOKEN = getEnv(
-  "CLOUDFLARE_WEB_ANALYTICS_TOKEN",
-  {
+export const MICROSOFT_CLARITY_ID = sanitizeOptionalPublicEnv(
+  getEnv("MICROSOFT_CLARITY_ID", {
     isSecret: false,
     isRequired: false,
-  }
+  })
+);
+export const CLOUDFLARE_WEB_ANALYTICS_TOKEN = sanitizeOptionalPublicEnv(
+  getEnv("CLOUDFLARE_WEB_ANALYTICS_TOKEN", {
+    isSecret: false,
+    isRequired: false,
+  })
 );
 export const FORMBRICKS_ENV_ID = getEnv("FORMBRICKS_ENV_ID", {
   isSecret: false,

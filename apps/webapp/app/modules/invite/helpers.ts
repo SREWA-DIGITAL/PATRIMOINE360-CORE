@@ -1,5 +1,4 @@
-import { SERVER_URL, SUPPORT_EMAIL } from "~/utils/env";
-import { resolveUserDisplayName } from "~/utils/user";
+import { emailTemplateCatalog } from "~/emails/template-registry.server";
 import type { InviteWithInviterAndOrg } from "./types";
 
 export function generateRandomCode(length: number): string {
@@ -21,38 +20,12 @@ export const inviteEmailText = ({
   invite: InviteWithInviterAndOrg;
   token: string;
   extraMessage?: string | null;
-}) => `Howdy,
-
-${resolveUserDisplayName(
-  invite.inviter
-)} invites you to join Shelf as a member of ${
-  invite.organization.name
-}'s workspace.
-${
-  extraMessage
-    ? `
----
-Message from ${resolveUserDisplayName(invite.inviter)}:
-
-${extraMessage}
----
-`
-    : ""
-}
-Click the link to accept the invite:
-${SERVER_URL}/accept-invite/${invite.id}?token=${token}
-
-Once you're done setting up your account, you'll be able to access the workspace and start exploring features like Asset Explorer, Location Tracking, Collaboration, Custom fields and more.
-
-If you have any questions or need assistance, please don't hesitate to contact our support team at ${SUPPORT_EMAIL}.
-${
-  invite.organization.customEmailFooter
-    ? `\n---\n${invite.organization.customEmailFooter}`
-    : ""
-}
-Thanks,
-The Shelf Team
-`;
+}) =>
+  emailTemplateCatalog["invite.workspace"].text({
+    invite,
+    token,
+    extraMessage,
+  });
 
 export function splitName(fullName?: string | null): {
   firstName: string;
@@ -77,15 +50,12 @@ export const revokeAccessEmailText = ({
 }: {
   orgName: string;
   customEmailFooter?: string | null;
-}) => `Howdy,
-
-Your access to ${orgName} has been revoked.
-
-If you think this is a mistake, please contact the organization's administrator.
-${customEmailFooter ? `\n---\n${customEmailFooter}` : ""}
-Thanks,
-The Shelf Team
-`;
+}) =>
+  emailTemplateCatalog["team.access-revoked"].text({
+    orgName,
+    customEmailFooter,
+    recipientEmail: "",
+  });
 
 export const roleChangeEmailText = ({
   orgName,
@@ -97,12 +67,11 @@ export const roleChangeEmailText = ({
   previousRole: string;
   newRole: string;
   customEmailFooter?: string | null;
-}) => `Howdy,
-
-Your role in ${orgName} has been changed from ${previousRole} to ${newRole}.
-
-If you think this is a mistake, please contact the workspace administrator.
-${customEmailFooter ? `\n---\n${customEmailFooter}` : ""}
-Thanks,
-The Shelf Team
-`;
+}) =>
+  emailTemplateCatalog["team.role-changed"].text({
+    orgName,
+    previousRole,
+    newRole,
+    customEmailFooter,
+    recipientEmail: "",
+  });

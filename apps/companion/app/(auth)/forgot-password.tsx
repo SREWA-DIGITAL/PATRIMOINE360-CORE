@@ -19,29 +19,37 @@ import { useTheme } from "@/lib/theme-context";
 import { createStyles } from "@/lib/create-styles";
 
 export default function ForgotPasswordScreen() {
-  const { resetPassword } = useAuth();
+  const { resetPassword, confirmPasswordReset } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const styles = useStyles();
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSent, setIsSent] = useState(false);
+  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
 
-  const handleSubmit = async () => {
+  const validateEmail = (value: string) => {
+    if (!value) return "Veuillez saisir votre adresse e-mail.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      return "Veuillez saisir une adresse e-mail valide.";
+    }
+
+    return null;
+  };
+
+  const handleRequestOtp = async () => {
     Keyboard.dismiss();
     setError(null);
 
     const trimmedEmail = email.trim();
-    if (!trimmedEmail) {
-      setError("Please enter your email address.");
-      return;
-    }
-
-    // Basic email format check
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      setError("Please enter a valid email address.");
+    const emailError = validateEmail(trimmedEmail);
+    if (emailError) {
+      setError(emailError);
       return;
     }
 
@@ -52,35 +60,78 @@ export default function ForgotPasswordScreen() {
     if (resetError) {
       setError(resetError);
     } else {
-      setIsSent(true);
+      setIsOtpSent(true);
     }
   };
 
-  if (isSent) {
+  const handleConfirmReset = async () => {
+    Keyboard.dismiss();
+    setError(null);
+
+    const trimmedEmail = email.trim();
+    const emailError = validateEmail(trimmedEmail);
+    if (emailError) {
+      setError(emailError);
+      return;
+    }
+
+    if (!otp.trim()) {
+      setError("Veuillez saisir le code reçu par e-mail.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Le mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
+
+    if (password !== passwordConfirm) {
+      setError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const { error: confirmError } = await confirmPasswordReset(
+      trimmedEmail,
+      otp.trim(),
+      password
+    );
+    setIsSubmitting(false);
+
+    if (confirmError) {
+      setError(confirmError);
+      return;
+    }
+
+    setIsComplete(true);
+  };
+
+  if (isComplete) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.inner}>
           <View style={styles.successContainer}>
             <View style={styles.successIcon}>
-              <Ionicons name="mail-outline" size={40} color={colors.success} />
+              <Ionicons
+                name="checkmark-circle-outline"
+                size={40}
+                color={colors.success}
+              />
             </View>
-            <Text style={styles.successTitle}>Check your email</Text>
+            <Text style={styles.successTitle}>Mot de passe modifié</Text>
             <Text style={styles.successText}>
-              We&apos;ve sent a password reset link to{"\n"}
-              <Text style={styles.emailHighlight}>{email.trim()}</Text>
-            </Text>
-            <Text style={styles.successHint}>
-              If you don&apos;t see the email, check your spam folder.
+              Vous pouvez maintenant vous connecter avec votre nouveau mot de
+              passe.
             </Text>
             <TouchableOpacity
               testID="back-to-signin-button"
               style={styles.button}
               onPress={() => router.back()}
               activeOpacity={0.8}
-              accessibilityLabel="Return to sign in"
+              accessibilityLabel="Retour à la connexion"
               accessibilityRole="button"
             >
-              <Text style={styles.buttonText}>Back to Sign In</Text>
+              <Text style={styles.buttonText}>Retour à la connexion</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -100,22 +151,23 @@ export default function ForgotPasswordScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
             activeOpacity={0.7}
-            accessibilityLabel="Go back to sign in"
+            accessibilityLabel="Retour à la connexion"
             accessibilityRole="button"
           >
             <Ionicons name="arrow-back" size={24} color={colors.foreground} />
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <Text style={styles.title}>Forgot password?</Text>
+            <Text style={styles.title}>Mot de passe oublié ?</Text>
             <Text style={styles.subtitle}>
-              Enter the email associated with your Shelf account and we&apos;ll
-              send you a link to reset your password.
+              {isOtpSent
+                ? "Saisissez le code reçu par e-mail et choisissez un nouveau mot de passe."
+                : "Saisissez l’e-mail associé à votre compte pour recevoir un code de réinitialisation."}
             </Text>
           </View>
 
           <View style={styles.form}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>E-mail</Text>
             <TextInput
               testID="forgot-email-input"
               style={[styles.input, error ? styles.inputError : null]}
@@ -132,11 +184,73 @@ export default function ForgotPasswordScreen() {
               keyboardType="email-address"
               textContentType="emailAddress"
               returnKeyType="go"
-              onSubmitEditing={handleSubmit}
-              editable={!isSubmitting}
+              onSubmitEditing={isOtpSent ? undefined : handleRequestOtp}
+              editable={!isSubmitting && !isOtpSent}
               autoFocus
-              accessibilityLabel="Email address"
+              accessibilityLabel="Adresse e-mail"
             />
+
+            {isOtpSent && (
+              <>
+                <Text style={styles.label}>Code de vérification</Text>
+                <TextInput
+                  testID="reset-otp-input"
+                  style={[styles.input, error ? styles.inputError : null]}
+                  value={otp}
+                  onChangeText={(t) => {
+                    setOtp(t);
+                    setError(null);
+                  }}
+                  placeholder="123456"
+                  placeholderTextColor={colors.placeholderText}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="number-pad"
+                  returnKeyType="next"
+                  editable={!isSubmitting}
+                  accessibilityLabel="Code de vérification"
+                />
+
+                <Text style={styles.label}>Nouveau mot de passe</Text>
+                <TextInput
+                  testID="reset-password-input"
+                  style={[styles.input, error ? styles.inputError : null]}
+                  value={password}
+                  onChangeText={(t) => {
+                    setPassword(t);
+                    setError(null);
+                  }}
+                  placeholder="Votre nouveau mot de passe"
+                  placeholderTextColor={colors.placeholderText}
+                  secureTextEntry
+                  autoComplete="password-new"
+                  textContentType="newPassword"
+                  returnKeyType="next"
+                  editable={!isSubmitting}
+                  accessibilityLabel="Nouveau mot de passe"
+                />
+
+                <Text style={styles.label}>Confirmer le mot de passe</Text>
+                <TextInput
+                  testID="reset-password-confirm-input"
+                  style={[styles.input, error ? styles.inputError : null]}
+                  value={passwordConfirm}
+                  onChangeText={(t) => {
+                    setPasswordConfirm(t);
+                    setError(null);
+                  }}
+                  placeholder="Confirmez le mot de passe"
+                  placeholderTextColor={colors.placeholderText}
+                  secureTextEntry
+                  autoComplete="password-new"
+                  textContentType="newPassword"
+                  returnKeyType="go"
+                  onSubmitEditing={handleConfirmReset}
+                  editable={!isSubmitting}
+                  accessibilityLabel="Confirmer le mot de passe"
+                />
+              </>
+            )}
 
             {error && (
               <Text
@@ -151,18 +265,42 @@ export default function ForgotPasswordScreen() {
             <TouchableOpacity
               testID="send-reset-button"
               style={[styles.button, isSubmitting && styles.buttonDisabled]}
-              onPress={handleSubmit}
+              onPress={isOtpSent ? handleConfirmReset : handleRequestOtp}
               disabled={isSubmitting}
               activeOpacity={0.8}
-              accessibilityLabel="Send reset link"
+              accessibilityLabel={
+                isOtpSent
+                  ? "Réinitialiser le mot de passe"
+                  : "Envoyer le code de réinitialisation"
+              }
               accessibilityRole="button"
             >
               {isSubmitting ? (
                 <ActivityIndicator color={colors.primaryForeground} />
               ) : (
-                <Text style={styles.buttonText}>Send Reset Link</Text>
+                <Text style={styles.buttonText}>
+                  {isOtpSent
+                    ? "Réinitialiser le mot de passe"
+                    : "Envoyer le code"}
+                </Text>
               )}
             </TouchableOpacity>
+
+            {isOtpSent && (
+              <TouchableOpacity
+                testID="resend-reset-code-button"
+                style={styles.secondaryButton}
+                onPress={handleRequestOtp}
+                disabled={isSubmitting}
+                activeOpacity={0.8}
+                accessibilityLabel="Renvoyer le code"
+                accessibilityRole="button"
+              >
+                <Text style={styles.secondaryButtonText}>
+                  Renvoyer le code
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -242,6 +380,15 @@ const useStyles = createStyles((colors, shadows) => ({
   buttonText: {
     color: colors.primaryForeground,
     fontSize: fontSize.lg,
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  secondaryButtonText: {
+    color: colors.buttonGhostText,
+    fontSize: fontSize.base,
     fontWeight: "600",
   },
 

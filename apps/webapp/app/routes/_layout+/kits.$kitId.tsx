@@ -434,9 +434,9 @@ export default function KitDetails() {
   const kitHasUnavailableAssets = kit.assets.some((a) => !a.availableToBook);
 
   const items = [
-    { to: "assets", content: "Assets" },
-    { to: "overview", content: "Overview" },
-    { to: "bookings", content: "Bookings" },
+    { to: "assets", content: "Biens" },
+    { to: "overview", content: "Vue d'ensemble" },
+    { to: "bookings", content: "Réservations" },
   ];
 
   const matches = useMatches();

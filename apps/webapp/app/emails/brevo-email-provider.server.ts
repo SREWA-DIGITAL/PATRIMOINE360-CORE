@@ -67,7 +67,7 @@ function getBrevoErrorMessage(cause: unknown) {
 }
 
 export async function sendEmailWithBrevo({
-  from = '"Shelf" <hello@example.com>',
+  from = '"Patrimoine360" <hello@example.com>',
   headers,
   html,
   params,

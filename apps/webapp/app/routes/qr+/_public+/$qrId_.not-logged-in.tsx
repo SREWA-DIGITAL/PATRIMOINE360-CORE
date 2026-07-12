@@ -10,7 +10,9 @@ import { appendToMetaTitle } from "~/utils/append-to-meta-title";
 import { makeShelfError } from "~/utils/error";
 import { error, payload, getParams } from "~/utils/http.server";
 
-export const meta = () => [{ title: appendToMetaTitle("QR not logged in") }];
+export const meta = () => [
+  { title: appendToMetaTitle("QR - connexion requise") },
+];
 
 export async function loader({ params }: LoaderFunctionArgs) {
   const { qrId } = getParams(params, z.object({ qrId: z.string() }));
@@ -39,12 +41,12 @@ export default function QrNotLoggedIn() {
           </div>
           <div className="mb-8">
             <h1 className="mb-2 text-[24px] font-semibold">
-              Thank you for scanning
+              Merci pour votre scan
             </h1>
             <p className="text-gray-600">
               {canContactOwner
-                ? "Log in if you own this item. Contact the owner to report it found if it's lost."
-                : "Log in if you own this item. This code hasn't been claimed yet."}
+                ? "Connectez-vous si vous êtes propriétaire de cet élément. S'il est perdu, contactez son propriétaire pour signaler que vous l'avez retrouvé."
+                : "Connectez-vous si vous êtes propriétaire de cet élément. Ce code n'a pas encore été attribué."}
             </p>
           </div>
           <div className="flex flex-col">
@@ -55,7 +57,7 @@ export default function QrNotLoggedIn() {
                 `/login?redirectTo=${searchParams.get("redirectTo")}`
               )}
             >
-              Log In
+              Se connecter
             </Button>
             {canContactOwner ? (
               <Button
@@ -63,20 +65,20 @@ export default function QrNotLoggedIn() {
                 to={`/qr/${qrId}/contact-owner`}
                 className="max-w-full"
               >
-                Contact Owner
+                Contacter le propriétaire
               </Button>
             ) : null}
           </div>
         </div>
       </div>
       <div className="mt-6 text-center text-sm text-gray-500">
-        Don't have an account?{" "}
+        Vous n'avez pas de compte ?{" "}
         <Button
           variant="link"
           data-test-id="signupButton"
           to={encodeURI(`/join?redirectTo=${searchParams.get("redirectTo")}`)}
         >
-          Sign up
+          Créer un compte
         </Button>
       </div>
     </>

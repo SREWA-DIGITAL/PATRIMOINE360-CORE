@@ -55,7 +55,7 @@ export async function loader({ context, request, params }: LoaderFunctionArgs) {
     });
 
     const header: HeaderData = {
-      title: `${asset.title}'s activity`,
+      title: `${asset.title} - Activité`,
     };
 
     return payload({ asset, header });
@@ -70,7 +70,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => [
 ];
 
 export const handle = {
-  breadcrumb: () => "Activity",
+  breadcrumb: () => "Activité",
 };
 
 export default function AssetActivity() {
@@ -94,8 +94,8 @@ export default function AssetActivity() {
             <div className="mb-4 inline-flex size-8 items-center justify-center  rounded-full bg-primary-100 p-2 text-primary-600">
               <NoPermissionsIcon />
             </div>
-            <h5>Insufficient permissions</h5>
-            <p>You are not allowed to view asset notes</p>
+            <h5>Permissions insuffisantes</h5>
+            <p>Vous n'êtes pas autorisé à consulter les notes de ce bien.</p>
           </div>
         </div>
       )}

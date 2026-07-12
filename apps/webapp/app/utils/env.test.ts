@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { getEnv } from "./env";
+import { getEnv, sanitizeOptionalPublicEnv } from "./env";
 import { ShelfError } from "./error";
 
 // why: Mock isBrowser to ensure we're testing server-side behavior
@@ -191,5 +191,32 @@ describe("getEnv", () => {
         getEnv("SESSION_SECRET");
       }).toThrow(ShelfError);
     });
+  });
+});
+
+describe("sanitizeOptionalPublicEnv", () => {
+  it("returns undefined for empty values", () => {
+    expect(sanitizeOptionalPublicEnv(undefined)).toBeUndefined();
+    expect(sanitizeOptionalPublicEnv("")).toBeUndefined();
+    expect(sanitizeOptionalPublicEnv("   ")).toBeUndefined();
+  });
+
+  it("returns undefined for known placeholder values", () => {
+    expect(sanitizeOptionalPublicEnv("sentry-dsn")).toBeUndefined();
+    expect(sanitizeOptionalPublicEnv("microsoft-clarity-id")).toBeUndefined();
+    expect(
+      sanitizeOptionalPublicEnv("your-cloudflare-web-analytics-token")
+    ).toBeUndefined();
+  });
+
+  it("keeps configured public env values", () => {
+    expect(
+      sanitizeOptionalPublicEnv(
+        "https://examplePublicKey@o0.ingest.sentry.io/1"
+      )
+    ).toBe("https://examplePublicKey@o0.ingest.sentry.io/1");
+    expect(sanitizeOptionalPublicEnv("clarity-prod-123")).toBe(
+      "clarity-prod-123"
+    );
   });
 });

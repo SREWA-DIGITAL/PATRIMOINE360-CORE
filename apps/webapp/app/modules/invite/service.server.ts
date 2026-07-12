@@ -14,8 +14,7 @@ import invariant from "tiny-invariant";
 import type { z } from "zod";
 import type { InviteUserFormSchema } from "~/components/settings/invite-user-dialog";
 import { db } from "~/database/db.server";
-import { invitationTemplateString } from "~/emails/invite-template";
-import { sendEmail } from "~/emails/mail.server";
+import { sendTemplatedEmail } from "~/emails/template-registry.server";
 import { organizationRolesMap } from "~/routes/_layout+/settings.team";
 import { INVITE_EXPIRY_TTL_DAYS } from "~/utils/constants";
 import { updateCookieWithPerPage } from "~/utils/cookies.server";
@@ -26,7 +25,7 @@ import { ShelfError, isLikeShelfError } from "~/utils/error";
 import { getCurrentSearchParams } from "~/utils/http.server";
 import { getParamsValues } from "~/utils/list";
 import { checkDomainSSOStatus, doesSSOUserExist } from "~/utils/sso.server";
-import { generateRandomCode, inviteEmailText, splitName } from "./helpers";
+import { generateRandomCode, splitName } from "./helpers";
 import { processInvitationMessage } from "./message-validator.server";
 import { createTeamMember } from "../team-member/service.server";
 import { createUserOrAttachOrg } from "../user/service.server";
@@ -286,16 +285,14 @@ export async function createInvite(
       expiresIn: `${INVITE_EXPIRY_TTL_DAYS}d`,
     }); //keep only needed data in token to maintain the size
 
-    sendEmail({
+    void sendTemplatedEmail({
       to: inviteeEmail,
-      subject: `✉️ You have been invited to ${invite.organization.name}`,
-      text: inviteEmailText({ invite, token, extraMessage: sanitizedMessage }),
-      html: await invitationTemplateString({
+      template: "invite.workspace",
+      data: {
         invite,
         token,
         extraMessage: sanitizedMessage,
-      }),
-      tags: ["invite", "organization", "transactional"],
+      },
     });
 
     return invite;
@@ -797,22 +794,14 @@ export async function bulkInviteUsers({
             expiresIn: `${INVITE_EXPIRY_TTL_DAYS}d`,
           });
 
-          const html = await invitationTemplateString({
-            invite,
-            token,
-            extraMessage: extraInviteMessage,
-          });
-
-          sendEmail({
+          await sendTemplatedEmail({
             to: invite.inviteeEmail,
-            subject: `✉️ You have been invited to ${invite.organization.name}`,
-            text: inviteEmailText({
+            template: "invite.workspace",
+            data: {
               invite,
               token,
               extraMessage: extraInviteMessage,
-            }),
-            html,
-            tags: ["invite", "organization", "transactional"],
+            },
           });
         }, delay);
       });

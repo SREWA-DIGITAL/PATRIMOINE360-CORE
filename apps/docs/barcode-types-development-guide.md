@@ -1,10 +1,12 @@
-# Barcode Types Development Guide
+# Guide de développement des types de codes-barres
 
-This guide provides comprehensive instructions for developers on how to add new barcode types to the Shelf.nu application. Due to the distributed nature of barcode handling across multiple layers of the application, this guide ensures all necessary changes are made systematically.
+Ce guide explique comment ajouter un nouveau type de code-barres dans
+Patrimoine360 Core. Comme la gestion des codes-barres traverse plusieurs
+couches de l'application, la mise en œuvre doit rester systématique.
 
-## Overview
+## Vue d'ensemble
 
-The barcode system in Shelf.nu is implemented across multiple layers:
+Le système de codes-barres du Core traverse plusieurs couches :
 
 - **Database Schema** - Type definitions and storage
 - **Validation Layer** - Type-specific validation rules

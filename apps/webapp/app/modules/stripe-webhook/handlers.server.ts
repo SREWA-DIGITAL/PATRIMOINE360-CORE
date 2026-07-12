@@ -1,12 +1,11 @@
 import { TierId } from "@prisma/client";
 import type Stripe from "stripe";
 import { db } from "~/database/db.server";
-import { sendEmail } from "~/emails/mail.server";
 import { sendAuditTrialEndsSoonEmail } from "~/emails/stripe/audit-trial-ends-soon";
 import { sendBarcodeTrialEndsSoonEmail } from "~/emails/stripe/barcode-trial-ends-soon";
-import { subscriptionGrantedText } from "~/emails/stripe/subscription-granted";
+import { sendSubscriptionGrantedEmail } from "~/emails/stripe/subscription-granted";
 import { sendTrialEndsSoonEmail } from "~/emails/stripe/trial-ends-soon";
-import { unpaidInvoiceUserText } from "~/emails/stripe/unpaid-invoice";
+import { sendUnpaidInvoiceUserEmail } from "~/emails/stripe/unpaid-invoice";
 import { sendTeamTrialWelcomeEmail } from "~/emails/stripe/welcome-to-trial";
 import { scheduleTrialEndsTomorrowEmail } from "~/modules/addon-trial/scheduler.server";
 import { handleAuditAddonWebhook } from "~/modules/audit/addon.server";
@@ -210,14 +209,13 @@ export async function handleSubscriptionCreated(
       customerId,
       user,
     });
-    const subscriptionName = product?.name || "Shelf Subscription";
+    const subscriptionName = product?.name || "Abonnement Patrimoine360";
 
     for (const email of emailsToNotify) {
-      sendEmail({
-        to: email,
-        subject: "Your Shelf subscription is now active",
-        text: subscriptionGrantedText({ customerName, subscriptionName }),
-        tags: ["billing", "subscription", "activated"],
+      void sendSubscriptionGrantedEmail({
+        customerName,
+        subscriptionName,
+        email,
       });
     }
   }
@@ -468,7 +466,7 @@ export async function handleInvoicePaymentFailed(
     user,
     eventType: event.type,
     invoiceId: failedInvoice.id,
-    subject: `Unpaid invoice: ${user.email}`,
+    status: "payment-failed",
   });
 
   // Send user notification (deduplicated)
@@ -480,17 +478,13 @@ export async function handleInvoicePaymentFailed(
     });
 
   for (const email of emailsToNotify) {
-    sendEmail({
-      to: email,
-      subject: "Action needed: Payment issue with your Shelf subscription",
-      text: unpaidInvoiceUserText({
-        customerEmail: email,
-        customerName,
-        subscriptionName,
-        amountDue,
-        dueDate,
-      }),
-      tags: ["billing", "invoice", "payment-failed"],
+    void sendUnpaidInvoiceUserEmail({
+      amountDue,
+      customerEmail: email,
+      customerName,
+      dueDate,
+      subscriptionName,
+      variant: "payment-failed",
     });
   }
 
@@ -609,7 +603,7 @@ export async function handleInvoicePaid(
       user,
       eventType: event.type,
       invoiceId: paidInvoice.id,
-      subject: `Invoice resolved: ${user.email}`,
+      status: "resolved",
     });
   }
 
@@ -645,7 +639,7 @@ export async function handleInvoiceResolved(
     user,
     eventType: event.type,
     invoiceId: resolvedInvoice.id,
-    subject: `Invoice resolved: ${user.email}`,
+    status: "resolved",
   });
 
   return OK();
@@ -681,7 +675,7 @@ export async function handleInvoiceOverdue(
     user,
     eventType: event.type,
     invoiceId: overdueInvoice.id,
-    subject: `Invoice overdue: ${user.email}`,
+    status: "overdue",
   });
 
   // Send user notification (deduplicated)
@@ -693,17 +687,13 @@ export async function handleInvoiceOverdue(
     });
 
   for (const email of emailsToNotify) {
-    sendEmail({
-      to: email,
-      subject: "Action needed: Your Shelf invoice is overdue",
-      text: unpaidInvoiceUserText({
-        customerEmail: email,
-        customerName,
-        subscriptionName,
-        amountDue,
-        dueDate,
-      }),
-      tags: ["billing", "invoice", "overdue"],
+    void sendUnpaidInvoiceUserEmail({
+      amountDue,
+      customerEmail: email,
+      customerName,
+      dueDate,
+      subscriptionName,
+      variant: "overdue",
     });
   }
 
@@ -835,7 +825,7 @@ export async function handleTrialWillEnd(
       firstName: user.firstName,
       email: user.email,
       hasPaymentMethod,
-      planName: product?.name || "Shelf",
+      planName: product?.name || "Patrimoine360",
       trialEndDate: new Date((subscription.trial_end as number) * 1000),
     });
   }

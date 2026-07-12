@@ -151,12 +151,14 @@ Avant production :
 
 ## Rollback / reprise
 
-Tant que `06I` n'est pas lancé, le rollback reste simple :
+Depuis le retrait du chemin runtime Supabase Auth, le rollback ne consiste plus
+à réactiver un fallback applicatif Supabase. Il doit être piloté de façon
+contrôlée par données et environnement :
 
-- conserver le fallback Supabase Auth actif
 - supprimer les lignes `BetterAuthAccount` / `BetterAuthUser` créées pour les
   comptes migrés si la validation échoue
 - corriger les cas bloquants puis relancer la migration
 
-Le rollback est beaucoup plus coûteux après retrait du chemin actif Supabase,
-raison pour laquelle la validation staging est une exigence de `06H`.
+Le rollback reste coûteux après retrait du chemin actif Supabase, raison pour
+laquelle la validation staging et les sauvegardes PostgreSQL restent des
+exigences de `06H`.

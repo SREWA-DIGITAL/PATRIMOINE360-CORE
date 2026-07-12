@@ -39,11 +39,16 @@ process.env.ENABLE_PREMIUM_FEATURES = "true";
 process.env.STRIPE_SECRET_KEY = "stripe-secret-key";
 process.env.STRIPE_PUBLIC_KEY = "stripe-public-key";
 process.env.STRIPE_WEBHOOK_ENDPOINT_SECRET = "stripe-endpoint-secret";
+process.env.EMAIL_PROVIDER = "brevo";
+process.env.BREVO_API_KEY = "xkeysib-test";
+process.env.BREVO_SENDER_EMAIL = "support@patrimoine360.local";
+process.env.BREVO_SENDER_NAME = "Patrimoine360";
+process.env.EMAIL_REPLY_TO = "support@patrimoine360.local";
+process.env.EMAIL_REPLY_TO_NAME = "Support Patrimoine360";
 process.env.SMTP_PWD = "super-safe-passw0rd";
 process.env.SMTP_HOST = "mail.example.com";
 process.env.SMTP_PORT = "465";
 process.env.SMTP_USER = "some-email@example.com";
-process.env.EMAIL_PROVIDER = "smtp";
 process.env.BETTER_AUTH_SECRET = "better-auth-secret";
 process.env.BETTER_AUTH_URL = "http://localhost:3000";
 process.env.BETTER_AUTH_BASE_PATH = "/api/auth";
@@ -54,6 +59,7 @@ process.env.INVITE_TOKEN_SECRET = "secret-test-invite";
 process.env.SENTRY_ORG = "sentry-org";
 process.env.SENTRY_PROJECT = "sentry-project";
 process.env.SENTRY_DSN = "sentry-dsn";
+process.env.SUPPORT_EMAIL = "support@patrimoine360.local";
 
 if (typeof window !== "undefined") {
   // @ts-expect-error missing vitest type

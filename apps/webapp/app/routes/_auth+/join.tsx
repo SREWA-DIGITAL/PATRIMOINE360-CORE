@@ -15,7 +15,6 @@ import { Button } from "~/components/shared/button";
 import { config } from "~/config/shelf.config";
 import { useSearchParams } from "~/hooks/search-params";
 import { useAutoFocus } from "~/hooks/use-auto-focus";
-import { ContinueWithEmailForm } from "~/modules/auth/components/continue-with-email-form";
 import { signUpWithBetterAuthEmailPass } from "~/modules/auth/service.server";
 import { findUserByEmail } from "~/modules/user/service.server";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
@@ -46,7 +45,7 @@ export function loader({ context }: LoaderFunctionArgs) {
         cause: null,
         title: "Signup is disabled",
         message:
-          "For more information, please contact your workspace administrator.",
+          "La création de compte est désactivée. Pour plus d'informations, contactez l'administrateur de votre espace de travail.",
         label: "User onboarding",
         status: 403,
         shouldBeCaptured: false,
@@ -69,21 +68,21 @@ const JoinFormSchema = z
       .string()
       .transform((email) => email.toLowerCase())
       .refine(validEmail, () => ({
-        message: "Please enter a valid email",
+        message: "Veuillez saisir une adresse e-mail valide",
       })),
     password: z
       .string()
-      .min(8, "Your password is too short. Min 8 characters are required."),
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères."),
     confirmPassword: z
       .string()
-      .min(8, "Your password is too short. Min 8 characters are required."),
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères."),
     redirectTo: z.string().optional(),
   })
   .superRefine(({ password, confirmPassword }, ctx) => {
     if (password !== confirmPassword) {
       return ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Password and confirm password must match",
+        message: "Les deux mots de passe doivent être identiques",
         path: ["confirmPassword"],
       });
     }
@@ -108,7 +107,8 @@ export async function action({ request }: ActionFunctionArgs) {
         if (existingUser) {
           throw new ShelfError({
             cause: null,
-            message: "User with this Email already exits, login instead",
+            message:
+              "Un utilisateur avec cette adresse e-mail existe déjà. Connectez-vous à la place.",
             additionalData: {
               email,
             },
@@ -168,8 +168,8 @@ export default function Join() {
             <Input
               ref={emailInputRef}
               data-test-id="email"
-              label="Email address"
-              placeholder="zaans@huisje.com"
+              label="Adresse e-mail"
+              placeholder="utilisateur@organisation.ci"
               required
               name={zo.fields.email()}
               type="email"
@@ -181,7 +181,7 @@ export default function Join() {
           </div>
 
           <PasswordInput
-            label="Password"
+            label="Mot de passe"
             placeholder="**********"
             required
             data-test-id="password"
@@ -192,7 +192,7 @@ export default function Join() {
             error={zo.errors.password()?.message}
           />
           <PasswordInput
-            label="Confirm Password"
+            label="Confirmer le mot de passe"
             placeholder="**********"
             required
             data-test-id="confirmPassword"
@@ -215,27 +215,12 @@ export default function Join() {
             disabled={disabled}
             width="full"
           >
-            Get Started
+            Commencer
           </Button>
         </Form>
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-gray-500">
-                {"Or use a One Time Password"}
-              </span>
-            </div>
-          </div>
-          <div className="mt-6">
-            <ContinueWithEmailForm mode="signup" />
-          </div>
-        </div>
         <div className="flex items-center justify-center pt-5">
           <div className="text-center text-sm text-gray-500">
-            {"Already have an account? "}
+            {"Vous avez déjà un compte ? "}
             <Button
               variant="link"
               to={{
@@ -243,7 +228,7 @@ export default function Join() {
                 search: searchParams.toString(),
               }}
             >
-              Log in
+              Se connecter
             </Button>
           </div>
         </div>

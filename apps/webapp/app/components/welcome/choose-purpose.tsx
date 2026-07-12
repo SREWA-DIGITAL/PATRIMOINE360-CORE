@@ -108,22 +108,23 @@ const PLAN_DETAILS: Record<
   }
 > = {
   personal: {
-    title: "Personal",
+    title: "Personnel",
     description:
-      "For testing or individual use. Includes 3 custom fields and branded QR labels.",
-    chip: "Free",
-    helper: "Personal workspaces are free and ready to use immediately.",
+      "Pour les tests ou un usage individuel. Inclut 3 champs personnalisés et des étiquettes QR personnalisées.",
+    chip: "Gratuit",
+    helper:
+      "Les espaces personnels sont gratuits et disponibles immédiatement.",
     analytics: "cta-start-personal",
-    ctaLabel: "Start using Shelf",
+    ctaLabel: "Commencer avec Patrimoine360",
     href: "/assets",
   },
   team: {
-    title: "Team",
-    description: `For organizations and labs. Includes collaboration features with a ${config.freeTrialDays}-day free trial. No credit card required.`,
-    chip: `${config.freeTrialDays}-day trial`,
-    badge: "Recommended",
+    title: "Équipe",
+    description: `Pour les organisations et les laboratoires. Inclut les fonctions de collaboration avec ${config.freeTrialDays} jours d'essai gratuit. Sans carte bancaire.`,
+    chip: `${config.freeTrialDays} jours d'essai`,
+    badge: "Recommandé",
     analytics: "cta-next-team",
-    ctaLabel: "Next: Select a plan",
+    ctaLabel: "Suivant : choisir une offre",
     href: "/select-plan",
   },
 };
@@ -176,12 +177,12 @@ export function ChoosePurpose({
   // Determine CTA label based on plan and addon selection
   const selectedAddons = [
     wantsAudits && "Audit",
-    wantsBarcodes && "Barcode",
+    wantsBarcodes && "Codes-barres",
   ].filter(Boolean);
   const ctaLabel =
     selectedPlan === "personal" && wantsAnyAddon
-      ? `Start with ${selectedAddons.join(" & ")} trial`
-      : selectedDetails?.ctaLabel ?? "Start using Shelf";
+      ? `Démarrer avec l'essai ${selectedAddons.join(" + ")}`
+      : selectedDetails?.ctaLabel ?? "Commencer avec Patrimoine360";
 
   // Determine href for team flow (pass addon params)
   const teamParams = new URLSearchParams();
@@ -204,19 +205,20 @@ export function ChoosePurpose({
         <ShelfSymbolLogo className="mb-4 size-8" />
         <div className="mb-4 max-w-2xl text-center">
           <h3 className="text-2xl font-semibold text-gray-900">
-            How would you like to get started with Shelf?
+            Comment souhaitez-vous commencer avec Patrimoine360 ?
           </h3>
           <p className="mt-3 text-base text-gray-600">
-            Your choice determines which features we prepare for you. You can
-            always switch later.
+            Votre choix détermine les fonctionnalités que nous préparons pour
+            vous. Vous pourrez toujours changer plus tard.
           </p>
           <p className="mt-4 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
-            If your organization already uses Shelf, you don't need to create a
-            new workspace — look for your email invite or sign in instead.
+            Si votre organisation utilise déjà Patrimoine360, il n'est pas
+            nécessaire de créer un nouvel espace : recherchez votre invitation
+            par e-mail ou connectez-vous.
           </p>
         </div>
         <h4 className=" w-full text-left  font-semibold text-gray-700">
-          Select a plan
+          Choisir une formule
         </h4>
         <div className="grid w-full grid-cols-2 gap-4">
           {(Object.keys(PLAN_DETAILS) as Array<SignupPlan>).map((planKey) => {
@@ -249,7 +251,7 @@ export function ChoosePurpose({
         {showAddonsSection ? (
           <>
             <h4 className="mt-6 w-full text-left font-semibold text-gray-700">
-              Choose optional add-ons
+              Choisir des modules complémentaires
             </h4>
             {showAuditOption ? (
               <AddonToggle
@@ -374,7 +376,9 @@ function AddonToggle({
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h4 className="text-base font-semibold text-gray-900">{label}</h4>
-              <Tag className="bg-primary-50 text-primary-700">7-day trial</Tag>
+              <Tag className="bg-primary-50 text-primary-700">
+                Essai 7 jours
+              </Tag>
             </div>
             <p className="mt-1 text-sm text-gray-600">{description}</p>
           </div>
@@ -434,14 +438,14 @@ function AddonBillingCards({
               billingInterval === "month" ? "text-primary-600" : "text-gray-500"
             )}
           >
-            Monthly
+            Mensuel
           </p>
           <p className="text-2xl font-semibold">
             {fmtPrice(monthlyPrice.unit_amount || 0, monthlyPrice.currency)}
             <span className="text-sm font-normal text-gray-500">/mo</span>
           </p>
-          <p className="text-xs text-gray-500">Billed monthly</p>
-          <p className="mt-1 text-xs text-gray-500">per workspace</p>
+          <p className="text-xs text-gray-500">Facturé mensuellement</p>
+          <p className="mt-1 text-xs text-gray-500">par espace</p>
         </button>
       )}
       {yearlyPrice && (
@@ -457,7 +461,7 @@ function AddonBillingCards({
         >
           {yearlyDiscount != null && yearlyDiscount > 0 && (
             <span className="absolute -top-2.5 rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-semibold text-white">
-              Save {yearlyDiscount}%
+              Économisez {yearlyDiscount}%
             </span>
           )}
           <p
@@ -466,7 +470,7 @@ function AddonBillingCards({
               billingInterval === "year" ? "text-primary-600" : "text-gray-500"
             )}
           >
-            Yearly
+            Annuel
           </p>
           <p className="text-2xl font-semibold">
             {fmtPrice(
@@ -476,10 +480,10 @@ function AddonBillingCards({
             <span className="text-sm font-normal text-gray-500">/mo</span>
           </p>
           <p className="text-xs text-gray-500">
-            Billed annually{" "}
+            Facturé annuellement{" "}
             {fmtPrice(yearlyPrice.unit_amount || 0, yearlyPrice.currency)}
           </p>
-          <p className="mt-1 text-xs text-gray-500">per workspace</p>
+          <p className="mt-1 text-xs text-gray-500">par espace</p>
         </button>
       )}
     </div>

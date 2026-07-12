@@ -42,7 +42,7 @@ describe("login route action", () => {
       new ShelfError({
         cause: null,
         message:
-          "Check your inbox and click the verification link before logging in.",
+          "Consultez votre boîte de réception puis cliquez sur le lien de vérification avant de vous connecter.",
         additionalData: {
           authState: "email-not-verified",
           email: "owner@example.com",

@@ -122,11 +122,11 @@ export async function loader({ context, request, params }: LoaderFunctionArgs) {
     const totalPages = Math.ceil(bookingCount / perPage);
 
     const header: HeaderData = {
-      title: "Bookings",
+      title: "Réservations du bien",
     };
     const modelName = {
-      singular: "booking",
-      plural: "bookings",
+      singular: "réservation",
+      plural: "réservations",
     };
 
     return data(
@@ -142,7 +142,7 @@ export async function loader({ context, request, params }: LoaderFunctionArgs) {
         ...teamMembersData,
         ...tagsData,
         searchFieldTooltip: {
-          title: "Search your bookings",
+          title: "Rechercher dans les réservations",
           text: parseMarkdownToReact(bookingsSearchFieldTooltipText),
         },
       }),

@@ -217,7 +217,7 @@ export async function loader({ context, request, params }: LoaderFunctionArgs) {
     const { categories, totalCategories } = categoriesData;
     const { locations, totalLocations } = locationsData;
     const header: HeaderData = {
-      title: `${asset.title}'s overview`,
+      title: `${asset.title} - Vue d'ensemble`,
     };
 
     return payload({
@@ -250,7 +250,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => [
 ];
 
 export const handle = {
-  breadcrumb: () => "Overview",
+  breadcrumb: () => "Vue d'ensemble",
 };
 
 export async function action({ context, request, params }: ActionFunctionArgs) {
@@ -505,7 +505,7 @@ export default function AssetOverview() {
               {asset?.sequentialId ? (
                 <li className="w-full border-b-[1.1px] border-b-gray-100 p-4 last:border-b-0 md:flex">
                   <span className="w-1/4 text-[14px] font-medium text-gray-900">
-                    Asset ID
+                    ID du bien
                   </span>
                   <div className="mt-1 w-3/5 text-gray-600 md:mt-0">
                     {asset.sequentialId}
@@ -515,7 +515,7 @@ export default function AssetOverview() {
               {asset?.qrCodes?.[0] ? (
                 <li className="w-full border-b-[1.1px] border-b-gray-100 p-4 last:border-b-0 md:flex">
                   <span className="w-1/4 text-[14px] font-medium text-gray-900">
-                    Shelf QR ID
+                    ID QR Patrimoine360
                   </span>
                   <div className="mt-1 w-3/5 text-gray-600 md:mt-0">
                     {asset.qrCodes[0].id}
@@ -524,7 +524,7 @@ export default function AssetOverview() {
               ) : null}
               <li className="w-full border-b-[1.1px] border-b-gray-100 p-4 last:border-b-0 md:flex">
                 <span className="w-1/4 text-[14px] font-medium text-gray-900">
-                  Created
+                  Créé le
                 </span>
                 <div className="mt-1 w-3/5 text-gray-600 md:mt-0">
                   <DateS date={asset.createdAt} includeTime />
@@ -533,14 +533,14 @@ export default function AssetOverview() {
 
               <InlineEditableField
                 fieldName="category"
-                label="Category"
+                label="Catégorie"
                 canEdit={canEditAsset}
                 renderDisplay={() => (
                   <Badge
                     color={asset.category?.color ?? "#808080"}
                     withDot={false}
                   >
-                    {asset.category?.name ?? "Uncategorized"}
+                    {asset.category?.name ?? "Sans catégorie"}
                   </Badge>
                 )}
                 renderEditor={() => (
@@ -548,8 +548,8 @@ export default function AssetOverview() {
                     fieldName="fieldValue"
                     defaultValue={asset.category?.id ?? undefined}
                     model={{ name: "category", queryKey: "name" }}
-                    contentLabel="Categories"
-                    placeholder="Select category"
+                    contentLabel="Catégories"
+                    placeholder="Sélectionner une catégorie"
                     initialDataKey="categories"
                     countKey="totalCategories"
                     closeOnSelect
@@ -561,7 +561,7 @@ export default function AssetOverview() {
 
               <InlineEditableField
                 fieldName="location"
-                label="Location"
+                label="Site"
                 canEdit={canEditAsset}
                 isEmpty={!location}
                 renderDisplay={() =>
@@ -642,14 +642,14 @@ export default function AssetOverview() {
                       ))}
                     </div>
                   ) : (
-                    <span className="text-gray-600">No tags</span>
+                    <span className="text-gray-600">Aucune étiquette</span>
                   )}
                 </div>
               </li>
 
               <InlineEditableField
                 fieldName="valuation"
-                label="Value"
+                label="Valeur"
                 canEdit={canEditAsset}
                 isEmpty={asset.valuation == null}
                 renderDisplay={() => (
@@ -660,7 +660,7 @@ export default function AssetOverview() {
                           locale,
                           currency: asset.organization.currency,
                         })
-                      : "No value"}
+                      : "Aucune valeur"}
                   </div>
                 )}
                 renderEditor={() => (
@@ -681,7 +681,7 @@ export default function AssetOverview() {
                    * the numeric keypad.
                    */
                   <Input
-                    label="Value"
+                    label="Valeur"
                     hideLabel
                     type="text"
                     inputMode="decimal"
@@ -711,16 +711,17 @@ export default function AssetOverview() {
                           iconClassName="size-4"
                           content={
                             <>
-                              <h6>Barcodes support</h6>
+                              <h6>Prise en charge des codes-barres</h6>
                               <p>
-                                Want to know more about barcodes? Check out our
-                                knowledge base article on{" "}
+                                Pour en savoir plus sur les codes-barres,
+                                consultez notre article de base de
+                                connaissances sur{" "}
                                 <Button
                                   variant="link"
                                   target="_blank"
                                   to="https://www.shelf.nu/knowledge-base/alternative-barcodes"
                                 >
-                                  barcode support
+                                  la prise en charge des codes-barres
                                 </Button>
                               </p>
                             </>
@@ -750,7 +751,7 @@ export default function AssetOverview() {
                         >
                           <div className="flex flex-col items-center gap-1 text-gray-400">
                             <Icon icon="lock" />
-                            <span className="text-xs">Hidden</span>
+                            <span className="text-xs">Masqué</span>
                           </div>
                         </div>
                       ))}
@@ -769,7 +770,7 @@ export default function AssetOverview() {
           (canEditAsset && allCustomFields.length > 0) ? (
             <>
               <TextualDivider
-                text="Custom fields"
+                text="Champs personnalisés"
                 className="mb-8 pt-3 lg:hidden"
               />
               <Card className="my-3 px-[-4] py-[-5] md:border">
@@ -839,7 +840,7 @@ export default function AssetOverview() {
                               )}
                             </div>
                           ) : (
-                            <span className="text-gray-400">Not set</span>
+                            <span className="text-gray-400">Non renseigné</span>
                           )
                         }
                         renderEditor={() => {
@@ -886,7 +887,7 @@ export default function AssetOverview() {
                                   defaultValue={rawValue}
                                   className="w-full rounded border border-gray-300 px-3 py-2 text-sm"
                                 >
-                                  <option value="">Select an option</option>
+                                  <option value="">Sélectionner une option</option>
                                   {(def.options as string[] | null)
                                     ?.filter(
                                       (o: string) => o !== null && o !== ""
@@ -943,10 +944,10 @@ export default function AssetOverview() {
                 <div className="flex justify-between gap-3">
                   <div>
                     <p className="text-[14px] font-medium text-gray-700">
-                      Available for bookings
+                      Disponible à la réservation
                     </p>
                     <p className="text-[12px] text-gray-600">
-                      Asset is available for being used in bookings
+                      Ce bien peut être utilisé dans des réservations.
                     </p>
                   </div>
                   <Switch
@@ -958,8 +959,8 @@ export default function AssetOverview() {
                     required
                     title={
                       !canUpdateAvailability
-                        ? "You do not have the permissions to change availability"
-                        : "Toggle availability"
+                        ? "Vous n'avez pas les droits pour modifier la disponibilité"
+                        : "Basculer la disponibilité"
                     }
                   />
                   <input type="hidden" value="toggle" name="intent" />
@@ -981,7 +982,7 @@ export default function AssetOverview() {
 
                 <div>
                   <h3 className="mb-1 text-sm font-semibold">
-                    Included in kit
+                    Inclus dans le lot
                   </h3>
                   <Button
                     to={`/kits/${asset.kitId}`}
@@ -1079,7 +1080,7 @@ function BooleanCustomFieldEditor({
         }}
       />
       <span className="text-sm text-gray-600">
-        {isUnset ? `${label} (not set)` : label}
+        {isUnset ? `${label} (non renseigné)` : label}
       </span>
       {/*
        * Clear is only offered when the field was originally unset
@@ -1094,7 +1095,7 @@ function BooleanCustomFieldEditor({
           onClick={() => setIsUnset(true)}
           className="text-xs text-gray-400 underline hover:text-gray-600"
         >
-          Clear
+          Effacer
         </button>
       )}
     </div>

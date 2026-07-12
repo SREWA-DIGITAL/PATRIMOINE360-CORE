@@ -1,6 +1,8 @@
-# Accessibility Guidelines
+# Guide d'accessibilité
 
-Shelf.nu is committed to providing an accessible experience for all users. This guide outlines our accessibility standards and provides practical guidance for developers.
+Patrimoine360 Core vise une expérience accessible pour tous les utilisateurs.
+Ce guide résume les standards d'accessibilité et les pratiques utiles pour les
+développeurs.
 
 ## Standards
 
@@ -350,7 +352,8 @@ import {
 
 ## Component Library
 
-Shelf uses [Radix UI](https://www.radix-ui.com) primitives which provide:
+Le projet s'appuie sur les primitives [Radix UI](https://www.radix-ui.com),
+qui apportent notamment :
 
 - ✅ Built-in keyboard navigation
 - ✅ ARIA attributes

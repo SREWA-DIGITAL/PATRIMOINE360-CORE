@@ -17,7 +17,7 @@ import { getUserByID } from "~/modules/user/service.server";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
 
 export const meta: MetaFunction = () => [
-  { title: appendToMetaTitle("Workspace Assignment Pending") },
+  { title: appendToMetaTitle("Attribution d'organisation en attente") },
 ];
 
 /**
@@ -53,22 +53,25 @@ export default function SsoPendingAssignment() {
     <div className="flex flex-col items-center px-6 py-12 text-center md:px-12">
       <ShelfSymbolLogo className="mb-6 size-12" />
 
-      <h1 className="mb-2 text-[24px] font-semibold">No workspace assigned</h1>
+      <h1 className="mb-2 text-[24px] font-semibold">
+        Aucune organisation attribuée
+      </h1>
 
       <p className="mx-auto mb-6 max-w-md text-gray-600">
-        You don&apos;t currently have access to any workspace in Shelf. This
-        usually means your administrator hasn&apos;t assigned you to one yet.
+        Vous n&apos;avez actuellement accès à aucune organisation dans
+        Patrimoine360. Cela signifie généralement qu&apos;aucune organisation ne
+        vous a encore été attribuée.
       </p>
 
       <p className="mx-auto mb-8 max-w-md text-sm text-gray-500">
-        Contact your IT administrator to request access. Once they&apos;ve
-        updated your group assignments, log out and log back in for the changes
-        to take effect.
+        Contactez votre administrateur informatique pour demander l&apos;accès.
+        Une fois vos groupes mis à jour, déconnectez-vous puis reconnectez-vous
+        pour appliquer les changements.
       </p>
 
       <Form method="post" action="/logout">
         <Button type="submit" variant="secondary">
-          Log out
+          Se déconnecter
         </Button>
       </Form>
     </div>

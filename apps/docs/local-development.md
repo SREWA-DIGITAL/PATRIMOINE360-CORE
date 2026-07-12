@@ -1,502 +1,308 @@
-# Local Development Guide 💻
+# Guide de développement local
 
-This guide covers everything you need to know for developing Shelf.nu locally after completing the [Supabase Setup](./supabase-setup.md).
+Ce guide rassemble l'essentiel pour lancer Patrimoine360 Core en local après
+avoir configuré [Supabase](./supabase-setup.md).
 
-## Prerequisites ✅
+Le chemin officiel de développement du Core repose aujourd'hui sur :
 
-- ✅ **Node.js** (>=22.20.0)
-- ✅ **pnpm** (9.15.4+) — install via `corepack enable && corepack prepare pnpm@9.15.4 --activate`
-- ✅ **Git**
-- ✅ **Supabase project** configured ([Setup Guide](./supabase-setup.md))
-- ✅ **`.env` file** with Supabase credentials (place in **monorepo root**, copy from `.env.example`)
+- Better Auth pour l'authentification active ;
+- Brevo pour les e-mails transactionnels ;
+- Supabase pour PostgreSQL et le stockage de fichiers.
 
----
+## Prérequis
 
-## Monorepo Overview 📦
+- **Node.js** `22.20.0` recommandé via `.nvmrc` ou `.node-version`
+- **pnpm** `9.15.4+`
+- **Git**
+- **Un projet Supabase** prêt pour PostgreSQL et Storage
+- **Un fichier `.env`** à la racine du monorepo, copié depuis `.env.example`
 
-Shelf.nu is organized as a **pnpm + Turborepo monorepo**. All commands use `pnpm` instead of `npm`.
+## Vue d'ensemble du monorepo
 
-| Package                    | Path                  | Description                            |
-| -------------------------- | --------------------- | -------------------------------------- |
-| `@shelf/webapp`            | `apps/webapp/`        | Remix web application                  |
-| `@shelf/docs`              | `apps/docs/`          | VitePress documentation site           |
-| `@shelf/database`          | `packages/database/`  | Prisma client factory and shared types |
-| `@shelf/typescript-config` | `tooling/typescript/` | Shared TypeScript configurations       |
+Patrimoine360 Core est organisé en monorepo `pnpm + Turborepo`.
 
-Commands are scoped to specific packages using `pnpm --filter <package>` or run across the entire monorepo with `pnpm turbo <task>`.
+| Package                    | Chemin                | Description                             |
+| -------------------------- | --------------------- | --------------------------------------- |
+| `@shelf/webapp`            | `apps/webapp/`        | application web principale              |
+| `@shelf/docs`              | `apps/docs/`          | site de documentation                   |
+| `@shelf/database`          | `packages/database/`  | Prisma, client base de données et types |
+| `@shelf/typescript-config` | `tooling/typescript/` | configurations TypeScript partagées     |
 
-**Convenience shortcuts** follow the `<app>:<task>` pattern and are available at the root:
+Les commandes peuvent être lancées package par package avec
+`pnpm --filter <package>` ou à l'échelle du monorepo avec `pnpm turbo <task>`.
+
+## Commandes principales
+
+### Webapp
 
 ```bash
-# Webapp
-pnpm webapp:dev        # Start webapp dev server
-pnpm webapp:build      # Build webapp for production
-pnpm webapp:test       # Run webapp unit tests
-pnpm webapp:validate   # Run all webapp checks (lint, typecheck, format, tests)
-
-# Docs
-pnpm docs:dev          # Start docs dev server
-pnpm docs:build        # Build docs for production
-pnpm docs:preview      # Preview docs production build
-
-# Database
-pnpm webapp:setup               # Generate Prisma client and deploy migrations
-pnpm db:generate         # Generate Prisma client after schema changes
-pnpm db:prepare-migration # Create new database migration
-pnpm db:deploy-migration  # Apply migrations and regenerate client
-pnpm db:reset            # Reset database (destructive!)
+pnpm webapp:dev
+pnpm webapp:build
+pnpm webapp:test
+pnpm webapp:validate
+pnpm webapp:start
 ```
 
----
-
-## Development Setup 🚀
-
-### 1. Clone & Install Dependencies
+### Documentation
 
 ```bash
-# Clone the repository
-git clone https://github.com/Shelf-nu/shelf.nu.git
-cd shelf.nu
+pnpm docs:dev
+pnpm docs:build
+pnpm docs:preview
+```
 
-# Install dependencies (uses pnpm workspaces)
+### Base de données
+
+```bash
+pnpm webapp:setup
+pnpm db:generate
+pnpm db:prepare-migration
+pnpm db:deploy-migration
+pnpm db:seed:core
+pnpm db:reset
+```
+
+### Validation Core
+
+```bash
+pnpm core:validate:min
+pnpm core:validate:ci
+pnpm webapp:test:e2e:smoke
+```
+
+## Installation
+
+### 1. Cloner le dépôt et installer les dépendances
+
+```bash
+git clone https://github.com/SREWA-DIGITAL/PATRIMOINE360-CORE.git
+cd PATRIMOINE360-CORE
 pnpm install
 ```
 
-### 2. Setup Local SSL (Optional but Recommended) 🔒
+### 2. Configurer le SSL local si besoin
 
-Shelf is configured to use HTTPS locally for a better development experience. You can set this up using `mkcert`:
-
-#### Install mkcert
+Le projet peut fonctionner en HTTPS local avec `mkcert`.
 
 ```bash
-# macOS
-brew install mkcert
-
-# Ubuntu/Debian
-sudo apt install libnss3-tools
-wget -O mkcert https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64
-chmod +x mkcert
-sudo mv mkcert /usr/local/bin/
-
-# Windows (using Chocolatey)
-choco install mkcert
-```
-
-#### Generate SSL Certificates
-
-```bash
-# Install local CA
 mkcert -install
-
-# Create certificate directory inside the webapp folder
 mkdir apps/webapp/.cert
-
-# Generate certificates for localhost
 mkcert -key-file apps/webapp/.cert/key.pem -cert-file apps/webapp/.cert/cert.pem localhost 127.0.0.1 ::1
 ```
 
-#### Alternative: Disable SSL
+Si vous préférez désactiver le SSL local, retirez la configuration `https`
+dans `apps/webapp/vite.config.ts`.
 
-If you prefer to run without SSL, edit `apps/webapp/vite.config.ts` and remove these lines:
-
-```ts
-// Remove or comment out these lines in apps/webapp/vite.config.ts
-https: {
-  key: "./.cert/key.pem",
-  cert: "./.cert/cert.pem",
-},
-```
-
-### 3. Initialize Database
-
-This command sets up your database schema and runs initial migrations:
+### 3. Initialiser la base
 
 ```bash
 pnpm webapp:setup
 ```
 
-### 4. Start Development Server
+### 4. Démarrer l'application
 
 ```bash
 pnpm webapp:dev
 ```
 
-**With SSL enabled:** Your app will be available at: `https://localhost:3000` 🔒  
-**Without SSL:** Your app will be available at: `http://localhost:3000` 🎉
+Avec SSL :
 
----
+- `https://localhost:3000`
 
-## Technology Stack 🛠️
+Sans SSL :
 
-Understanding Shelf's tech stack will help you develop effectively:
+- `http://localhost:3000`
 
-### Core Framework
+## Pile technique
 
-- **[Remix](https://remix.run/)** - Full-stack web framework
-- **[React](https://reactjs.org/)** - UI library
-- **[TypeScript](https://typescriptlang.org/)** - Type safety
+### Socle applicatif
 
-### Database & Backend
+- **React Router / Remix mode data**
+- **React**
+- **TypeScript**
+- **Vite**
 
-- **[Supabase](https://supabase.com/)** - Database and authentication
-- **[Prisma](https://prisma.io/)** - Database ORM
-- **[PostgreSQL](https://postgresql.org/)** - Database
+### Données et backend
 
-### Styling & UI
+- **Better Auth**
+- **Supabase**
+- **Prisma**
+- **PostgreSQL**
 
-- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS
-- **Custom Components** - Built for asset management
+### UI et outillage
 
-### Development Tools
+- **Tailwind CSS**
+- **ESLint**
+- **Prettier**
+- **Playwright**
+- **Vitest**
 
-- **[Vite](https://vitejs.dev/)** - Build tool
-- **[ESLint](https://eslint.org/)** - Code linting
-- **[Prettier](https://prettier.io/)** - Code formatting
+## Workflow de développement
 
----
+### Modifier le schéma Prisma
 
-## Available Scripts 📜
-
-### Development
-
-```bash
-pnpm webapp:dev      # Start development server
-pnpm webapp:build    # Build webapp for production
-pnpm turbo build     # Build all packages for production
-pnpm webapp:start    # Start production server locally (loads root .env)
-pnpm turbo typecheck # Run TypeScript checks (all packages)
-```
-
-### Database
+1. éditer `packages/database/prisma/schema.prisma`
+2. préparer une migration :
 
 ```bash
-pnpm webapp:setup               # Initial database setup
-pnpm db:prepare-migration # Create new migration
-pnpm db:deploy-migration  # Apply migrations and regenerate client
-pnpm db:reset            # Reset database (careful!)
+pnpm db:prepare-migration
 ```
 
-### Code Quality
+3. relire le SQL généré dans `packages/database/prisma/migrations/`
+4. appliquer la migration :
 
 ```bash
-pnpm turbo lint        # Run ESLint (all packages)
-pnpm run format        # Format code with Prettier
-pnpm webapp:validate   # Run all checks (lint, typecheck, format, tests)
-pnpm webapp:doctor     # React health scan (react-doctor) — advisory, not gated
+pnpm db:deploy-migration
 ```
 
-### Git Hooks (Lefthook)
-
-We use [Lefthook](https://github.com/evilmartians/lefthook) to run automated checks on every commit. Hooks are configured in `lefthook.yml` at the monorepo root.
-
-#### Pre-commit hooks (piped, run in order)
-
-| Command            | Priority | Triggers on                              | What it does                                   |
-| ------------------ | -------- | ---------------------------------------- | ---------------------------------------------- |
-| `prisma-generate`  | 1        | `packages/database/prisma/schema.prisma` | Regenerates Prisma client after schema changes |
-| `eslint`           | 2        | `apps/webapp/**/*.{js,jsx,ts,tsx}`       | Lints staged webapp files with `--fix`         |
-| `eslint-companion` | 2        | `apps/companion/**/*.{js,jsx,ts,tsx}`    | Lints companion app via `expo lint`            |
-| `prettier`         | 3        | `**/*.{ts,tsx,js,jsx,json,md,css,yaml}`  | Formats staged files with Prettier             |
-| `typecheck`        | 4        | `apps/webapp/**/*.{ts,tsx}`              | Runs TypeScript type checking on the webapp    |
-
-#### Commit-msg hook
-
-| Command      | What it does                                                                |
-| ------------ | --------------------------------------------------------------------------- |
-| `commitlint` | Enforces [Conventional Commits](https://www.conventionalcommits.org) format |
-
-#### Key details
-
-- Hooks are **piped** — they run in priority order and stop on first failure.
-- All pre-commit hooks are **skipped during merge and rebase** to avoid blocking conflict resolution.
-- The webapp ESLint runs on **staged files only** (fast). The companion ESLint runs on the full app when companion files are staged (Expo's lint wrapper doesn't support individual file paths).
-- Prettier auto-fixes and re-stages formatted files.
-- To override hooks locally (not recommended), create a `lefthook-local.yml` — it's gitignored.
-
-### Testing
+5. injecter le seed minimal si nécessaire :
 
 ```bash
-pnpm webapp:test -- --run                    # Run unit tests (always use --run flag)
-pnpm --filter @shelf/webapp test:e2e         # Run end-to-end tests
-pnpm --filter @shelf/webapp test:e2e:dev     # Run E2E tests in dev mode
-pnpm --filter @shelf/webapp test:e2e:install # Install Playwright browsers
+pnpm db:seed:core
 ```
 
----
+### Ajouter une fonctionnalité
 
-## Development Workflow 🔄
+- nouvelles routes : `apps/webapp/app/routes/`
+- composants réutilisables : `apps/webapp/app/components/`
+- logique métier : `apps/webapp/app/modules/`
+- utilitaires : `apps/webapp/app/utils/`
 
-### Making Database Changes
-
-1. **Update Prisma Schema**
-
-   ```bash
-   # Edit packages/database/prisma/schema.prisma
-   ```
-
-2. **Create Migration**
-
-   ```bash
-   pnpm db:prepare-migration
-   ```
-
-3. **Apply Migration**
-   ```bash
-   pnpm db:deploy-migration
-   ```
-
-### Adding New Features
-
-1. **Create your feature files** in appropriate directories:
-
-   - `apps/webapp/app/routes/` - New pages/routes
-   - `apps/webapp/app/components/` - Reusable components
-   - `apps/webapp/app/utils/` - Utility functions
-   - `apps/webapp/app/modules/` - Business logic modules
-
-2. **Follow the established patterns**:
-
-   - Use TypeScript for type safety
-   - Follow Remix conventions for data loading
-   - Use Tailwind for styling
-   - Add tests for new functionality
-
-3. **Test your changes**:
-   ```bash
-   pnpm webapp:validate       # Check code quality
-   pnpm webapp:test -- --run  # Run tests
-   ```
-
----
-
-## Project Structure 📁
-
-```
-shelf.nu/
-├── .env.example                     # Environment variables template (copy to .env)
-├── turbo.json                       # Turborepo pipeline config
-├── pnpm-workspace.yaml              # Workspace package definitions
-├── pnpm-lock.yaml                   # Lockfile (committed)
-├── apps/
-│   ├── webapp/                      # @shelf/webapp — Remix app
-│   │   ├── app/
-│   │   │   ├── components/          # Reusable UI components
-│   │   │   ├── database/            # DB client (re-exports @shelf/database)
-│   │   │   ├── modules/             # Business logic modules
-│   │   │   ├── routes/              # Remix routes (pages)
-│   │   │   ├── utils/               # Utility functions
-│   │   │   └── root.tsx             # App root component
-│   │   └── package.json
-│   └── docs/                        # @shelf/docs — VitePress documentation
-├── packages/
-│   └── database/                    # @shelf/database — Prisma client + types
-│       ├── prisma/
-│       │   ├── schema.prisma        # Database schema
-│       │   └── migrations/          # Database migrations
-│       └── src/client.ts            # createDatabaseClient() factory
-└── tooling/
-    └── typescript/                  # Shared tsconfig bases
-```
-
-### Key Directories
-
-**`apps/webapp/app/routes/`** - Each file becomes a route in your app:
-
-- `_index.tsx` → `/`
-- `assets._index.tsx` → `/assets`
-- `assets.new.tsx` → `/assets/new`
-
-**`apps/webapp/app/components/`** - Reusable React components:
-
-- Follow atomic design principles
-- Include TypeScript props interfaces
-- Use Tailwind for styling
-
-**`apps/webapp/app/modules/`** - Business logic organized by domain:
-
-- `auth/` - Authentication logic
-- `asset/` - Asset management
-- `booking/` - Booking system
-
----
-
-## Environment Configuration 🔧
-
-Your `.env` file lives at the **monorepo root** (not inside `apps/webapp/`). Copy `.env.example` to `.env` and fill in your values.
-
-### How env vars are loaded
-
-Because the `.env` lives at the monorepo root but the webapp runs from `apps/webapp/`, different contexts load env vars differently:
-
-| Context              | Command                                  | How env vars are loaded                                                                                                     |
-| -------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Dev server**       | `pnpm webapp:dev`                        | Vite reads from `envDir: "../.."` (the monorepo root)                                                                       |
-| **Local production** | `pnpm webapp:start`                      | Root script calls `start:local` which uses `dotenv -e ../../.env` to inject the root `.env` before starting the Node server |
-| **Docker / Fly.io**  | `pnpm run start` (inside `apps/webapp/`) | Env vars are provided by the platform — no dotenv, no `.env` file needed                                                    |
-
-> **Why the distinction?** The bare `start` script (`NODE_ENV=production node ./build/server/index.js`) does not load any `.env` file. In production (Docker/Fly), the platform injects env vars directly. For local production testing you need the `start:local` wrapper (called automatically by `pnpm webapp:start`) to load the root `.env`, otherwise required vars like `SESSION_SECRET` will be missing.
-
-Here are the development-specific ones:
+Avant de considérer un lot comme prêt :
 
 ```bash
-# Development server (adjust based on SSL setup)
-SERVER_URL="https://localhost:3000"  # With SSL
-# SERVER_URL="http://localhost:3000"  # Without SSL
+pnpm webapp:validate
+pnpm webapp:test -- --run
+```
 
-# Database (from Supabase)
-DATABASE_URL="your-supabase-connection-string"
-DIRECT_URL="your-supabase-direct-connection"
+## Hooks Git
 
-# Disable premium features for local development
+Le dépôt utilise `lefthook.yml` pour lancer automatiquement :
+
+- génération Prisma si le schéma change ;
+- ESLint sur les fichiers stagés ;
+- Prettier ;
+- typecheck webapp ;
+- contrôle du message de commit via Conventional Commits.
+
+En phase de merge ou de rebase, les hooks pre-commit sont ignorés pour éviter
+de bloquer la résolution des conflits.
+
+## Variables d'environnement
+
+Le fichier `.env` vit à la **racine du monorepo**, pas dans `apps/webapp/`.
+
+Variables importantes en local :
+
+```bash
+SERVER_URL="https://localhost:3000"
+DATABASE_URL="postgres://..."
+DIRECT_URL="postgres://..."
+BETTER_AUTH_SECRET="replace-with-a-long-random-secret"
+BETTER_AUTH_URL="https://localhost:3000"
+BETTER_AUTH_BASE_PATH="/api/auth"
+SUPABASE_URL="https://your-project.supabase.co"
+SUPABASE_ANON_PUBLIC="your-anon-public-key"
+SUPABASE_SERVICE_ROLE="your-service-role-key"
 ENABLE_PREMIUM_FEATURES="false"
-
-# Session security
 SESSION_SECRET="your-local-session-secret"
 ```
 
----
+### Chargement des variables
 
-## Database Development 🗄️
+| Contexte            | Commande            | Chargement                            |
+| ------------------- | ------------------- | ------------------------------------- |
+| Dev                 | `pnpm webapp:dev`   | Vite lit la racine du monorepo        |
+| Production locale   | `pnpm webapp:start` | wrapper `start:local` avec `dotenv`   |
+| Docker / plateforme | `pnpm run start`    | variables injectées par la plateforme |
 
-### Working with Prisma
+## Tests
 
-**View your data:**
+### Tests unitaires
+
+```bash
+pnpm webapp:test -- --run
+```
+
+### Smoke E2E prioritaire
+
+```bash
+pnpm webapp:test:e2e:smoke
+```
+
+### Playwright complet
+
+```bash
+pnpm --filter @shelf/webapp test:e2e:install
+pnpm --filter @shelf/webapp test:e2e:dev
+```
+
+## Débogage rapide
+
+### Prisma Studio
 
 ```bash
 pnpm --filter @shelf/webapp exec prisma studio
 ```
 
-This opens a web interface to browse your database.
-
-**Reset database (destructive!):**
+### Typecheck global
 
 ```bash
-pnpm db:reset
+pnpm turbo typecheck
 ```
 
-### Creating Migrations
-
-When you modify `packages/database/prisma/schema.prisma`:
-
-1. **Prepare migration:**
-
-   ```bash
-   pnpm db:prepare-migration
-   ```
-
-2. **Review the generated SQL** in `packages/database/prisma/migrations/`
-
-3. **Apply migration:**
-   ```bash
-   pnpm db:deploy-migration
-   ```
-
----
-
-## Testing 🧪
-
-### Unit Testing with Vitest
+### Formatage global
 
 ```bash
-pnpm webapp:test -- --run   # Run all unit tests
+pnpm run format
 ```
 
-Create test files alongside your components:
+### En cas d'erreur base de données
 
-```
-components/
-├── Button.tsx
-└── Button.test.tsx
-```
+- vérifier `DATABASE_URL` et `DIRECT_URL`
+- vérifier que Supabase est bien accessible
+- relancer les migrations si nécessaire
 
-### End-to-End Testing with Playwright
+### En cas d'erreur SSL locale
 
-```bash
-pnpm --filter @shelf/webapp test:e2e:install  # Install browsers (first time)
-pnpm --filter @shelf/webapp test:e2e:dev      # Run tests in development
-```
+- relancer `mkcert -install`
+- régénérer les certificats
+- ou désactiver `https` dans `vite.config.ts`
 
-E2E tests are in the `tests/e2e/` directory.
+## Structure du projet
 
----
-
-## Debugging 🐛
-
-### Common Issues
-
-**Port already in use:**
-
-```bash
-# Kill process on port 3000
-lsof -ti:3000 | xargs kill -9
-```
-
-**SSL Certificate errors:**
-
-- Make sure you ran `mkcert -install` to install the local CA
-- Regenerate certificates: `mkcert -key-file .cert/key.pem -cert-file .cert/cert.pem localhost`
-- Or disable SSL by removing the `https` section from `apps/webapp/vite.config.ts`
-
-**Database connection errors:**
-
-- Check your root `.env` database URLs
-- Verify Supabase project is running
-- Ensure you have the correct password
-
-**Build errors:**
-
-```bash
-# Clear node modules and reinstall
-rm -rf node_modules pnpm-lock.yaml
-pnpm install
+```text
+PATRIMOINE360-CORE/
+├── .env.example
+├── turbo.json
+├── pnpm-workspace.yaml
+├── apps/
+│   ├── webapp/
+│   │   └── app/
+│   │       ├── components/
+│   │       ├── database/
+│   │       ├── modules/
+│   │       ├── routes/
+│   │       ├── utils/
+│   │       └── root.tsx
+│   └── docs/
+├── packages/
+│   └── database/
+│       ├── prisma/
+│       └── src/
+└── tooling/
+    └── typescript/
 ```
 
-### Development Tools
+## Outils recommandés
 
-**Database inspection:**
+- **Prisma** pour `.prisma`
+- **Tailwind CSS IntelliSense**
+- **TypeScript and JavaScript**
+- **Prettier**
+- **ESLint**
 
-```bash
-pnpm --filter @shelf/webapp exec prisma studio  # Visual database browser
-```
-
-**Type checking:**
-
-```bash
-pnpm turbo typecheck  # Check for TypeScript errors
-```
-
-**Code formatting:**
-
-```bash
-pnpm run format     # Auto-format all code
-```
-
----
-
-## Hot Reloading 🔥
-
-The development server includes hot reloading:
-
-- **React components** - Changes update instantly
-- **Routes** - New routes appear automatically
-- **Styles** - CSS changes apply immediately
-- **Server code** - Remix restarts the server
-
----
-
-## VS Code Setup 💡
-
-Recommended extensions:
-
-- **Prisma** - Syntax highlighting for `.prisma` files
-- **Tailwind CSS IntelliSense** - Auto-complete for CSS classes
-- **TypeScript and JavaScript** - Enhanced TS support
-- **Prettier** - Code formatting
-- **ESLint** - Code linting
-
-### Workspace Settings
-
-Create `.vscode/settings.json`:
+Exemple de `.vscode/settings.json` :
 
 ```json
 {
@@ -508,42 +314,10 @@ Create `.vscode/settings.json`:
 }
 ```
 
----
+## Étapes suivantes
 
-## Performance Tips 🚀
-
-### Development Performance
-
-- **Use TypeScript strict mode** for better error catching
-- **Run tests frequently** to catch issues early
-- **Use Prisma Studio** for database inspection instead of raw SQL
-- **Leverage Remix's built-in optimizations** (no need for extra bundlers)
-
-### Database Performance
-
-- **Use database indexes** for frequently queried fields
-- **Limit data in development** - Use `.take()` to limit results
-- **Use Prisma's `include` and `select`** to fetch only needed data
-
----
-
-## Next Steps 🎯
-
-Once you're comfortable with local development:
-
-1. **Explore the codebase** - Look at existing routes and components
-2. **Read the other docs** - Check out [hooks](./hooks.md), [error handling](./handling-errors.md), etc.
-3. **Join the community** - [Discord](https://discord.gg/8he9W7aTJu) for questions
-4. **Contribute** - See [CONTRIBUTING.md](./contributing.md)
-5. **Deploy** - Check out [Deployment Guide](./deployment.md) when ready
-
----
-
-## Getting Help 💬
-
-- 💬 **[Discord Community](https://discord.gg/8he9W7aTJu)** - Chat with other developers
-- 📖 **[Documentation](./README.md)** - Browse all guides
-- 🐛 **[GitHub Issues](https://github.com/Shelf-nu/shelf.nu/issues)** - Report bugs or request features
-- 🐦 **[Twitter](https://twitter.com/ShelfQR)** - Follow for updates
-
-Happy coding! 🎉
+1. explorer les routes et modules existants ;
+2. lire aussi [hooks](./hooks.md), [handling-errors](./handling-errors.md) et
+   les autres guides de `apps/docs` ;
+3. préparer ensuite le déploiement avec [deployment](./deployment.md) ou
+   [docker](./docker.md) selon le contexte.

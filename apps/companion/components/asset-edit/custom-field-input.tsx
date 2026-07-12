@@ -1,7 +1,7 @@
 /**
  * CustomFieldInput
  *
- * Renders the correct input control for a Shelf custom field based on the
+ * Renders the correct input control for a Patrimoine360 custom field based on the
  * field's `type`. Used by the asset create (`new.tsx`) and edit (`edit.tsx`)
  * screens. Keeps both screens visually and behaviourally consistent and
  * centralises accessibility metadata so a single fix here improves both

@@ -32,7 +32,7 @@ export function CustodianField({
         className="mb-2.5 block font-medium text-gray-700"
         htmlFor="custodian"
       >
-        <span className="required-input-label">Custodian</span>
+        <span className="required-input-label">Responsable</span>
       </label>
       <DynamicSelect
         defaultValue={
@@ -51,10 +51,10 @@ export function CustodianField({
           deletedAt: null,
         }}
         fieldName="custodian"
-        contentLabel="Team members"
+        contentLabel="Responsables"
         initialDataKey="teamMembersForForm"
         countKey="totalTeamMembers"
-        placeholder="Select a team member"
+        placeholder="Sélectionner un responsable"
         allowClear
         closeOnSelect
         transformItem={(item: ModelFilterItem & { userId?: string }) => ({
@@ -75,8 +75,8 @@ export function CustodianField({
 
       {error ? <div className="text-sm text-error-500">{error}</div> : null}
       <p className="mt-2 text-[14px] text-gray-600">
-        The person that will be in custody of or responsible for the assets
-        during the duration of the booking period.
+        La personne responsable des biens pendant toute la durée de la
+        réservation.
       </p>
     </FormRow>
   );

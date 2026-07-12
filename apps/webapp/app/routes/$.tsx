@@ -2,7 +2,7 @@ import { ErrorIcon } from "~/components/errors";
 import { Button } from "~/components/shared/button";
 import { appendToMetaTitle } from "~/utils/append-to-meta-title";
 
-export const meta = () => [{ title: appendToMetaTitle("Not found") }];
+export const meta = () => [{ title: appendToMetaTitle("Page introuvable") }];
 
 export default function LayoutSplat() {
   return (
@@ -11,14 +11,14 @@ export default function LayoutSplat() {
         <span className="mb-5 size-14 text-primary">
           <ErrorIcon />
         </span>
-        <h2 className="mb-2">Page not found</h2>
+        <h2 className="mb-2">Page introuvable</h2>
         <p className="max-w-[550px]">
-          We couldn't find the page you were looking for.
+          Nous n'avons pas trouvé la page que vous recherchez.
         </p>
 
         <div className=" mt-8 flex gap-3">
           <Button to="/" variant="secondary" icon="home">
-            Back to home
+            Retour à l'accueil
           </Button>
         </div>
       </div>

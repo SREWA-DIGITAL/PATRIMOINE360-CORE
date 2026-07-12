@@ -62,9 +62,9 @@ export async function loader({ context, params }: LoaderFunctionArgs) {
       .catch((cause) => {
         throw new ShelfError({
           cause,
-          title: "Invite not found",
+          title: "Invitation introuvable",
           message:
-            "The invitation you are trying to accept is either not found or expired",
+            "L'invitation que vous essayez d'accepter est introuvable ou a expiré.",
           label: "Invite",
         });
       });
@@ -86,7 +86,10 @@ export async function loader({ context, params }: LoaderFunctionArgs) {
   } catch (cause) {
     const reason = makeShelfError(cause);
     throw data(
-      error({ ...reason, title: reason.title || "Accept team invite" }),
+      error({
+        ...reason,
+        title: reason.title || "Accepter une invitation d'équipe",
+      }),
       {
         status: reason.status,
       }
@@ -94,7 +97,9 @@ export async function loader({ context, params }: LoaderFunctionArgs) {
   }
 }
 
-export const meta = () => [{ title: appendToMetaTitle("Accept team invite") }];
+export const meta = () => [
+  { title: appendToMetaTitle("Accepter une invitation d'équipe") },
+];
 
 export async function action({ context, request }: LoaderFunctionArgs) {
   try {
@@ -103,7 +108,7 @@ export async function action({ context, request }: LoaderFunctionArgs) {
       z.object({ token: z.string() }),
       {
         message:
-          "The invitation link doesn't have a token provided. Please try clicking the link in your email again or request a new invite. If the issue persists, feel free to contact support",
+          "Le lien d'invitation ne contient pas de jeton. Veuillez recliquer sur le lien reçu par e-mail ou demander une nouvelle invitation. Si le problème persiste, contactez le support.",
       }
     );
 
@@ -121,7 +126,7 @@ export async function action({ context, request }: LoaderFunctionArgs) {
       throw new ShelfError({
         cause: null,
         message:
-          "Something went wrong with updating your invite. Please try again",
+          "Une erreur est survenue lors de la mise à jour de votre invitation. Veuillez réessayer.",
         label: "Invite",
       });
     }
@@ -172,15 +177,16 @@ export async function action({ context, request }: LoaderFunctionArgs) {
     const reason = makeShelfError(cause);
     let titleOverride = null;
     if (cause instanceof Error && cause.name === "JsonWebTokenError") {
-      titleOverride = "Invalid invite token";
+      titleOverride = "Jeton d'invitation invalide";
       reason.message =
-        "The invitation link is invalid. Please try clicking the link in your email again or request a new invite. If the issue persists, feel free to contact support";
+        "Le lien d'invitation est invalide. Veuillez recliquer sur le lien reçu par e-mail ou demander une nouvelle invitation. Si le problème persiste, contactez le support.";
     }
 
     return data(
       error({
         ...reason,
-        title: titleOverride ?? (reason.title || "Accept team invite"),
+        title:
+          titleOverride ?? (reason.title || "Accepter une invitation d'équipe"),
       }),
       {
         status: reason.status,
@@ -229,15 +235,15 @@ export default function AcceptInvite() {
               ))}
             </p>
             <Button to="/" variant={"secondary"}>
-              Back to home
+              Retour à la connexion
             </Button>
           </div>
         ) : (
           <div>
-            <h2>Accept invite</h2>
+            <h2>Accepter l'invitation</h2>
             <p className="mt-2">
-              <strong>{inviter}</strong> invites you to join Shelf as a member
-              of <strong>{workspace}’s</strong> workspace.
+              <strong>{inviter}</strong> vous invite à rejoindre Patrimoine360
+              comme membre de l'espace <strong>{workspace}</strong>.
             </p>
             <Form method="post" className="my-3">
               <input
@@ -247,7 +253,9 @@ export default function AcceptInvite() {
               />
 
               <Button type="submit" disabled={disabled || error}>
-                {disabled ? "Validating token..." : "Accept invite"}
+                {disabled
+                  ? "Validation de l'invitation..."
+                  : "Accepter l'invitation"}
               </Button>
             </Form>
           </div>
@@ -255,8 +263,8 @@ export default function AcceptInvite() {
       </div>
       <div className=" mx-4 mt-20 flex flex-col items-center text-center text-gray-600 md:mx-[-200px]">
         <p>
-          If you have any questions or need assistance, please don't hesitate to
-          contact our support team at{" "}
+          Si vous avez des questions ou besoin d'aide, contactez notre équipe
+          support à l'adresse{" "}
           <Button variant={"link-gray"} to={`mailto:${SUPPORT_EMAIL}`}>
             {SUPPORT_EMAIL}
           </Button>

@@ -130,7 +130,7 @@ const ConditionalActionsDropdown = () => {
                       }
                     >
                       <span className="flex items-center gap-1">
-                        <Icon icon="release-custody" /> Release custody
+                        <Icon icon="release-custody" /> Libérer l'affectation
                       </span>
                     </Button>
                   ) : (

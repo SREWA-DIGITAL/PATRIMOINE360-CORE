@@ -8,7 +8,7 @@ import {
   type GenericOAuthConfig,
 } from "better-auth/plugins/generic-oauth";
 import { db } from "~/database/db.server";
-import { sendEmail } from "~/emails/mail.server";
+import { sendTemplatedEmail } from "~/emails/template-registry.server";
 import {
   BETTER_AUTH_BASE_PATH,
   BETTER_AUTH_SECRET,
@@ -376,63 +376,29 @@ function sendBetterAuthVerificationEmail(input: {
   url: string;
 }) {
   return Promise.resolve(
-    sendEmail({
+    sendTemplatedEmail({
       to: input.email,
-      subject: "Verify your email address",
-      text: [
-        "Verify your email address",
-        "",
-        "Click the link below to confirm your email and finish your signup:",
-        input.url,
-        "",
-        "If you did not create an account, you can ignore this email.",
-      ].join("\n"),
-      html: [
-        "<h2>Verify your email address</h2>",
-        "<p>Click the link below to confirm your email and finish your signup:</p>",
-        `<p><a href="${input.url}">${input.url}</a></p>`,
-        "<p>If you did not create an account, you can ignore this email.</p>",
-      ].join(""),
-      tags: ["auth", "email-verification"],
+      template: "auth.verify-email-link",
+      data: {
+        email: input.email,
+        url: input.url,
+      },
     })
   );
 }
 
-function getBetterAuthOtpCopy(
+function getBetterAuthOtpTemplateKey(
   type: "change-email" | "email-verification" | "forget-password" | "sign-in"
 ) {
   switch (type) {
     case "sign-in":
-      return {
-        headline: "Login code",
-        intro: "To log in, please use the following one-time code:",
-        subject: "Your login code",
-        tags: ["auth", "otp", "login"],
-      };
+      return "auth.login-otp";
     case "email-verification":
-      return {
-        headline: "Verify your email",
-        intro:
-          "To verify your email address, please use the following one-time code:",
-        subject: "Confirm your email address",
-        tags: ["auth", "otp", "confirm-signup"],
-      };
+      return "auth.signup-otp";
     case "forget-password":
-      return {
-        headline: "Reset Password",
-        intro:
-          "To reset your password, please use the following one-time code:",
-        subject: "Reset password code",
-        tags: ["auth", "password-reset"],
-      };
+      return "auth.reset-password-otp";
     case "change-email":
-      return {
-        headline: "Confirm your new email",
-        intro:
-          "To confirm your new email address, please use the following one-time code:",
-        subject: "Confirm your new email address",
-        tags: ["auth", "otp", "change-email"],
-      };
+      return "auth.change-email-otp";
   }
 }
 
@@ -441,27 +407,24 @@ function sendBetterAuthOtp(input: {
   otp: string;
   type: "change-email" | "email-verification" | "forget-password" | "sign-in";
 }) {
-  const copy = getBetterAuthOtpCopy(input.type);
+  const template = getBetterAuthOtpTemplateKey(input.type);
 
   return Promise.resolve(
-    sendEmail({
+    sendTemplatedEmail({
       to: input.email,
-      subject: `${copy.subject}: ${input.otp}`,
-      text: [
-        copy.headline,
-        "",
-        copy.intro,
-        input.otp,
-        "",
-        "Do not share this code with anyone.",
-      ].join("\n"),
-      html: [
-        `<h2>${copy.headline}</h2>`,
-        `<p>${copy.intro}</p>`,
-        `<h2><b>${input.otp}</b></h2>`,
-        "<p>Do not share this code with anyone.</p>",
-      ].join(""),
-      tags: copy.tags,
+      template,
+      data:
+        template === "auth.change-email-otp"
+          ? {
+              otp: input.otp,
+              user: {
+                email: input.email,
+              },
+            }
+          : {
+              email: input.email,
+              otp: input.otp,
+            },
     })
   );
 }

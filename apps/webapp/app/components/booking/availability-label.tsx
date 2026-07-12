@@ -43,9 +43,9 @@ export function AvailabilityLabel({
   if (isAlreadyAdded) {
     return (
       <AvailabilityBadge
-        badgeText="Already added to this booking"
-        tooltipTitle="Asset is part of booking"
-        tooltipContent="This asset is already added to the current booking."
+        badgeText="Déjà ajouté à cette réservation"
+        tooltipTitle="Bien déjà présent"
+        tooltipContent="Ce bien est déjà ajouté à la réservation en cours."
       />
     );
   }
@@ -57,10 +57,10 @@ export function AvailabilityLabel({
   if (!asset.availableToBook) {
     return (
       <AvailabilityBadge
-        badgeText={"Unavailable"}
-        tooltipTitle={"Asset is unavailable for bookings"}
+        badgeText={"Indisponible"}
+        tooltipTitle={"Bien indisponible à la réservation"}
         tooltipContent={
-          "This asset is marked as unavailable for bookings by an administrator."
+          "Ce bien est marqué comme indisponible pour les réservations par un administrateur."
         }
       />
     );
@@ -72,9 +72,9 @@ export function AvailabilityLabel({
   if (isPartOfKit && showKitStatus) {
     return (
       <AvailabilityBadge
-        badgeText="Part of kit"
-        tooltipTitle="Asset is part of a kit"
-        tooltipContent="Remove the asset from the kit to add it individually."
+        badgeText="Inclus dans un lot"
+        tooltipTitle="Bien inclus dans un lot"
+        tooltipContent="Retirez ce bien du lot pour l'ajouter individuellement."
       />
     );
   }
@@ -85,10 +85,10 @@ export function AvailabilityLabel({
   if (asset.custody) {
     return (
       <AvailabilityBadge
-        badgeText={"In custody"}
-        tooltipTitle={"Asset is in custody"}
+        badgeText={"Affecté"}
+        tooltipTitle={"Bien déjà affecté"}
         tooltipContent={
-          "This asset is in custody of a team member making it currently unavailable for bookings."
+          "Ce bien est déjà affecté à un responsable et n'est donc pas disponible pour une réservation."
         }
       />
     );
@@ -117,12 +117,12 @@ export function AvailabilityLabel({
       })[0];
     return (
       <AvailabilityBadge
-        badgeText={"Already booked"}
-        tooltipTitle={"Asset is already part of a booking"}
+        badgeText={"Déjà réservé"}
+        tooltipTitle={"Bien déjà réservé"}
         tooltipContent={
           conflictingBooking ? (
             <span>
-              This asset is added to a booking (
+              Ce bien est déjà rattaché à la réservation (
               <Button
                 to={`/bookings/${conflictingBooking.id}`}
                 target="_blank"
@@ -131,10 +131,10 @@ export function AvailabilityLabel({
               >
                 {conflictingBooking?.name}
               </Button>
-              ) that is overlapping the selected time period.
+              ) qui chevauche la période sélectionnée.
             </span>
           ) : (
-            "This asset is added to a booking that is overlapping the selected time period."
+            "Ce bien est déjà rattaché à une réservation qui chevauche la période sélectionnée."
           )
         }
       />
@@ -165,12 +165,13 @@ export function AvailabilityLabel({
 
     return (
       <AvailabilityBadge
-        badgeText={"Checked out"}
-        tooltipTitle={"Asset is currently checked out"}
+        badgeText={"Sorti"}
+        tooltipTitle={"Bien actuellement sorti"}
         tooltipContent={
           conflictingBooking ? (
             <span>
-              This asset is currently checked out as part of another booking (
+              Ce bien est actuellement sorti dans le cadre d'une autre
+              réservation (
               <Link
                 to={`${SERVER_URL}/bookings/
                 ${conflictingBooking.id}`}
@@ -178,10 +179,10 @@ export function AvailabilityLabel({
               >
                 {conflictingBooking?.name}
               </Link>
-              ) and should be available for your selected date range period
+              ) et devrait redevenir disponible sur la période sélectionnée
             </span>
           ) : (
-            "This asset is currently checked out as part of another booking and should be available for your selected date range period"
+            "Ce bien est actuellement sorti dans le cadre d'une autre réservation et devrait redevenir disponible sur la période sélectionnée."
           )
         }
       />
@@ -194,9 +195,9 @@ export function AvailabilityLabel({
   if (isAddedThroughKit) {
     return (
       <AvailabilityBadge
-        badgeText="Added through kit"
-        tooltipTitle="Asset was added through a kit"
-        tooltipContent="Remove the asset from the kit to add it individually."
+        badgeText="Ajouté via un lot"
+        tooltipTitle="Bien ajouté via un lot"
+        tooltipContent="Retirez ce bien du lot pour l'ajouter individuellement."
       />
     );
   }
@@ -319,9 +320,9 @@ export function KitAvailabilityLabel({ kit }: { kit: KitForBooking }) {
   if (isInCustody) {
     return (
       <AvailabilityBadge
-        badgeText="In custody"
-        tooltipTitle="Kit is in custody"
-        tooltipContent="This kit is in custody or it contains some assets that are in custody."
+        badgeText="Affecté"
+        tooltipTitle="Lot déjà affecté"
+        tooltipContent="Ce lot est affecté ou contient des biens déjà affectés."
       />
     );
   }
@@ -329,12 +330,12 @@ export function KitAvailabilityLabel({ kit }: { kit: KitForBooking }) {
   if (isCheckedOut) {
     return (
       <AvailabilityBadge
-        badgeText="Checked out"
-        tooltipTitle="Kit is checked out"
+        badgeText="Sorti"
+        tooltipTitle="Lot actuellement sorti"
         tooltipContent={
           isCheckedOutInANonConflictingBooking
-            ? "This kit is currently checked out as part of another booking and should be available for your selected date range period"
-            : "This kit is currently checked out and is not available for your selected date range period"
+            ? "Ce lot est actuellement sorti dans le cadre d'une autre réservation et devrait redevenir disponible sur la période sélectionnée."
+            : "Ce lot est actuellement sorti et n'est pas disponible sur la période sélectionnée."
         }
       />
     );
@@ -343,9 +344,9 @@ export function KitAvailabilityLabel({ kit }: { kit: KitForBooking }) {
   if (isKitWithoutAssets) {
     return (
       <AvailabilityBadge
-        badgeText="No assets"
-        tooltipTitle="No assets in kit"
-        tooltipContent="There are no assets added to this kit yet."
+        badgeText="Aucun bien"
+        tooltipTitle="Lot vide"
+        tooltipContent="Aucun bien n'a encore été ajouté à ce lot."
       />
     );
   }
@@ -353,9 +354,9 @@ export function KitAvailabilityLabel({ kit }: { kit: KitForBooking }) {
   if (someAssetMarkedUnavailable) {
     return (
       <AvailabilityBadge
-        badgeText="Contains non-bookable assets"
-        tooltipTitle="Kit is unavailable for check-out"
-        tooltipContent="Some assets in this kit are marked as non-bookable. You can still add the kit to your booking, but you must remove the non-bookable assets to proceed with check-out."
+        badgeText="Contient des biens non réservables"
+        tooltipTitle="Lot indisponible à la sortie"
+        tooltipContent="Certains biens de ce lot sont marqués comme non réservables. Vous pouvez encore ajouter le lot à votre réservation, mais vous devez retirer ces biens avant la sortie."
       />
     );
   }
@@ -363,9 +364,9 @@ export function KitAvailabilityLabel({ kit }: { kit: KitForBooking }) {
   if (someAssetHasUnavailableBooking) {
     return (
       <AvailabilityBadge
-        badgeText="Already booked"
-        tooltipTitle="Kit is already part of a booking"
-        tooltipContent="This kit is already added to another booking."
+        badgeText="Déjà réservé"
+        tooltipTitle="Lot déjà réservé"
+        tooltipContent="Ce lot est déjà ajouté à une autre réservation."
       />
     );
   }

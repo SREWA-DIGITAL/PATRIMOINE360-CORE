@@ -19,6 +19,7 @@
     "test:cov": "vitest --coverage",
     "test:e2e:dev": "start-server-and-test dev http://localhost:3000 'npx playwright test --ui'",
     "test:e2e:run": "start-server-and-test dev http://localhost:3000 'npx playwright test'",
+    "test:e2e:smoke": "start-server-and-test dev http://localhost:3000 'npx playwright test test/e2e/smoke.spec.ts'",
     "test:e2e:install": "npx playwright install --with-deps chromium",
     "pretest:e2e:run": "pnpm run build",
     "typecheck": "react-router typegen && tsc -b",
@@ -201,6 +202,6 @@
     "vitest": "^2.1.9"
   },
   "engines": {
-    "node": ">=22.20.0"
+    "node": ">=22.13.0"
   }
 }

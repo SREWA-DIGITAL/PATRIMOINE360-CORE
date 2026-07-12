@@ -377,7 +377,7 @@ function ReleaseCustodyForm({ disableSubmit }: { disableSubmit: boolean }) {
               width="full"
               disabled={disabled || disableSubmit || idsTotalCount === 0}
             >
-              Release custody
+              Libérer l'affectation
             </Button>
           </div>
         </div>
@@ -392,9 +392,9 @@ export function AssetRow({ asset }: { asset: AssetFromQr }) {
   const availabilityConfigs = [
     {
       condition: asset.status === AssetStatus.IN_CUSTODY,
-      badgeText: `In custody of: ${asset.custody?.custodian?.name}`,
-      tooltipTitle: "Asset is in custody",
-      tooltipContent: `This asset is in custody of ${asset.custody?.custodian?.name}.`,
+      badgeText: `Affecté à : ${asset.custody?.custodian?.name}`,
+      tooltipTitle: "Bien déjà affecté",
+      tooltipContent: `Ce bien est actuellement affecté à ${asset.custody?.custodian?.name}.`,
       priority: 110,
       className: "bg-gray-50 border-gray-200 text-gray-700",
     },
@@ -445,9 +445,9 @@ export function KitRow({ kit }: { kit: KitFromQr }) {
   const availabilityConfigs = [
     {
       condition: kit.status === AssetStatus.IN_CUSTODY,
-      badgeText: `In custody of: ${kit.custody?.custodian?.name}`,
-      tooltipTitle: "Kit is in custody",
-      tooltipContent: `This kit is in custody of ${kit.custody?.custodian?.name}.`,
+      badgeText: `Affecté à : ${kit.custody?.custodian?.name}`,
+      tooltipTitle: "Lot déjà affecté",
+      tooltipContent: `Ce lot est actuellement affecté à ${kit.custody?.custodian?.name}.`,
       priority: 110,
       className: "bg-gray-50 border-gray-200 text-gray-700",
     },

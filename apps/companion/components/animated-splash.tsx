@@ -12,15 +12,13 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
 
-import ShelfIcon from "@/components/brand/shelf-icon";
-import ShelfWordmark from "@/components/brand/shelf-wordmark";
 import { useReducedMotion } from "@/lib/a11y";
 
 // ── Brand color ──────────────────────────────────────────────────────────────
-const SHELF_ORANGE = "#FF7809";
+const BRAND_ORANGE = "#FF7809";
 
 // ── Timing (ms) ──────────────────────────────────────────────────────────────
 const PHASE1_DURATION = 300;
@@ -136,7 +134,7 @@ export default function AnimatedSplash({
         },
       ]}
       pointerEvents={isReady && introComplete ? "none" : "auto"}
-      accessibilityLabel="Loading Shelf"
+      accessibilityLabel="Loading Patrimoine360"
       accessibilityRole="progressbar"
     >
       <View style={styles.content}>
@@ -146,11 +144,9 @@ export default function AnimatedSplash({
             transform: [{ scale: iconScale }],
           }}
         >
-          <ShelfIcon
-            size={96}
-            iconBgColor="transparent"
-            iconShelfsColor="#FFFFFF"
-          />
+          <View style={styles.logoMark}>
+            <Text style={styles.logoText}>P360</Text>
+          </View>
         </Animated.View>
 
         <Animated.View
@@ -160,7 +156,9 @@ export default function AnimatedSplash({
             marginTop: 16,
           }}
         >
-          <ShelfWordmark width={110} color="#FFFFFF" />
+          <Animated.Text style={styles.wordmarkText}>
+            Patrimoine360
+          </Animated.Text>
         </Animated.View>
       </View>
     </Animated.View>
@@ -170,12 +168,31 @@ export default function AnimatedSplash({
 const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: SHELF_ORANGE,
+    backgroundColor: BRAND_ORANGE,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 999,
   },
   content: {
     alignItems: "center",
+  },
+  logoMark: {
+    width: 96,
+    height: 96,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: "rgba(255,255,255,0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  logoText: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "800",
+  },
+  wordmarkText: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontWeight: "800",
   },
 });

@@ -29,14 +29,14 @@ export const ErrorContent = ({ className }: ErrorContentProps) => {
   const loc = useLocation();
   const response = useRouteError();
 
-  let title = "Oops, something went wrong";
+  let title = "Oups, une erreur est survenue";
   let message =
-    "There was an unexpected error. Please refresh to try again. If the issues persists, please contact support.";
+    "Une erreur inattendue est survenue. Actualisez la page puis réessayez. Si le problème persiste, contactez le support.";
   let traceId;
 
   if (isRouteError(response)) {
     message = response.data.error.message;
-    title = response.data.error.title || "Oops, something went wrong";
+    title = response.data.error.title || "Oups, une erreur est survenue";
     traceId = response.data.error.traceId;
   }
 
@@ -100,10 +100,10 @@ export const ErrorContent = ({ className }: ErrorContentProps) => {
         )}
         <div className=" mt-8 flex gap-3">
           <Button to="/" variant="secondary" icon="home">
-            Back to home
+            Retour à l'accueil
           </Button>
           <Button to={loc.pathname} reloadDocument>
-            Reload page
+            Recharger la page
           </Button>
         </div>
       </div>

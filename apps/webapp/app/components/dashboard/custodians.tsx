@@ -13,7 +13,6 @@ import { ClickableTr } from "./clickable-tr";
 import { DashboardEmptyState } from "./empty-state";
 import { PremiumFeatureTeaser } from "../home/premium-feature-teaser";
 import { Button } from "../shared/button";
-
 import { Table, Td, Tr } from "../table";
 
 /**
@@ -38,11 +37,12 @@ export default function CustodiansList() {
     entity: PermissionEntity.teamMemberProfile,
     action: PermissionAction.read,
   });
+
   return (
     <div className="flex h-full flex-col rounded border border-gray-200 bg-white">
       <div className="flex items-center justify-between border-b px-4 py-3 md:px-6">
         <span className="text-[14px] font-semibold text-gray-900">
-          Top custodians
+          Responsables actifs
         </span>
         <div className="flex items-center gap-2">
           {!isPersonal && (
@@ -51,7 +51,7 @@ export default function CustodiansList() {
               variant="block-link-gray"
               className="!mt-0 text-xs"
             >
-              View all
+              Voir tout
             </Button>
           )}
         </div>
@@ -60,11 +60,11 @@ export default function CustodiansList() {
       {isPersonal ? (
         <div className="flex flex-1 items-center justify-center p-4">
           <PremiumFeatureTeaser
-            headline="Track who has what"
-            description="Add non-registered members to assign asset custody, or create a Team workspace to invite users with full access."
-            ctaLabel="Add a member"
+            headline="Suivez qui détient quoi"
+            description="Ajoutez des responsables sans compte pour affecter des biens, ou créez un espace Équipe pour inviter des utilisateurs avec accès complet."
+            ctaLabel="Ajouter un responsable"
             ctaTo="/settings/team/nrm"
-            secondaryLabel="Or create a Team workspace →"
+            secondaryLabel="Ou créer un espace Équipe →"
             secondaryTo="/account-details/workspace"
           />
         </div>
@@ -83,6 +83,7 @@ export default function CustodiansList() {
                   canNavigate={canViewTeamMemberUsers}
                 />
               );
+
               return link ? (
                 <ClickableTr key={cd.id} className="h-[72px]" to={link}>
                   {rowContent}
@@ -106,10 +107,10 @@ export default function CustodiansList() {
       ) : (
         <div className="flex flex-1 items-center justify-center p-4">
           <DashboardEmptyState
-            text="No assets in custody"
-            subText="Assign custody of assets to team members to track who has what."
+            text="Aucun bien affecté"
+            subText="Affectez des biens à des responsables pour savoir qui détient quoi."
             ctaTo="/assets"
-            ctaText="Go to assets"
+            ctaText="Voir les biens"
           />
         </div>
       )}
@@ -136,6 +137,7 @@ function Row({
   canNavigate: boolean;
 }) {
   const teamMemberName = resolveTeamMemberName(custodian);
+
   return (
     <>
       <Td className="w-full">
@@ -149,7 +151,7 @@ function Row({
                     : "/static/images/default_pfp.jpg"
                 }
                 className={"size-10 rounded-[4px]"}
-                alt={`${resolveTeamMemberName(custodian)}'s profile`}
+                alt={`Profil de ${resolveTeamMemberName(custodian)}`}
               />
               <div>
                 <span className="word-break block">
@@ -167,7 +169,9 @@ function Row({
                     <span className="mt-px">{teamMemberName}</span>
                   )}
                 </span>
-                <span className="block text-gray-600">{count} Assets</span>
+                <span className="block text-gray-600">
+                  {count} bien{count > 1 ? "s" : ""}
+                </span>
               </div>
             </div>
           </span>

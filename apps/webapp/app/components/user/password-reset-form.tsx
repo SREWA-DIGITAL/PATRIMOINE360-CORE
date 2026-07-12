@@ -12,7 +12,9 @@ export default function PasswordResetForm() {
           <input type="hidden" name="type" value="resetPassword" />
           <input type="hidden" name="intent" value="resetPassword" />
           <Button data-test-id="logout" type="submit" variant="link">
-            {isProcessing ? "Logging you out..." : "Reset password"}
+            {isProcessing
+              ? "Déconnexion en cours..."
+              : "Réinitialiser le mot de passe"}
           </Button>
         </Form>
       </div>

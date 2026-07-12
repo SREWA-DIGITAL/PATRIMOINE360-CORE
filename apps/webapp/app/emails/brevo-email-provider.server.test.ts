@@ -102,4 +102,21 @@ describe("brevo-email-provider", () => {
       ],
     });
   });
+
+  it("wraps provider failures with a clear Brevo message", async () => {
+    const error = new mocks.MockBrevoError("Invalid sender");
+    mocks.sendTransacEmail.mockRejectedValueOnce(error);
+
+    await expect(
+      sendEmailWithBrevo({
+        from: '"Support Team" <support@example.com>',
+        subject: "Welcome",
+        text: "Hello",
+        to: "ada@example.com",
+      })
+    ).rejects.toMatchObject({
+      label: "Email",
+      message: "Brevo email delivery failed: Invalid sender",
+    });
+  });
 });

@@ -1,8 +1,7 @@
 import type { TierId } from "@prisma/client";
 import Stripe from "stripe";
 import { db } from "~/database/db.server";
-import { sendEmail } from "~/emails/mail.server";
-import { unpaidInvoiceAdminText } from "~/emails/stripe/unpaid-invoice";
+import { sendTemplatedEmail } from "~/emails/template-registry.server";
 import {
   ADMIN_EMAIL,
   CUSTOM_INSTALL_CUSTOMERS,
@@ -84,7 +83,7 @@ export function sendAdminInvoiceEmail({
   user,
   eventType,
   invoiceId,
-  subject,
+  status,
 }: {
   user: {
     id: string;
@@ -95,14 +94,18 @@ export function sendAdminInvoiceEmail({
   };
   eventType: string;
   invoiceId: string;
-  subject: string;
+  status: "overdue" | "payment-failed" | "resolved";
 }) {
   if (ADMIN_EMAIL) {
-    sendEmail({
+    void sendTemplatedEmail({
       to: ADMIN_EMAIL,
-      subject,
-      text: unpaidInvoiceAdminText({ user, eventType, invoiceId }),
-      tags: ["billing", "invoice", "admin-notification"],
+      template: "billing.invoice-admin-notification",
+      data: {
+        eventType,
+        invoiceId,
+        status,
+        user,
+      },
     });
   }
 }

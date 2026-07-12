@@ -1,0 +1,21 @@
+diff --git a/android/build.gradle b/android/build.gradle
+index 4a98fe0616f24d45da7ea0f0bf7df3b439b1d599..f04cd9a4fb51e3c01da4552391769432db9262ef 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -125,16 +125,6 @@ android {
+     }
+ }
+ 
+-repositories {
+-    mavenCentral()
+-    mavenLocal()
+-    google()
+-    maven {
+-        // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+-        url "$rootDir/../node_modules/react-native/android"
+-    }
+-}
+-
+ dependencies {
+     implementation 'com.facebook.react:react-native:+'
+     implementation("com.facebook.fresco:fresco:${FRESCO_VERSION}") {

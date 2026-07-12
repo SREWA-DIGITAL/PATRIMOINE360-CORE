@@ -1,6 +1,7 @@
-# App configuration - shelf.config.ts
+# Configuration de l'application - `shelf.config.ts`
 
-This file contains configuration options that are used to adjust and disable certain functionalities in Shelf.nu.
+Ce fichier centralise les options de configuration qui permettent d'ajuster
+certaines fonctions de Patrimoine360 Core.
 
 ```ts
 // shelf.config.ts
@@ -29,158 +30,145 @@ export const config: Config = {
 };
 ```
 
-## Configuration Options
+## Options principales
 
-### sendOnboardingEmail
+### `sendOnboardingEmail`
 
-This flag controls whether the onboarding email will be sent to new users. The email is sent within the action of `routes/_welcome+/onboarding.tsx`.
+Détermine si l'e-mail d'onboarding est envoyé aux nouveaux utilisateurs depuis
+`routes/_welcome+/onboarding.tsx`.
 
-**Default value:** `false`  
-**Environment variable:** `SEND_ONBOARDING_EMAIL`
+- valeur par défaut : `false`
+- variable d'environnement : `SEND_ONBOARDING_EMAIL`
 
 ```ts
-// Enable onboarding emails
 sendOnboardingEmail: true;
 ```
 
-### enablePremiumFeatures
+### `enablePremiumFeatures`
 
-Choose whether you want premium features to be enabled. Setting this to `false` will allow your users to use all features of Shelf without limitations.
+Active ou désactive les fonctions premium déjà présentes dans le socle
+technique. Dans le contexte Core, cette option doit être utilisée avec
+prudence selon la frontière Core / Enterprise.
 
-**Default value:** `false`  
-**Environment variable:** `ENABLE_PREMIUM_FEATURES`
+- valeur par défaut : `false`
+- variable d'environnement : `ENABLE_PREMIUM_FEATURES`
 
 ```ts
-// Enable premium features
 enablePremiumFeatures: true;
 ```
 
-You can set this directly in the config file or use the environment variable to have different configurations on different servers.
+### `collectBusinessIntel`
 
-### collectBusinessIntel
+Contrôle la collecte d'informations complémentaires pendant l'onboarding.
+Lorsqu'elle est activée, l'utilisateur peut renseigner :
 
-Controls whether business intelligence fields are collected during user onboarding. When enabled, users are asked to provide:
+- comment il a découvert Patrimoine360 ;
+- son rôle ;
+- la taille de son équipe ;
+- le nom de son entreprise ou organisation ;
+- d'éventuelles questions de personnalisation.
 
-- How they heard about Shelf (referral source)
-- Their role
-- Team size
-- Company/Organization name (for self-serve signups)
-- Optional customization questions (primary use case, current solution, timeline)
-
-When a user selects "Personal use" as their role, the team size and company name fields are automatically hidden.
-
-**Default value:** `false`
-**Environment variable:** `COLLECT_BUSINESS_INTEL`
+- valeur par défaut : `false`
+- variable d'environnement : `COLLECT_BUSINESS_INTEL`
 
 ```ts
-// Enable business intelligence collection
 collectBusinessIntel: true;
 ```
 
-**Backwards Compatibility:** If `COLLECT_BUSINESS_INTEL` is not set, it falls back to `SHOW_HOW_DID_YOU_FIND_US` for compatibility with existing configurations.
+Si `COLLECT_BUSINESS_INTEL` n'est pas défini, la compatibilité historique est
+conservée via `SHOW_HOW_DID_YOU_FIND_US`.
 
-### showHowDidYouFindUs
+### `showHowDidYouFindUs`
 
-> **⚠️ Deprecated:** Use `collectBusinessIntel` instead. This option is kept for backwards compatibility.
+> [!WARNING]
+> Option dépréciée. Préférez `collectBusinessIntel`.
 
-Choose whether an open field will be shown on the onboarding page, asking the user to provide info on how they found out about Shelf.
+Affiche un champ libre sur l'onboarding pour demander comment l'utilisateur a
+découvert Patrimoine360.
 
-**Default value:** `false`
-**Environment variable:** `SHOW_HOW_DID_YOU_FIND_US`
+- valeur par défaut : `false`
+- variable d'environnement : `SHOW_HOW_DID_YOU_FIND_US`
 
-### freeTrialDays
+### `freeTrialDays`
 
-Sets the number of days for the free trial period when premium features are enabled.
+Définit la durée d'essai lorsque les fonctions premium sont activées.
 
-**Default value:** `7`  
-**Environment variable:** `FREE_TRIAL_DAYS`
+- valeur par défaut : `7`
+- variable d'environnement : `FREE_TRIAL_DAYS`
 
 ```ts
-// Set 14-day free trial
 freeTrialDays: 14;
 ```
 
-### disableSignup
+### `disableSignup`
 
-Prevents new users from signing up to your Shelf instance. Useful for closed/private instances.
+Empêche les nouvelles inscriptions sur l'instance. Pratique pour un déploiement
+fermé ou privé.
 
-**Default value:** `false`  
-**Environment variable:** `DISABLE_SIGNUP`
+- valeur par défaut : `false`
+- variable d'environnement : `DISABLE_SIGNUP`
 
 ```ts
-// Disable new user registrations
 disableSignup: true;
 ```
 
-### disableSSO
+### `disableSSO`
 
-Disables Single Sign-On functionality even if SSO providers are configured.
+Désactive le SSO même si des fournisseurs sont configurés.
 
-**Default value:** `false`  
-**Environment variable:** `DISABLE_SSO`
+- valeur par défaut : `false`
+- variable d'environnement : `DISABLE_SSO`
 
 ```ts
-// Disable SSO login
 disableSSO: true;
 ```
 
-### logoPath
+### `logoPath`
 
-Defines the paths to your application logos. These are used throughout the application interface.
-
-**Default values:**
+Définit les chemins des logos utilisés dans l'interface.
 
 - `fullLogo`: `"/static/images/logo-full-color(x2).png"`
 - `symbol`: `"/static/images/shelf-symbol.png"`
 
 ```ts
-// Custom logo paths
 logoPath: {
   fullLogo: "/static/images/my-custom-logo.png",
   symbol: "/static/images/my-symbol.png",
-}
+};
 ```
 
-### faviconPath
+### `faviconPath`
 
-Path to your application's favicon.
+Chemin du favicon de l'application.
 
-**Default value:** `"/static/favicon.ico"`
+- valeur par défaut : `"/static/favicon.ico"`
 
-```ts
-// Custom favicon
-faviconPath: "/static/my-favicon.ico";
-```
+### `emailPrimaryColor`
 
-### emailPrimaryColor
+Couleur principale utilisée dans les e-mails transactionnels.
 
-Primary color used in email templates and notifications.
-
-**Default value:** `"#EF6820"` (Shelf orange)
+- valeur par défaut : `"#EF6820"`
 
 ```ts
-// Custom email color
 emailPrimaryColor: "#FF5733";
 ```
 
-## Environment Variables
+## Variables d'environnement
 
-You can override any of these settings using environment variables:
+Exemple :
 
 ```bash
-# .env file
 SEND_ONBOARDING_EMAIL=true
 ENABLE_PREMIUM_FEATURES=false
 FREE_TRIAL_DAYS=14
 DISABLE_SIGNUP=false
 DISABLE_SSO=false
 COLLECT_BUSINESS_INTEL=true
-# SHOW_HOW_DID_YOU_FIND_US=true  # Deprecated, use COLLECT_BUSINESS_INTEL instead
 ```
 
 ## Notes
 
-- Changes to this file require a server restart to take effect
-- Environment variables take precedence over hardcoded values
-- Logo and favicon paths are relative to the `public` directory
-- Email colors should be in hex format (`#RRGGBB`)
+- un redémarrage serveur est nécessaire après modification ;
+- les variables d'environnement priment sur les valeurs codées en dur ;
+- les chemins logo et favicon sont relatifs à `public/` ;
+- les couleurs d'e-mail doivent être en hexadécimal.

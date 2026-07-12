@@ -12,7 +12,9 @@ import {
 } from "~/utils/permissions/permission.data";
 import { requirePermission } from "~/utils/roles.server";
 
-export const meta = () => [{ title: appendToMetaTitle("Team member assets") }];
+export const meta = () => [
+  { title: appendToMetaTitle("Biens du responsable") },
+];
 
 export async function loader({ request, context, params }: LoaderFunctionArgs) {
   const authSession = context.getSession();
@@ -53,8 +55,8 @@ export default function UserAssetsPage() {
       disableTeamMemberFilter
       disableBulkActions
       customEmptyStateContent={{
-        title: "No assets in custody",
-        text: "This user currently has no assets in their custody.",
+        title: "Aucun bien affecté",
+        text: "Cet utilisateur n'a actuellement aucun bien affecté.",
       }}
     />
   );

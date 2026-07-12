@@ -41,26 +41,26 @@ export const baseAuditTextEmailContent = ({
   emailContent,
 }: BasicAuditEmailContentArgs & { emailContent: string }) => {
   const dueDateText = dueDate
-    ? `Due date: ${getDateTimeFormatFromHints(hints, {
+    ? `Date limite : ${getDateTimeFormatFromHints(hints, {
         dateStyle: "medium",
         timeStyle: "short",
       }).format(dueDate)}\n`
     : "";
   const orgQuery = organizationId ? `?orgId=${organizationId}` : "";
 
-  return `Howdy,
+  return `Bonjour,
 
 ${emailContent}
 
-${auditName} | ${assetsCount} ${assetsCount === 1 ? "asset" : "assets"}
+${auditName} | ${assetsCount} ${assetsCount === 1 ? "bien" : "biens"}
 
-Created by: ${creatorName}
-${dueDateText}${description ? `Description: ${description}\n` : ""}
-To view the audit, follow the link below:
+Cree par : ${creatorName}
+${dueDateText}${description ? `Description : ${description}\n` : ""}
+Pour ouvrir l'audit :
 ${SERVER_URL}/audits/${auditId}/overview${orgQuery}
 ${customEmailFooter ? `\n---\n${customEmailFooter}\n` : ""}
-Thanks,
-The Shelf Team
+Cordialement,
+L'equipe Patrimoine360
 `;
 };
 
@@ -70,13 +70,13 @@ The Shelf Team
 export const auditAssignedEmailContent = (args: BasicAuditEmailContentArgs) =>
   baseAuditTextEmailContent({
     ...args,
-    emailContent: `You've been assigned to audit: "${args.auditName}".`,
+    emailContent: `Vous avez ete assigne a l'audit "${args.auditName}".`,
   });
 
 /**
  * Builds the plain-text body for the audit-cancelled email.
  *
- * `cancelledByName` is the user who actually performed the cancellation —
+ * `cancelledByName` is the user who actually performed the cancellation вЂ”
  * may differ from `creatorName` (the audit's original creator) when an
  * admin/owner cancels an audit a team member created.
  *
@@ -91,7 +91,7 @@ export const auditCancelledEmailContent = (
 ) =>
   baseAuditTextEmailContent({
     ...args,
-    emailContent: `The audit "${args.auditName}" has been cancelled by ${args.cancelledByName}. This audit is no longer active.`,
+    emailContent: `L'audit "${args.auditName}" a ete annule par ${args.cancelledByName}. Cet audit n'est plus actif.`,
   });
 
 /**
@@ -117,18 +117,18 @@ export const auditCompletedEmailContent = (
       }).format(args.dueDate)
     : null;
 
-  let statusMessage = `The audit "${args.auditName}" has been completed on ${completedDateText}.`;
+  let statusMessage = `L'audit "${args.auditName}" a ete termine le ${completedDateText}.`;
 
   if (dueDateText) {
     if (args.wasOverdue) {
-      statusMessage += `\n\nThis audit was completed after the due date (${dueDateText}). ⚠️`;
+      statusMessage += `\n\nCet audit a ete termine apres la date limite (${dueDateText}).`;
     } else {
-      statusMessage += `\n\nThis audit was completed before the due date (${dueDateText}). ✅`;
+      statusMessage += `\n\nCet audit a ete termine avant la date limite (${dueDateText}).`;
     }
   }
 
   // Include a direct receipt link for the completion email.
-  statusMessage += `\n\nDownload receipt:\n${SERVER_URL}/audits/${args.auditId}/overview${receiptQuery}`;
+  statusMessage += `\n\nTelecharger le recu :\n${SERVER_URL}/audits/${args.auditId}/overview${receiptQuery}`;
 
   return baseAuditTextEmailContent({
     ...args,
@@ -145,7 +145,7 @@ export const auditReminderEmailContent = (
 ) =>
   baseAuditTextEmailContent({
     ...args,
-    emailContent: `Reminder: The audit "${args.auditName}" is due in ${args.timeframe}.`,
+    emailContent: `Rappel : l'audit "${args.auditName}" arrive a echeance dans ${args.timeframe}.`,
   });
 
 /**
@@ -154,7 +154,7 @@ export const auditReminderEmailContent = (
 export const auditOverdueEmailContent = (args: BasicAuditEmailContentArgs) =>
   baseAuditTextEmailContent({
     ...args,
-    emailContent: `The audit "${args.auditName}" is now overdue. Please complete it as soon as possible.`,
+    emailContent: `L'audit "${args.auditName}" est maintenant en retard. Merci de le terminer des que possible.`,
   });
 
 /**
@@ -177,14 +177,14 @@ export async function sendAuditAssignedEmail({
   try {
     const html = await auditUpdatesTemplateString({
       audit,
-      heading: `🔍 You've been assigned to audit: "${audit.name}"`,
+      heading: `Affectation a l'audit : "${audit.name}"`,
       hints,
       assetCount,
     });
 
     sendEmail({
       to: assigneeEmail,
-      subject: `🔍 You've been assigned to audit: "${audit.name}" - shelf.nu`,
+      subject: `Affectation a l'audit : ${audit.name}`,
       text: auditAssignedEmailContent({
         auditName: audit.name,
         assetsCount: assetCount,
@@ -221,7 +221,7 @@ export async function sendAuditAssignedEmail({
 /**
  * Sends an "audit cancelled" email to each provided recipient.
  *
- * Recipient construction (assigneesToNotify) is the caller's responsibility —
+ * Recipient construction (assigneesToNotify) is the caller's responsibility вЂ”
  * the service decides who to notify. This function only handles delivery and
  * fan-out: per recipient it builds the plain-text + HTML versions, calls
  * {@link sendEmail}, and logs success or wraps any per-send failure in a
@@ -258,7 +258,7 @@ export function sendAuditCancelledEmails({
   /**
    * Display name of the user who actually cancelled the audit. May differ
    * from the original creator when an admin/owner cancels someone else's
-   * audit — recipients see the real canceller, not the creator.
+   * audit вЂ” recipients see the real canceller, not the creator.
    */
   cancelledByName: string;
   hints: ClientHint;
@@ -274,14 +274,14 @@ export function sendAuditCancelledEmails({
     try {
       const html = await auditUpdatesTemplateString({
         audit,
-        heading: `❌ Audit cancelled: "${audit.name}"`,
+        heading: `Audit annule : "${audit.name}"`,
         hints,
         assetCount,
       });
 
       sendEmail({
         to: assignment.user.email,
-        subject: `❌ Audit cancelled: "${audit.name}" - shelf.nu`,
+        subject: `Audit annule : ${audit.name}`,
         text: auditCancelledEmailContent({
           auditName: audit.name,
           assetsCount: assetCount,
@@ -354,7 +354,7 @@ export function sendAuditCompletedEmail({
     try {
       const html = await auditUpdatesTemplateString({
         audit,
-        heading: `✅ Audit completed: "${audit.name}"`,
+        heading: `Audit termine : "${audit.name}"`,
         hints,
         assetCount,
         completedAt,
@@ -363,7 +363,7 @@ export function sendAuditCompletedEmail({
 
       sendEmail({
         to: assignment.user.email,
-        subject: `✅ Audit completed: "${audit.name}" - shelf.nu`,
+        subject: `Audit termine : ${audit.name}`,
         text: auditCompletedEmailContent({
           auditName: audit.name,
           assetsCount: assetCount,
@@ -406,7 +406,7 @@ export function sendAuditCompletedEmail({
 /**
  * Send audit reminder email to assignees
  * @param timeframe - Human-readable timeframe (e.g., "24 hours", "4 hours", "1 hour")
- * @param heading - Email heading/subject prefix (e.g., "🔔 Audit due in 24 hours")
+ * @param heading - Email heading/subject prefix (e.g., "рџ”” Audit due in 24 hours")
  */
 export function sendAuditReminderEmail({
   audit,
@@ -443,7 +443,7 @@ export function sendAuditReminderEmail({
 
       sendEmail({
         to: assignment.user.email,
-        subject: `${heading}: "${audit.name}" - shelf.nu`,
+        subject: `${heading} : ${audit.name}`,
         text: auditReminderEmailContent({
           auditName: audit.name,
           assetsCount: assetCount,
@@ -505,14 +505,14 @@ export function sendAuditOverdueEmail({
     try {
       const html = await auditUpdatesTemplateString({
         audit,
-        heading: `⚠️ Audit overdue: "${audit.name}"`,
+        heading: `Audit en retard : "${audit.name}"`,
         hints,
         assetCount,
       });
 
       sendEmail({
         to: recipient.email,
-        subject: `⚠️ Audit overdue: "${audit.name}" - shelf.nu`,
+        subject: `Audit en retard : ${audit.name}`,
         text: auditOverdueEmailContent({
           auditName: audit.name,
           assetsCount: assetCount,

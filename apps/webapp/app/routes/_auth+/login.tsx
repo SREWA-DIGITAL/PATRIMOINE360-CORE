@@ -65,9 +65,11 @@ const LoginFormSchema = z.object({
     .string()
     .transform((email) => email.toLowerCase())
     .refine(validEmail, () => ({
-      message: "Please enter a valid email",
+      message: "Veuillez saisir une adresse e-mail valide",
     })),
-  password: z.string().min(8, "Password is too short. Minimum 8 characters."),
+  password: z
+    .string()
+    .min(8, "Le mot de passe doit contenir au moins 8 caractères."),
   redirectTo: z.string().optional(),
 });
 
@@ -206,25 +208,27 @@ export default function IndexLoginForm() {
     <div className="w-full max-w-md">
       {acceptedInvite ? (
         <div className="mb-8 text-center text-success-600">
-          Successfully accepted workspace invite. Please login to see your new
-          workspace.
+          Invitation à l'espace de travail acceptée. Connectez-vous pour accéder
+          à votre nouvel espace.
         </div>
       ) : null}
 
       {passwordReset ? (
         <div className="mb-8 text-center text-success-600">
-          You have successfully reset your password. You can now use your new
-          password to login.
+          Votre mot de passe a bien été réinitialisé. Vous pouvez maintenant
+          vous connecter.
         </div>
       ) : null}
       {emailSent ? (
         <div className="mb-8 text-center text-success-600">
-          Check your inbox and click the verification link before logging in.
+          Consultez votre boîte de réception puis cliquez sur le lien de
+          vérification avant de vous connecter.
         </div>
       ) : null}
       {emailVerified ? (
         <div className="mb-8 text-center text-success-600">
-          Your email has been verified. You can now log in.
+          Votre adresse e-mail a été vérifiée. Vous pouvez maintenant vous
+          connecter.
         </div>
       ) : null}
       <Form ref={zo.ref} method="post" replace className="flex flex-col gap-5">
@@ -232,8 +236,8 @@ export default function IndexLoginForm() {
           <Input
             ref={emailInputRef}
             data-test-id="email"
-            label="Email address"
-            placeholder="zaans@huisje.com"
+            label="Adresse e-mail"
+            placeholder="utilisateur@organisation.ci"
             required
             name={zo.fields.email()}
             type="email"
@@ -244,7 +248,7 @@ export default function IndexLoginForm() {
           />
         </div>
         <PasswordInput
-          label="Password"
+          label="Mot de passe"
           placeholder="**********"
           data-test-id="password"
           name={zo.fields.password()}
@@ -260,11 +264,11 @@ export default function IndexLoginForm() {
           data-test-id="login"
           disabled={disabled}
         >
-          Log In
+          Se connecter
         </Button>
         <div className="flex flex-col items-center justify-center">
           <div className="text-center text-sm text-gray-500">
-            Don't remember your password?{" "}
+            Mot de passe oublié ?{" "}
             <Button
               variant="link"
               to={{
@@ -272,7 +276,7 @@ export default function IndexLoginForm() {
                 search: searchParams.toString(),
               }}
             >
-              Reset password
+              Réinitialiser le mot de passe
             </Button>
           </div>
         </div>
@@ -286,7 +290,7 @@ export default function IndexLoginForm() {
               search: searchParams.toString(),
             }}
           >
-            Login with SSO
+            Se connecter avec SSO
           </Button>
         </div>
       )}
@@ -298,9 +302,9 @@ export default function IndexLoginForm() {
           </div>
           <div className="relative flex justify-center text-sm">
             <span className="bg-white px-2 text-gray-500">
-              Or use a{" "}
-              <strong title="One Time Password (OTP) is the most secure way to login. We will send you a code to your email.">
-                One Time Password
+              Ou utilisez un{" "}
+              <strong title="Le code à usage unique (OTP) est le moyen le plus sûr de vous connecter. Nous vous enverrons un code par e-mail.">
+                code à usage unique
               </strong>
             </span>
           </div>
@@ -310,7 +314,7 @@ export default function IndexLoginForm() {
         </div>
         {disableSignup ? null : (
           <div className="mt-6 text-center text-sm text-gray-500">
-            Don't have an account?{" "}
+            Vous n'avez pas de compte ?{" "}
             <Button
               variant="link"
               data-test-id="signupButton"
@@ -319,7 +323,7 @@ export default function IndexLoginForm() {
                 search: searchParams.toString(),
               }}
             >
-              Sign up
+              Créer un compte
             </Button>
           </div>
         )}
