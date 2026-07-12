@@ -2,11 +2,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  sendEmail: vi.fn(),
+  sendTemplatedEmail: vi.fn(),
 }));
 
-vi.mock("~/emails/mail.server", () => ({
-  sendEmail: mocks.sendEmail,
+vi.mock("~/emails/template-registry.server", () => ({
+  sendTemplatedEmail: mocks.sendTemplatedEmail,
 }));
 
 vi.mock("~/database/db.server", () => ({
@@ -21,7 +21,7 @@ const { sendReportEmails } = await import("./service.server");
 
 describe("sendReportEmails", () => {
   beforeEach(() => {
-    mocks.sendEmail.mockClear();
+    mocks.sendTemplatedEmail.mockClear();
   });
 
   it("tags owner and reporter emails for asset reports", () => {
@@ -41,18 +41,26 @@ describe("sendReportEmails", () => {
       } as never,
     });
 
-    expect(mocks.sendEmail).toHaveBeenNthCalledWith(
+    expect(mocks.sendTemplatedEmail).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
         to: "owner@example.com",
-        tags: ["report-found", "owner-notification", "asset"],
+        template: "report-found.owner",
+        data: expect.objectContaining({
+          itemLabel: "Camera A",
+          reportType: "asset",
+        }),
       })
     );
-    expect(mocks.sendEmail).toHaveBeenNthCalledWith(
+    expect(mocks.sendTemplatedEmail).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
         to: "reporter@example.com",
-        tags: ["report-found", "reporter-confirmation", "asset"],
+        template: "report-found.reporter",
+        data: expect.objectContaining({
+          itemLabel: "Camera A",
+          reportType: "asset",
+        }),
       })
     );
   });

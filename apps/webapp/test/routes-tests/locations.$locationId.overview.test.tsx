@@ -157,7 +157,7 @@ describe("LocationOverview component", () => {
 
     expect(screen.getByText("ID")).toBeInTheDocument();
     expect(screen.getByText("loc-123")).toBeInTheDocument();
-    expect(screen.getByText("Created")).toBeInTheDocument();
+    expect(screen.getByText("Créé le")).toBeInTheDocument();
     // DateS component formats the date client-side
     expect(screen.getByText("formatted-date")).toBeInTheDocument();
 

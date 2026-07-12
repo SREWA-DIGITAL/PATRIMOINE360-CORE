@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ActionFunctionArgs } from "react-router";
 import { redirect } from "react-router";
 
@@ -7,7 +7,6 @@ import { locationDescendantsMock } from "@mocks/location-descendants";
 // why: mocking location descendants to avoid database queries during tests
 vi.mock("~/modules/location/descendants.server", () => locationDescendantsMock);
 
-import type { action as scanAssetsAction } from "~/routes/_layout+/bookings.$bookingId.overview.scan-assets";
 import { requirePermission } from "~/utils/roles.server";
 import { addScannedAssetsToBooking } from "~/modules/booking/service.server";
 
@@ -78,13 +77,9 @@ vi.mock("react-router", async () => {
 
 const requirePermissionMock = vi.mocked(requirePermission);
 const addScannedAssetsToBookingMock = vi.mocked(addScannedAssetsToBooking);
-let action: typeof scanAssetsAction;
-
-beforeAll(async () => {
-  ({ action } = await import(
-    "~/routes/_layout+/bookings.$bookingId.overview.scan-assets"
-  ));
-});
+const { action } = await import(
+  "~/routes/_layout+/bookings.$bookingId.overview.scan-assets"
+);
 
 function createActionArgs(
   overrides: Partial<ActionFunctionArgs> = {}

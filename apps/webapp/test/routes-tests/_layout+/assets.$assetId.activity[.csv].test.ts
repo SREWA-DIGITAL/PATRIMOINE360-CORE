@@ -3,7 +3,7 @@ import {
   PermissionAction,
   PermissionEntity,
 } from "~/utils/permissions/permission.data";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createLoaderArgs } from "@mocks/remix";
 import { locationDescendantsMock } from "@mocks/location-descendants";
 
@@ -49,19 +49,13 @@ vi.mock("lottie-react", () => ({
   default: vi.fn(() => null),
 }));
 
-let loader: (typeof import("~/routes/_layout+/assets.$assetId.activity[.csv]"))["loader"];
+const { loader } = await import("~/routes/_layout+/assets.$assetId.activity[.csv]");
 const requirePermissionMock = vi.mocked(requirePermission);
 const getDateTimeFormatMock = vi.mocked(getDateTimeFormat);
 const dbMock = db as unknown as {
   asset: { findFirstOrThrow: ReturnType<typeof vi.fn> };
   note: { findMany: ReturnType<typeof vi.fn> };
 };
-
-beforeAll(async () => {
-  ({ loader } = await import(
-    "~/routes/_layout+/assets.$assetId.activity[.csv]"
-  ));
-});
 
 describe("app/routes/_layout+/assets.$assetId.activity[.csv] loader", () => {
   const context = {

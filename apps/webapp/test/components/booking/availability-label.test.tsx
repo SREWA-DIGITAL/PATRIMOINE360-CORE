@@ -1,7 +1,6 @@
 import type { Booking } from "@prisma/client";
 import { BookingStatus } from "@prisma/client";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AvailabilityLabel } from "~/components/booking/availability-label";
@@ -28,6 +27,14 @@ vi.mock("react-router", async () => {
 // why: testing availability label tooltip display without executing booking conflict detection logic
 vi.mock("~/modules/booking/helpers", () => ({
   hasAssetBookingConflicts: vi.fn(),
+}));
+
+// why: tooltip behavior belongs to Radix, while this test only validates the availability copy and destination link
+vi.mock("~/components/shared/tooltip", () => ({
+  TooltipProvider: ({ children }: { children: React.ReactNode }) => children,
+  Tooltip: ({ children }: { children: React.ReactNode }) => children,
+  TooltipTrigger: ({ children }: { children: React.ReactNode }) => children,
+  TooltipContent: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 const useLoaderDataMock = vi.mocked(useLoaderData);
@@ -100,9 +107,6 @@ describe("AvailabilityLabel", () => {
       />
     );
 
-    const user = userEvent.setup();
-    await user.hover(await screen.findByText("Already booked"));
-
     const links = await screen.findAllByRole("link", {
       name: "New Booking",
     });
@@ -140,9 +144,6 @@ describe("AvailabilityLabel", () => {
         isAlreadyAdded={false}
       />
     );
-
-    const user = userEvent.setup();
-    await user.hover(await screen.findByText("Already booked"));
 
     const links = await screen.findAllByRole("link", {
       name: "Other Booking",

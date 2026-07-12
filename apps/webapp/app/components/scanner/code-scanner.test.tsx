@@ -1,14 +1,6 @@
 import { forwardRef } from "react";
 import { act, render, screen, waitFor } from "@testing-library/react";
-import {
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type * as CodeScannerModule from "~/components/scanner/code-scanner";
 import { handleDetection } from "~/components/scanner/utils";
 
@@ -57,12 +49,9 @@ let CodeScanner: typeof CodeScannerModule.CodeScanner;
 let handleScannerInputValue: typeof CodeScannerModule.handleScannerInputValue;
 
 const originalNavigator = globalThis.navigator;
-
-beforeAll(async () => {
-  const module = await import("~/components/scanner/code-scanner");
-  CodeScanner = module.CodeScanner;
-  handleScannerInputValue = module.handleScannerInputValue;
-});
+const codeScannerModule = await import("~/components/scanner/code-scanner");
+CodeScanner = codeScannerModule.CodeScanner;
+handleScannerInputValue = codeScannerModule.handleScannerInputValue;
 
 beforeEach(() => {
   // Ensure navigator.mediaDevices is available for tests that rely on it
