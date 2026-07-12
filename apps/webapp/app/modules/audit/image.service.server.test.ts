@@ -4,6 +4,9 @@ vi.mock("~/utils/storage.server", () => ({
   // why: We need to mock storage operations to avoid actually uploading files during tests
   parseFileFormData: vi.fn(),
   removePublicFile: vi.fn(),
+  getPublicFileURL: vi.fn(
+    ({ filename }: { filename: string }) => `https://example.test/${filename}`
+  ),
   getFileUploadPath: vi.fn(
     (params) =>
       `${params.organizationId}/${params.type}/${params.typeId}/test.jpg`

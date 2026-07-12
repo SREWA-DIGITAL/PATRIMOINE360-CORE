@@ -178,7 +178,7 @@ type EmailTemplateCatalogue = {
   [K in EmailTemplateKey]: EmailTemplateDefinition<K>;
 };
 
-const productName = config.brand.name;
+const productName = config.brand?.name ?? "Patrimoine360";
 const supportEmail = SUPPORT_EMAIL || "support@patrimoine360.local";
 
 function getGreeting(name?: string | null) {

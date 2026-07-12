@@ -92,7 +92,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
         title: "Non autorisé",
         message:
           "Les réservations ne sont pas disponibles dans un espace personnel. Créez un espace d'équipe pour gérer des réservations.",
-        label: "Réservation",
+        label: "Booking",
         shouldBeCaptured: false,
       });
     }

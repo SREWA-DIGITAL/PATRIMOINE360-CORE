@@ -119,6 +119,11 @@ vitest.mock("~/database/db.server", () => ({
     },
     bookingSettings: {
       findUnique: vitest.fn().mockResolvedValue(null),
+      upsert: vitest.fn().mockResolvedValue({
+        notifyBookingCreator: true,
+        notifyAdminsOnNewBooking: true,
+        alwaysNotifyTeamMembers: [],
+      }),
     },
   },
 }));
